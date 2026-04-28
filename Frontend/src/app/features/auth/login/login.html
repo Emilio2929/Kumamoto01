@@ -1,0 +1,35 @@
+<section class="login">
+	<h1>Iniciar sesion</h1>
+
+	<form [formGroup]="formularioLogin" (ngSubmit)="iniciarSesion()" novalidate>
+		<div class="campo">
+			<label for="correo">Correo</label>
+			<input id="correo" type="email" formControlName="correo" placeholder="correo@colegio.edu" />
+
+			<small *ngIf="correoControl.touched && correoControl.hasError('required')">
+				El correo es obligatorio.
+			</small>
+			<small *ngIf="correoControl.touched && correoControl.hasError('email')">
+				El formato del correo no es valido.
+			</small>
+		</div>
+
+		<div class="campo">
+			<label for="password">Contrasena</label>
+			<input id="password" type="password" formControlName="password" placeholder="Tu contrasena" />
+
+			<small *ngIf="passwordControl.touched && passwordControl.hasError('required')">
+				La contrasena es obligatoria.
+			</small>
+			<small *ngIf="passwordControl.touched && passwordControl.hasError('minlength')">
+				La contrasena debe tener al menos 6 caracteres.
+			</small>
+		</div>
+
+		<p class="error" *ngIf="error">{{ error }}</p>
+
+		<button type="submit" [disabled]="formularioLogin.invalid || cargando">
+			{{ cargando ? 'Ingresando...' : 'Ingresar' }}
+		</button>
+	</form>
+</section>

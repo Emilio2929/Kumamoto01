@@ -1,0 +1,75 @@
+using Microsoft.EntityFrameworkCore;
+using Kumamoto.API.Models;
+
+namespace Kumamoto.API.Data;
+
+public class KumamotoDbContext : DbContext
+{
+    public KumamotoDbContext(DbContextOptions<KumamotoDbContext> options) : base(options) { }
+
+    public DbSet<Rol> Roles { get; set; }
+    public DbSet<Grado> Grados { get; set; }
+    public DbSet<Seccion> Secciones { get; set; }
+    public DbSet<Aula> Aulas { get; set; }
+    public DbSet<Usuario> Usuarios { get; set; }
+    public DbSet<Estudiante> Estudiantes { get; set; }
+    public DbSet<Asistencia> Asistencias { get; set; }
+    public DbSet<AlertaRiesgo> AlertasRiesgo { get; set; }
+    public DbSet<Curso> Cursos { get; set; }
+    public DbSet<CargaAcademica> CargasAcademicas { get; set; }
+    public DbSet<HorarioCurso> HorarioDetalle { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // Mapeo explícito de tablas (snake_case, singular, igual que el script SQL)
+        modelBuilder.Entity<Rol>().ToTable("rol");
+        modelBuilder.Entity<Grado>().ToTable("grado");
+        modelBuilder.Entity<Seccion>().ToTable("seccion");
+        modelBuilder.Entity<Aula>().ToTable("aula");
+        modelBuilder.Entity<Usuario>().ToTable("usuario");
+        modelBuilder.Entity<Estudiante>().ToTable("estudiante");
+        modelBuilder.Entity<Asistencia>().ToTable("asistencia");
+        modelBuilder.Entity<AlertaRiesgo>().ToTable("alerta_riesgo");
+        modelBuilder.Entity<Curso>().ToTable("curso");
+        modelBuilder.Entity<CargaAcademica>().ToTable("carga_academica");
+        modelBuilder.Entity<HorarioCurso>().ToTable("horario_detalle");
+
+        // Unique constraint grado + sección en Aula
+        modelBuilder.Entity<Aula>()
+            .HasIndex(a => new { a.GradoId, a.SeccionId })
+            .IsUnique()
+            .HasDatabaseName("uc_grado_seccion");
+
+        // Unique en DNI y Correo de usuario
+        modelBuilder.Entity<Usuario>()
+            .HasIndex(u => u.Dni).IsUnique();
+        modelBuilder.Entity<Usuario>()
+            .HasIndex(u => u.Correo).IsUnique();
+
+        // CargaAcademica → Aula, Curso, Docente (nullable)
+        modelBuilder.Entity<CargaAcademica>()
+            .HasOne(ca => ca.Aula)
+            .WithMany()
+            .HasForeignKey(ca => ca.AulaId);
+
+        modelBuilder.Entity<CargaAcademica>()
+            .HasOne(ca => ca.Curso)
+            .WithMany()
+            .HasForeignKey(ca => ca.CursoId);
+
+        modelBuilder.Entity<CargaAcademica>()
+            .HasOne(ca => ca.Docente)
+            .WithMany()
+            .HasForeignKey(ca => ca.DocenteId)
+            .IsRequired(false);
+
+        // HorarioCurso → CargaAcademica (cascade delete)
+        modelBuilder.Entity<HorarioCurso>()
+            .HasOne(h => h.Carga)
+            .WithMany(ca => ca.Horarios)
+            .HasForeignKey(h => h.CargaId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}

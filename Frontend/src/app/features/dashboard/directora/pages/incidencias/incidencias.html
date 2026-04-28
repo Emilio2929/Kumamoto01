@@ -1,0 +1,109 @@
+
+
+<div class="toolbar">
+  <div class="search-box">
+    <span class="icon">Buscar</span>
+    <input type="text" placeholder="Buscar alumno o fecha...">
+  </div>
+  <button class="btn primary" (click)="openModal()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    Nueva Incidencia
+  </button>
+</div>
+
+<!-- Tabla de Incidencias Recientes -->
+<div class="card list-card">
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Alumno Implicado</th>
+          <th>Tipo</th>
+          <th>Gravedad</th>
+          <th>Apoderado Notificado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Hoy, 10:45 AM</td>
+          <td><span class="fw-bold">Juan Pérez García</span><br><span class="text-xs text-muted">1ro Secundaria A</span></td>
+          <td>Disciplina</td>
+          <td><span class="badge badge-moderada">Moderada</span></td>
+          <td><span class="icon text-success">Sí</span></td>
+          <td>
+            <button class="action-btn" title="Ver Detalle">Ver</button>
+          </td>
+        </tr>
+        <tr>
+          <td>Ayer, 08:00 AM</td>
+          <td><span class="fw-bold">María Fernández</span><br><span class="text-xs text-muted">2do Secundaria B</span></td>
+          <td>Asistencia</td>
+          <td><span class="badge badge-leve">Leve</span></td>
+          <td><span class="icon text-muted">No</span></td>
+          <td>
+            <button class="action-btn" title="Ver Detalle">Ver</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Registro Incidencia -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-content card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Registrar Nueva Incidencia</h2>
+      <button class="close-btn" (click)="closeModal()">Cerrar</button>
+    </div>
+    
+    <div class="modal-body custom-scrollbar">
+      <form class="manager-form">
+        <div class="form-group full-width">
+          <label>Alumno Implicado</label>
+          <div class="input-with-action">
+            <input type="text" placeholder="Buscar por DNI o Nombres..." [(ngModel)]="nuevoRegistro.alumno" name="alumno">
+            <button type="button" class="btn secondary sm">Buscar</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Tipo de Incidencia</label>
+          <select [(ngModel)]="nuevoRegistro.tipo" name="tipo">
+            <option *ngFor="let t of tipos" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Nivel de Gravedad</label>
+          <select [(ngModel)]="nuevoRegistro.gravedad" (change)="onGravedadChange()" name="gravedad">
+            <option *ngFor="let g of gravedades" [value]="g">{{ g }}</option>
+          </select>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Descripción y Observaciones</label>
+          <textarea rows="4" placeholder="Describa el hecho ocurrido de manera objetiva..." [(ngModel)]="nuevoRegistro.descripcion" name="desc"></textarea>
+        </div>
+
+        <div class="form-group full-width">
+          <label class="checkbox-container">
+            <input type="checkbox" [(ngModel)]="nuevoRegistro.notificar" name="notif" [disabled]="nuevoRegistro.gravedad === 'Grave'">
+            <span class="checkmark"></span>
+            Notificar automáticamente al apoderado
+          </label>
+          <div class="alert warning mt-2" *ngIf="nuevoRegistro.gravedad === 'Grave'">
+            Por reglamento, toda incidencia Grave requiere notificación obligatoria al apoderado.
+          </div>
+        </div>
+      </form>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="closeModal()">Cancelar</button>
+      <button class="btn primary" (click)="saveIncidencia()">Registrar Incidencia</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,62 @@
+
+
+<div class="settings-layout">
+  
+  <!-- Tarjeta: Datos Generales -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Información de Acceso</h2>
+      <span class="icon">Usuario</span>
+    </div>
+    <div class="card-body">
+      <form class="manager-form" (submit)="saveProfile(); $event.preventDefault()">
+        <div class="form-group full-width">
+          <label>Usuario del Sistema</label>
+          <input type="text" [(ngModel)]="userData.username" name="username" disabled title="El usuario no se puede cambiar">
+          <small class="hint">Su nombre de usuario es único y no puede modificarse.</small>
+        </div>
+        <div class="form-group">
+          <label>Correo de Recuperación</label>
+          <input type="email" [(ngModel)]="userData.email" name="email">
+        </div>
+        <div class="form-group">
+          <label>Teléfono (WhatsApp)</label>
+          <input type="text" [(ngModel)]="userData.phone" name="phone">
+        </div>
+        
+        <div class="form-actions mt-4">
+          <button type="submit" class="btn secondary">Actualizar Datos</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tarjeta: Cambio de Contraseña -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Seguridad y Contraseña</h2>
+      <span class="icon">Seguridad</span>
+    </div>
+    <div class="card-body">
+      <form class="manager-form" (submit)="updatePassword(); $event.preventDefault()">
+        <div class="form-group full-width">
+          <label>Contraseña Actual</label>
+          <input type="password" placeholder="Ingrese su contraseña actual" [(ngModel)]="passwords.current" name="curr">
+        </div>
+        <div class="form-group full-width">
+          <label>Nueva Contraseña</label>
+          <input type="password" placeholder="Mínimo 8 caracteres, números y letras" [(ngModel)]="passwords.newPass" name="newp">
+        </div>
+        <div class="form-group full-width">
+          <label>Confirmar Nueva Contraseña</label>
+          <input type="password" placeholder="Repita la nueva contraseña" [(ngModel)]="passwords.confirmPass" name="confp">
+        </div>
+        
+        <div class="form-actions mt-4">
+          <button type="submit" class="btn primary">Modificar Contraseña</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>

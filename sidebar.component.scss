@@ -1,0 +1,74 @@
+.sidebar {
+  background-color: #0f172a;
+  height: 100vh;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem;
+  box-sizing: border-box;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar-brand {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+  .brand-text {
+    color: #ffffff;
+    font-size: 1.25rem;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+  }
+}
+
+.nav-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  li {
+    margin: 0;
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #cbd5e1;
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+
+    .icon {
+      margin-right: 0.75rem;
+      font-size: 1.2rem;
+    }
+
+    /* Efecto hover y clase activa de Angular Router */
+    &:hover, &.active {
+      background-color: #1e293b;
+      color: #ffffff;
+    }
+  }
+}
+
+/* Modificador para mandar el logout hacia abajo */
+.nav-bottom {
+  margin-top: auto;
+  
+  .logout-btn {
+    /* Un pequeño detalle UX: el hover de salida se ve mejor con tonos rojizos/cálidos sutiles */
+    &:hover {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+    }
+  }
+}

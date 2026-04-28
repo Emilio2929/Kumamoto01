@@ -1,0 +1,113 @@
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.card {
+  background: var(--bg-surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .card-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    
+    h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+  }
+
+  .card-body {
+    padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+}
+
+.risk-gauge {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  border: 8px solid var(--risk-high);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+  
+  .gauge-value {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--risk-high);
+    line-height: 1;
+  }
+  
+  .gauge-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 0.5rem;
+    max-width: 80px;
+  }
+}
+
+.risk-legend {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 0.5rem;
+      
+      &.red { background-color: var(--risk-high); }
+      &.yellow { background-color: var(--risk-medium); }
+    }
+    
+    .label {
+      color: var(--text-muted);
+      flex: 1;
+    }
+    
+    .count {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+  }
+}
+
+.action-btn {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+}

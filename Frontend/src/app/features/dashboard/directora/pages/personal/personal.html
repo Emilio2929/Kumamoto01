@@ -1,0 +1,291 @@
+<div class="personal-layout">
+
+  <!-- ══ TABS ═══════════════════════════════════════════════════════════ -->
+  <div class="tabs-nav">
+    <button class="tab-btn" [class.active]="activeTab === 'docentes'" (click)="setTab('docentes')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Docentes
+      <span class="tab-count" *ngIf="activeTab === 'docentes' && docentes.length > 0">{{ docentes.length }}</span>
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'auxiliares'" (click)="setTab('auxiliares')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Auxiliares
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'admin'" (click)="setTab('admin')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Administrativos
+    </button>
+  </div>
+
+  <!-- ══ TAB DOCENTES ════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab === 'docentes'" class="tab-pane">
+
+    <!-- Header -->
+    <div class="pane-header">
+      <div class="pane-title">
+        <div class="page-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <h1>Docentes</h1>
+          <p class="sub">{{ docentes.length }} registrados · {{ totalActivos }} activos</p>
+        </div>
+      </div>
+      <div class="pane-actions">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Buscar por nombre o DNI..." [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
+        </div>
+        <button class="btn primary" (click)="abrirModalCrear()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Registrar Docente
+        </button>
+      </div>
+    </div>
+
+    <!-- Estado -->
+    <div *ngIf="loading" class="state-block">
+      <div class="spinner"></div>
+      <p>Cargando docentes...</p>
+    </div>
+    <div *ngIf="errorLoad" class="state-block error">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p>{{ errorLoad }}</p>
+      <button class="btn secondary sm" (click)="cargar()">Reintentar</button>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card table-card" *ngIf="!loading && !errorLoad">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Docente</th>
+              <th>DNI</th>
+              <th>Correo Institucional</th>
+              <th>Teléfono</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="docentesFiltrados.length === 0">
+              <td colspan="6" class="empty-row">No hay docentes registrados.</td>
+            </tr>
+            <tr *ngFor="let d of docentesFiltrados" [class.row-inactivo]="d.estado === 0">
+              <td>
+                <div class="usuario-cell">
+                  <div class="avatar docente">{{ d.nombres.charAt(0) }}{{ d.apellidos.charAt(0) }}</div>
+                  <span class="nombre">{{ nombreCompleto(d) }}</span>
+                </div>
+              </td>
+              <td class="mono">{{ d.dni }}</td>
+              <td>
+                <span class="correo-badge" *ngIf="d.correo">{{ d.correo }}</span>
+                <span class="no-data" *ngIf="!d.correo">—</span>
+              </td>
+              <td class="mono">{{ d.telefono ?? '—' }}</td>
+              <td>
+                <span class="badge" [class.activo]="d.estado === 1" [class.inactivo]="d.estado === 0">
+                  {{ d.estado === 1 ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <div class="action-group">
+                  <button class="action-btn edit" title="Editar" (click)="abrirModalEditar(d)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button class="action-btn key" title="Cambiar contraseña" (click)="abrirModalClave(d)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </button>
+                  <button class="action-btn toggle" [class.on]="d.estado === 1" [title]="d.estado === 1 ? 'Desactivar' : 'Activar'" (click)="toggleEstado(d)">
+                    <svg *ngIf="d.estado === 1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64A9 9 0 1 1 5.64 19.36"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                    <svg *ngIf="d.estado === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  </button>
+                  <button class="action-btn delete" title="Eliminar" (click)="pedirEliminar(d.id)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB AUXILIARES (próximamente) ══════════════════════════════════ -->
+  <div *ngIf="activeTab === 'auxiliares'" class="tab-pane coming-soon">
+    <div class="coming-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <h2>Gestión de Auxiliares</h2>
+    <p>Esta sección estará disponible próximamente.</p>
+  </div>
+
+  <!-- ══ TAB ADMIN (próximamente) ═══════════════════════════════════════ -->
+  <div *ngIf="activeTab === 'admin'" class="tab-pane coming-soon">
+    <div class="coming-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    </div>
+    <h2>Gestión de Administrativos</h2>
+    <p>Esta sección estará disponible próximamente.</p>
+  </div>
+</div>
+
+<!-- ══ MODAL REGISTRAR DOCENTE ═════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="modalCrear" (click)="cerrarModalCrear()">
+  <div class="modal-card wide" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h3>Registrar Docente</h3>
+        <p class="modal-sub">Se generará correo y contraseña institucional automáticamente.</p>
+      </div>
+      <button class="modal-close" (click)="cerrarModalCrear()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Credenciales generadas -->
+      <div class="credentials-box" *ngIf="credencialesGeneradas">
+        <div class="cred-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span>¡Docente registrado! Credenciales de acceso:</span>
+        </div>
+        <div class="cred-row">
+          <span class="cred-label">Correo:</span>
+          <span class="cred-value">{{ credencialesGeneradas.correo }}</span>
+        </div>
+        <div class="cred-row">
+          <span class="cred-label">Contraseña:</span>
+          <span class="cred-value mono">{{ credencialesGeneradas.clave }}</span>
+        </div>
+        <p class="cred-warning">Comparte estas credenciales con el docente. El docente podrá cambiar su contraseña desde su perfil.</p>
+        <button class="btn primary" (click)="cerrarModalCrear()">Cerrar</button>
+      </div>
+
+      <!-- Formulario -->
+      <div class="form-grid" *ngIf="!credencialesGeneradas">
+        <div class="error-banner" *ngIf="errorCrear">{{ errorCrear }}</div>
+        <div class="form-group">
+          <label>DNI <span class="required">*</span></label>
+          <input type="text" maxlength="8" placeholder="12345678" [(ngModel)]="formCrear.dni">
+        </div>
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input type="text" placeholder="999 999 999" [(ngModel)]="formCrear.telefono">
+        </div>
+        <div class="form-group full">
+          <label>Nombres <span class="required">*</span></label>
+          <input type="text" placeholder="Ej. Juan Carlos" [(ngModel)]="formCrear.nombres">
+        </div>
+        <div class="form-group full">
+          <label>Apellidos <span class="required">*</span></label>
+          <input type="text" placeholder="Ej. Quispe Torres" [(ngModel)]="formCrear.apellidos">
+        </div>
+        <div class="info-note full">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Correo generado: <strong>[inicial nombre][apellido]&#64;kumamoto.edu.pe</strong>&nbsp;— ej: <em>cmendoza&#64;kumamoto.edu.pe</em>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" *ngIf="!credencialesGeneradas">
+      <button class="btn secondary" (click)="cerrarModalCrear()">Cancelar</button>
+      <button class="btn primary" (click)="crearDocente()" [disabled]="guardandoCrear">
+        <div class="btn-spinner" *ngIf="guardandoCrear"></div>
+        {{ guardandoCrear ? 'Registrando...' : 'Registrar y Generar Credenciales' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL EDITAR ════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="modalEditar" (click)="cerrarModalEditar()">
+  <div class="modal-card wide" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Editar Datos del Docente</h3>
+      <button class="modal-close" (click)="cerrarModalEditar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="error-banner" *ngIf="errorEditar">{{ errorEditar }}</div>
+        <div class="form-group full">
+          <label>Nombres <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formEditar.nombres">
+        </div>
+        <div class="form-group full">
+          <label>Apellidos <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formEditar.apellidos">
+        </div>
+        <div class="form-group full">
+          <label>Correo</label>
+          <input type="email" [(ngModel)]="formEditar.correo">
+        </div>
+        <div class="form-group full">
+          <label>Teléfono</label>
+          <input type="text" [(ngModel)]="formEditar.telefono">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="cerrarModalEditar()">Cancelar</button>
+      <button class="btn primary" (click)="guardarEdicion()" [disabled]="guardandoEditar">
+        <div class="btn-spinner" *ngIf="guardandoEditar"></div>
+        {{ guardandoEditar ? 'Guardando...' : 'Guardar Cambios' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL CAMBIAR CONTRASEÑA ════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="modalClave" (click)="cerrarModalClave()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h3>Cambiar Contraseña</h3>
+        <p class="modal-sub">{{ docenteClaveNombre }}</p>
+      </div>
+      <button class="modal-close" (click)="cerrarModalClave()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorClave">{{ errorClave }}</div>
+      <div class="form-group">
+        <label>Nueva Contraseña <span class="required">*</span></label>
+        <div class="input-eye">
+          <input [type]="mostrarClave ? 'text' : 'password'" [(ngModel)]="nuevaClave" placeholder="Mínimo 4 caracteres">
+          <button class="eye-btn" type="button" (click)="mostrarClave = !mostrarClave">
+            <svg *ngIf="!mostrarClave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg *ngIf="mostrarClave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="cerrarModalClave()">Cancelar</button>
+      <button class="btn primary" (click)="guardarClave()" [disabled]="guardandoClave">
+        <div class="btn-spinner" *ngIf="guardandoClave"></div>
+        {{ guardandoClave ? 'Guardando...' : 'Cambiar Contraseña' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONFIRMAR ELIMINAR ══════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="confirmEliminarId !== null" (click)="cancelarEliminar()">
+  <div class="confirm-card" (click)="$event.stopPropagation()">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4h6v2"/></svg>
+    </div>
+    <h3>¿Dar de baja al docente?</h3>
+    <p>El docente quedará inactivo y no podrá iniciar sesión. Podrás reactivarlo en cualquier momento.</p>
+    <div class="confirm-actions">
+      <button class="btn secondary" (click)="cancelarEliminar()">Cancelar</button>
+      <button class="btn danger" (click)="confirmarEliminar()">Sí, dar de baja</button>
+    </div>
+  </div>
+</div>

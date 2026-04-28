@@ -1,0 +1,217 @@
+<div class="cam-layout">
+
+  <!-- ══ HEADER ════════════════════════════════════════════════════════ -->
+  <div class="cam-header">
+    <div class="cam-title">
+      <div class="cam-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <div>
+        <h2>Carga Académica</h2>
+        <p class="sub">{{ cargas.length }} cursos registrados · {{ totalAsignados }} con docente asignado</p>
+      </div>
+    </div>
+    <div class="cam-filters">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar curso, grado o docente..." [(ngModel)]="busqueda" (ngModelChange)="filtrar()">
+      </div>
+      <select class="filter-select" [(ngModel)]="filtroGrado" (ngModelChange)="filtrar()">
+        <option value="">Todos los grados</option>
+        <option *ngFor="let g of gradosUnicos" [value]="g">{{ g }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ══ STATS ═══════════════════════════════════════════════════════════ -->
+  <div class="stats-row" *ngIf="!loading && !errorLoad">
+    <div class="stat-chip asignados">
+      <div class="dot"></div>
+      <span>{{ totalAsignados }} Con docente</span>
+    </div>
+    <div class="stat-chip pendientes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>{{ totalSinDocente }} Sin asignar</span>
+    </div>
+  </div>
+
+  <!-- ══ ESTADOS ═══════════════════════════════════════════════════════ -->
+  <div *ngIf="loading" class="state-block">
+    <div class="spinner"></div>
+    <p>Cargando carga académica...</p>
+  </div>
+  <div *ngIf="errorLoad" class="state-block error">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <p>{{ errorLoad }}</p>
+    <button class="btn secondary sm" (click)="cargar()">Reintentar</button>
+  </div>
+
+  <!-- ══ TABLA ════════════════════════════════════════════════════════════ -->
+  <div class="table-card" *ngIf="!loading && !errorLoad">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Curso</th>
+            <th>Grado · Sección</th>
+            <th>Docente Asignado</th>
+            <th>Horario</th>
+            <th>Período</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="cargasFiltradas.length === 0">
+            <td colspan="6" class="empty-row">
+              No hay cursos registrados. Crea cursos en la pestaña "Cursos" primero.
+            </td>
+          </tr>
+          <tr *ngFor="let c of cargasFiltradas" [class.asignado]="c.docenteId">
+
+            <!-- Curso -->
+            <td>
+              <div class="curso-cell">
+                <div class="curso-avatar">{{ c.cursoNombre.charAt(0) }}</div>
+                <span class="curso-nombre">{{ c.cursoNombre }}</span>
+              </div>
+            </td>
+
+            <!-- Grado/Sección -->
+            <td>
+              <div class="aula-info">
+                <span class="aula-badge">{{ c.gradoNombre }} · Sec. {{ c.seccionLetra }}</span>
+                <span class="aula-desc" *ngIf="c.aulaDescripcion">{{ c.aulaDescripcion }}</span>
+              </div>
+            </td>
+
+            <!-- Docente -->
+            <td>
+              <div class="docente-cell clickable" *ngIf="c.docenteId" (click)="abrirModal(c)" title="Editar asignación">
+                <div class="docente-avatar">{{ c.docenteNombre?.charAt(0) }}</div>
+                <span class="docente-nombre">{{ c.docenteNombre }}</span>
+                <svg class="edit-hint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </div>
+              <span class="sin-asignar clickable" *ngIf="!c.docenteId" (click)="abrirModal(c)" title="Asignar docente">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
+                Sin asignar
+              </span>
+            </td>
+
+            <!-- Horario -->
+            <td>
+              <div class="horarios" *ngIf="c.horarios.length > 0">
+                <span class="horario-chip" *ngFor="let h of c.horarios">
+                  {{ horarioLabel(h) }}
+                </span>
+              </div>
+              <span class="no-data" *ngIf="c.horarios.length === 0">—</span>
+            </td>
+
+            <!-- Período -->
+            <td>
+              <span *ngIf="c.periodoLectivo" class="periodo-badge">{{ c.periodoLectivo }}</span>
+              <span class="no-data" *ngIf="!c.periodoLectivo">—</span>
+            </td>
+
+            <!-- Acciones -->
+            <td>
+              <div class="action-group">
+                <button class="action-btn assign" [title]="c.docenteId ? 'Editar asignación' : 'Asignar docente'" (click)="abrirModal(c)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="action-btn remove" *ngIf="c.docenteId" title="Quitar docente" (click)="pedirQuitar(c.id)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL ASIGNAR DOCENTE ════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="modal" (click)="cerrarModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h3>{{ cargaSeleccionada?.docenteId ? 'Editar Asignación' : 'Asignar Docente' }}</h3>
+        <p class="modal-sub">
+          <strong>{{ cargaSeleccionada?.cursoNombre }}</strong> —
+          {{ cargaSeleccionada?.gradoNombre }} · Sec. {{ cargaSeleccionada?.seccionLetra }}
+        </p>
+      </div>
+      <button class="modal-close" (click)="cerrarModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorModal">{{ errorModal }}</div>
+
+      <!-- Docente y Período -->
+      <div class="section-label">Docente y Período</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Docente</label>
+          <select [(ngModel)]="formDocenteId">
+            <option [ngValue]="null">-- Sin asignar --</option>
+            <option *ngFor="let d of docentes" [ngValue]="d.id">{{ d.nombreCompleto }}</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Período Lectivo</label>
+          <input type="text" placeholder="Ej. 2025-I" [(ngModel)]="formPeriodo">
+        </div>
+      </div>
+
+      <!-- Horario -->
+      <div class="section-label mt">
+        <span>Bloques Horarios</span>
+        <button class="btn-add-bloque" type="button" (click)="agregarBloque()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Agregar bloque
+        </button>
+      </div>
+
+      <div class="horarios-editor">
+        <div class="bloque" *ngFor="let h of formHorarios; let i = index">
+          <select [(ngModel)]="h.diaSemana" [name]="'dia_' + i">
+            <option *ngFor="let d of dias" [value]="d">{{ d }}</option>
+          </select>
+          <input type="time" [(ngModel)]="h.horaInicio" [name]="'ini_' + i">
+          <span class="a">a</span>
+          <input type="time" [(ngModel)]="h.horaFin" [name]="'fin_' + i">
+          <button class="btn-rm-bloque" type="button" (click)="quitarBloque(i)" title="Quitar bloque">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <p class="hint" *ngIf="formHorarios.length === 0">
+          Sin bloques horarios. Agrega al menos uno.
+        </p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn primary" (click)="guardar()" [disabled]="guardando">
+        <div class="btn-spinner" *ngIf="guardando"></div>
+        {{ guardando ? 'Guardando...' : 'Guardar Asignación' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONFIRMAR QUITAR ════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="confirmQuitarId !== null" (click)="cancelarQuitar()">
+  <div class="confirm-card" (click)="$event.stopPropagation()">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+    <h3>¿Quitar docente asignado?</h3>
+    <p>Se eliminará el docente y todos los bloques horarios de este curso. Esta acción se puede deshacer asignando nuevamente.</p>
+    <div class="confirm-actions">
+      <button class="btn secondary" (click)="cancelarQuitar()">Cancelar</button>
+      <button class="btn danger" (click)="confirmarQuitar()">Sí, quitar</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,66 @@
+<div class="login-page">
+  <header class="topbar">
+    <div class="brand">SISTEMA KUMAMOTO</div>
+    <a class="support-link" href="#" aria-label="Soporte Tecnico">Soporte Tecnico</a>
+  </header>
+
+  <main class="content-grid">
+    <section class="hero">
+      <p class="hero-kicker">Portal Institucional</p>
+      <h1>Gestion Academica de Excelencia</h1>
+      <p>
+        Bienvenidos al ecosistema digital del Colegio Kumamoto. Administra procesos
+        escolares con orden, claridad y acompanamiento para toda la comunidad educativa.
+      </p>
+    </section>
+
+    <section class="login-card" aria-label="Formulario de ingreso">
+      <h2>Iniciar Sesion</h2>
+      <p class="card-subtitle">Ingresa con tus credenciales institucionales.</p>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+        <div class="field" [class.invalid]="loginForm.get('correo')?.invalid && loginForm.get('correo')?.touched">
+          <label for="correo">Correo</label>
+          <input
+            id="correo"
+            type="email"
+            formControlName="correo"
+            placeholder="correo@colegio.edu"
+            autocomplete="email"
+          />
+          <small *ngIf="loginForm.get('correo')?.touched && loginForm.get('correo')?.hasError('required')">
+            El correo es obligatorio.
+          </small>
+          <small *ngIf="loginForm.get('correo')?.touched && loginForm.get('correo')?.hasError('email')">
+            Ingresa un correo valido.
+          </small>
+        </div>
+
+        <div class="field" [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+          <label for="password">Contrasena</label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            placeholder="Tu contrasena"
+            autocomplete="current-password"
+          />
+          <small *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')">
+            La contrasena es obligatoria.
+          </small>
+          <small *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('minlength')">
+            Debe tener al menos 6 caracteres.
+          </small>
+        </div>
+
+        <p class="form-error" *ngIf="mensajeError">{{ mensajeError }}</p>
+
+        <button type="submit" [disabled]="loginForm.invalid || cargando">
+          {{ cargando ? 'Ingresando...' : 'Ingresar' }}
+        </button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="page-footer">© 2026 Colegio Kumamoto. Todos los derechos reservados.</footer>
+</div>

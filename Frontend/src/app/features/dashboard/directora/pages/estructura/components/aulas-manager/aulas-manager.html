@@ -1,0 +1,150 @@
+<!-- Estado de carga / error -->
+<div *ngIf="loading" class="state-message loading">
+  <div class="spinner"></div>
+  <span>Cargando aulas desde la base de datos...</span>
+</div>
+
+<div *ngIf="errorMsg && !loading" class="state-message error">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+  <span>{{ errorMsg }}</span>
+</div>
+
+<!-- Contenido principal -->
+<div class="manager-layout" *ngIf="!loading && !errorMsg">
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" placeholder="Buscar por grado, sección o descripción..." [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
+    </div>
+    <button class="btn primary" (click)="abrirModalCrear()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      Nueva Aula
+    </button>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card list-card">
+    <div class="card-header">
+      <h2>Aulas Registradas <span class="count-badge">{{ aulas.length }}</span></h2>
+    </div>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Grado</th>
+            <th>Sección</th>
+            <th>Descripción</th>
+            <th>Capacidad</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let aula of aulasFiltradas" [class.row-inactiva]="aula.estado === 0">
+            <td class="bold">{{ aula.gradoNombre }}</td>
+            <td>
+              <span class="seccion-badge">{{ aula.seccionLetra }}</span>
+            </td>
+            <td class="text-muted">{{ aula.descripcion || '—' }}</td>
+            <td>{{ aula.capacidad }} alumnos</td>
+            <td>
+              <span class="badge" [class.activo]="aula.estado === 1" [class.inactivo]="aula.estado === 0">
+                {{ aula.estado === 1 ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="actions-cell">
+              <!-- Editar -->
+              <button class="action-btn edit" title="Editar" (click)="abrirModalEditar(aula)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              </button>
+              <!-- Toggle activo/inactivo -->
+              <button class="action-btn toggle" [class.active]="aula.estado === 1" [title]="aula.estado === 1 ? 'Desactivar' : 'Activar'" (click)="toggleEstado(aula)">
+                <svg *ngIf="aula.estado === 1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64A9 9 0 1 1 5.64 19.36"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+                <svg *ngIf="aula.estado === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+              </button>
+              <!-- Eliminar -->
+              <button class="action-btn delete" title="Eliminar" (click)="pedirConfirmarEliminar(aula.id)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4h6v2"></path></svg>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="aulasFiltradas.length === 0">
+            <td colspan="6" class="empty-row">No se encontraron aulas.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal Crear / Editar ── -->
+<div class="modal-overlay" *ngIf="modalAbierto" (click)="cerrarModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ modoEdicion ? 'Editar Aula' : 'Nueva Aula' }}</h3>
+      <button class="modal-close" (click)="cerrarModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorModal">
+        {{ errorModal }}
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Grado <span class="required">*</span></label>
+          <select [(ngModel)]="form.gradoId">
+            <option [value]="0" disabled>Selecciona un grado</option>
+            <option *ngFor="let g of grados" [value]="g.id">{{ g.nombre }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Sección <span class="required">*</span></label>
+          <select [(ngModel)]="form.seccionId">
+            <option [value]="0" disabled>Selecciona una sección</option>
+            <option *ngFor="let s of secciones" [value]="s.id">{{ s.letra }}</option>
+          </select>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Descripción (opcional)</label>
+          <input type="text" placeholder="Ej. Pabellón A - Aula 101" [(ngModel)]="form.descripcion">
+        </div>
+
+        <div class="form-group">
+          <label>Capacidad máxima <span class="required">*</span></label>
+          <input type="number" min="1" max="60" [(ngModel)]="form.capacidad">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn primary" (click)="guardar()" [disabled]="guardando">
+        <div class="btn-spinner" *ngIf="guardando"></div>
+        <svg *ngIf="!guardando" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        {{ guardando ? 'Guardando...' : 'Guardar Aula' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Confirmación Eliminar ── -->
+<div class="modal-overlay" *ngIf="confirmEliminarId !== null" (click)="cancelarEliminar()">
+  <div class="confirm-card" (click)="$event.stopPropagation()">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M9 6V4h6v2"></path></svg>
+    </div>
+    <h3>¿Eliminar esta aula?</h3>
+    <p>El aula quedará desactivada y no aparecerá en los listados activos. Podrás reactivarla después.</p>
+    <div class="confirm-actions">
+      <button class="btn secondary" (click)="cancelarEliminar()">Cancelar</button>
+      <button class="btn danger" (click)="confirmarEliminar()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>

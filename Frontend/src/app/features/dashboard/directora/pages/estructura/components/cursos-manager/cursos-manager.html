@@ -1,0 +1,185 @@
+<div class="cursos-layout">
+
+  <!-- ══ HEADER ══════════════════════════════════════════════════════════ -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="page-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      </div>
+      <div>
+        <h1>Gestión de Cursos</h1>
+        <p class="sub">{{ cursos.length }} cursos registrados</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar curso..." [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
+      </div>
+      <button class="btn primary" (click)="abrirModalCrear()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nuevo Curso
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ ESTADO CARGA ══════════════════════════════════════════════════ -->
+  <div *ngIf="loading" class="state-block">
+    <div class="spinner lg"></div>
+    <p>Cargando cursos...</p>
+  </div>
+
+  <div *ngIf="errorLoad" class="state-block error">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <p>{{ errorLoad }}</p>
+    <button class="btn secondary sm" (click)="cargarCursos()">Reintentar</button>
+  </div>
+
+  <!-- ══ TABLA ════════════════════════════════════════════════════════════ -->
+  <div class="card table-card" *ngIf="!loading && !errorLoad">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Curso</th>
+            <th>Aulas asignadas</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="cursosFiltrados.length === 0">
+            <td colspan="4" class="empty-row">No hay cursos registrados.</td>
+          </tr>
+          <tr *ngFor="let c of cursosFiltrados" [class.row-inactivo]="c.estado === 0">
+            <!-- Nombre -->
+            <td>
+              <div class="curso-nombre">
+                <div class="curso-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                </div>
+                <span>{{ c.nombre }}</span>
+              </div>
+            </td>
+
+            <!-- Aulas asignadas -->
+            <td>
+              <div class="aulas-chips">
+                <span *ngIf="c.aulas.length === 0" class="no-aulas">Sin asignar</span>
+                <div class="aula-chip" *ngFor="let a of c.aulas">
+                  <span>{{ a.gradoNombre }} · {{ a.seccionLetra }}</span>
+                  <button class="chip-remove" title="Quitar asignación" (click)="removerAsignacion(a.cargaId)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+                <button class="add-aula-btn" title="Asignar a un aula" (click)="abrirModalAsignar(c)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Asignar aula
+                </button>
+              </div>
+            </td>
+
+            <!-- Estado -->
+            <td>
+              <span class="badge" [class.activo]="c.estado === 1" [class.inactivo]="c.estado === 0">
+                {{ c.estado === 1 ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+
+            <!-- Acciones -->
+            <td>
+              <div class="action-group">
+                <button class="action-btn edit" title="Editar" (click)="abrirModalEditar(c)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="action-btn toggle" [class.on]="c.estado === 1" [title]="c.estado === 1 ? 'Desactivar' : 'Activar'" (click)="toggleEstado(c)">
+                  <svg *ngIf="c.estado === 1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64A9 9 0 1 1 5.64 19.36"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                  <svg *ngIf="c.estado === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                </button>
+                <button class="action-btn delete" title="Eliminar" (click)="pedirEliminar(c.id)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL CURSO ══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="modalCurso" (click)="cerrarModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ modoEdicion ? 'Editar Curso' : 'Nuevo Curso' }}</h3>
+      <button class="modal-close" (click)="cerrarModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorModal">{{ errorModal }}</div>
+      <div class="form-group">
+        <label>Nombre del Curso <span class="required">*</span></label>
+        <input type="text" placeholder="Ej. Matemática" [(ngModel)]="nombreCurso" (keyup.enter)="guardar()">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn primary" (click)="guardar()" [disabled]="guardando">
+        <div class="btn-spinner" *ngIf="guardando"></div>
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL ASIGNAR AULA ═══════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="modalAsignar" (click)="cerrarModalAsignar()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h3>Asignar Aula</h3>
+        <p class="modal-sub">Curso: <strong>{{ cursoAsignandoNombre }}</strong></p>
+      </div>
+      <button class="modal-close" (click)="cerrarModalAsignar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorAsignar">{{ errorAsignar }}</div>
+      <div class="form-group">
+        <label>Aula (Grado + Sección) <span class="required">*</span></label>
+        <select [(ngModel)]="aulaSeleccionadaId">
+          <option [ngValue]="null" disabled>-- Seleccione un aula --</option>
+          <option *ngFor="let a of aulasNoAsignadas" [ngValue]="a.id">
+            {{ a.gradoNombre }} - Sección {{ a.seccionLetra }}{{ a.descripcion ? ' (' + a.descripcion + ')' : '' }}
+          </option>
+        </select>
+        <span *ngIf="aulasNoAsignadas.length === 0" class="hint">Este curso ya está asignado a todas las aulas activas.</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="cerrarModalAsignar()">Cancelar</button>
+      <button class="btn primary" (click)="asignarAula()" [disabled]="asignando || !aulaSeleccionadaId">
+        <div class="btn-spinner" *ngIf="asignando"></div>
+        {{ asignando ? 'Asignando...' : 'Asignar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONFIRMAR ELIMINAR ════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="confirmEliminarId !== null" (click)="cancelarEliminar()">
+  <div class="confirm-card" (click)="$event.stopPropagation()">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4h6v2"/></svg>
+    </div>
+    <h3>¿Eliminar este curso?</h3>
+    <p>El curso quedará inactivo y se eliminarán sus asignaciones. Podrás reactivarlo después.</p>
+    <div class="confirm-actions">
+      <button class="btn secondary" (click)="cancelarEliminar()">Cancelar</button>
+      <button class="btn danger" (click)="confirmarEliminar()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>

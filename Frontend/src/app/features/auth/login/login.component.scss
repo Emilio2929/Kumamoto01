@@ -1,0 +1,225 @@
+$primary-color: #1f5ea8;
+$bg-color: #f4f7fb;
+$surface-color: #ffffff;
+$text-color: #1f2937;
+$text-muted: #5f6b7a;
+$border-color: #dbe3ef;
+$error-color: #c62828;
+
+:host {
+  display: block;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.login-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% 20%, rgba($primary-color, 0.15), transparent 45%),
+    radial-gradient(circle at 80% 85%, rgba($primary-color, 0.08), transparent 40%),
+    $bg-color;
+  color: $text-color;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.topbar {
+  height: 72px;
+  padding: 0 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .brand {
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: $primary-color;
+  }
+
+  .support-link {
+    color: $text-muted;
+    text-decoration: none;
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s ease, border-color 0.2s ease;
+
+    &:hover,
+    &:focus-visible {
+      color: $primary-color;
+      border-color: $primary-color;
+      outline: none;
+    }
+  }
+}
+
+.content-grid {
+  width: min(1120px, 92%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.hero {
+  h1 {
+    margin: 0.5rem 0 1rem;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    color: #17324d;
+  }
+
+  p {
+    margin: 0;
+    max-width: 58ch;
+    font-size: 1.05rem;
+    color: $text-muted;
+  }
+
+  .hero-kicker {
+    color: $primary-color;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.78rem;
+  }
+}
+
+.login-card {
+  background: $surface-color;
+  border: 1px solid rgba($border-color, 0.8);
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(16, 45, 79, 0.14);
+  padding: 2rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1.6rem;
+    color: #17324d;
+  }
+
+  .card-subtitle {
+    margin: 0.35rem 0 1.5rem;
+    color: $text-muted;
+    font-size: 0.96rem;
+  }
+
+  form {
+    display: grid;
+    gap: 1rem;
+  }
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+
+  label {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #244766;
+  }
+
+  input {
+    height: 44px;
+    border: 1px solid $border-color;
+    border-radius: 10px;
+    padding: 0 0.85rem;
+    font-size: 0.96rem;
+    color: $text-color;
+    background: #fcfdff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &::placeholder {
+      color: #95a3b8;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $primary-color;
+      box-shadow: 0 0 0 4px rgba($primary-color, 0.15);
+    }
+  }
+
+  small {
+    min-height: 1.05rem;
+    color: $error-color;
+    font-size: 0.78rem;
+  }
+
+  &.invalid input {
+    border-color: $error-color;
+    background: #fff9f9;
+  }
+}
+
+.form-error {
+  margin: 0;
+  font-size: 0.86rem;
+  color: $error-color;
+}
+
+button {
+  margin-top: 0.25rem;
+  height: 46px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(120deg, #1f5ea8, #2e76ca);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 18px rgba($primary-color, 0.24);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+.page-footer {
+  padding: 1rem 1.5rem 1.4rem;
+  text-align: center;
+  color: $text-muted;
+  font-size: 0.84rem;
+}
+
+@media (max-width: 980px) {
+  .topbar {
+    padding: 0 1.2rem;
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: 1.6rem;
+    padding: 1rem 0 2rem;
+  }
+
+  .hero {
+    text-align: center;
+
+    p {
+      margin: 0 auto;
+    }
+  }
+}
+
+@media (max-width: 560px) {
+  .topbar {
+    height: auto;
+    padding: 1rem;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .login-card {
+    padding: 1.25rem;
+    border-radius: 14px;
+  }
+}

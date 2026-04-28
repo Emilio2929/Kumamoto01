@@ -1,0 +1,130 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.card {
+  background: var(--bg-surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  margin-top: 1.5rem;
+
+  .card-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .view-all-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .card-body {
+    padding: 0; /* Remove padding for edge-to-edge table */
+  }
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.incidents-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+
+  th {
+    padding: 1rem 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background-color: #F9FAFB;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  td {
+    padding: 1rem 1.5rem;
+    font-size: 0.875rem;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  tbody tr {
+    transition: background-color 0.2s;
+    
+    &:hover {
+      background-color: #F9FAFB;
+    }
+    
+    &:last-child td {
+      border-bottom: none;
+    }
+  }
+}
+
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  
+  &.warning {
+    background-color: #FEF3C7;
+    color: #D97706;
+  }
+  
+  &.info {
+    background-color: #DBEAFE;
+    color: #2563EB;
+  }
+  
+  &.error {
+    background-color: #FEE2E2;
+    color: #DC2626;
+  }
+}
+
+.status {
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+  }
+  
+  &.pending {
+    color: var(--risk-medium);
+    &::before { background-color: var(--risk-medium); }
+  }
+  
+  &.resolved {
+    color: var(--risk-low);
+    &::before { background-color: var(--risk-low); }
+  }
+}

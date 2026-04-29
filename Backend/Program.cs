@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Kumamoto.API.Data;
 using Kumamoto.API.Endpoints;
 using Kumamoto.API.Services;
@@ -7,6 +8,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── JSON Configuration ──────────────────────────────────────────────────────
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 // ── Swagger ────────────────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
@@ -45,6 +52,7 @@ builder.Services.AddAuthorization();
 
 // ── Servicios propios ──────────────────────────────────────────────────────
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<RiesgoService>();
 
 // ──────────────────────────────────────────────────────────────────────────
 var app = builder.Build();
@@ -70,6 +78,10 @@ app.MapPadresEndpoints();
 app.MapMatriculaEndpoints();
 app.MapDocentesEndpoints();
 app.MapCargaAcademicaEndpoints();
+app.MapAuxiliarEndpoints();
+app.MapAuxiliaresAdminEndpoints();
+app.MapAsignacionAuxiliarEndpoints();
+app.MapIncidenciasEndpoints();
 
 
 app.Run();

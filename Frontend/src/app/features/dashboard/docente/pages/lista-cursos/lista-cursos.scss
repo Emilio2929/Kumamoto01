@@ -1,0 +1,173 @@
+.page-header {
+  margin-bottom: 1.25rem;
+
+  h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 0.25rem;
+  }
+
+  p {
+    color: var(--text-muted);
+  }
+}
+
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.course-card {
+  background: var(--bg-surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.course-top {
+  padding: 1rem 1rem 0.75rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.course-title {
+  min-width: 0;
+
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 0.15rem;
+  }
+
+  p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+}
+
+.pill {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.08);
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+
+.course-body {
+  padding: 0.9rem 1rem 1rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.meta-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  .label {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .value {
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: right;
+  }
+}
+
+.horarios {
+  display: grid;
+  gap: 0.5rem;
+
+  .label {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  font-size: 0.78rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: #F3F4F6;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.empty-state {
+  background: var(--bg-surface);
+  border-radius: 16px;
+  border: 1px dashed var(--border-color);
+  padding: 1.5rem;
+  text-align: center;
+
+  h3 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  p {
+    color: var(--text-muted);
+  }
+}
+
+.state-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 30px;
+  background: var(--bg-surface);
+  border-radius: 16px;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-sm);
+
+  &.loading {
+    color: var(--text-muted);
+  }
+
+  &.error {
+    color: var(--risk-high);
+    background-color: rgba(239, 68, 68, 0.1);
+
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: var(--primary);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+

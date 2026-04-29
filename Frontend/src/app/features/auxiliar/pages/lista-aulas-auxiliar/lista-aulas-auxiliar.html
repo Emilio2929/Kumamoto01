@@ -1,0 +1,59 @@
+<div class="page-header">
+  <h1>Mis Aulas</h1>
+  <p>Supervisión diaria y verificación de asistencia.</p>
+</div>
+
+<div *ngIf="loading" class="state-message loading">
+  <div class="spinner"></div>
+  <span>Cargando aulas asignadas...</span>
+</div>
+
+<div *ngIf="errorMsg" class="state-message error">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="12" y1="8" x2="12" y2="12"></line>
+    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+  </svg>
+  <span>{{ errorMsg }}</span>
+</div>
+
+<div *ngIf="!loading && !errorMsg && aulas.length === 0" class="empty-state">
+  <h3>Sin aulas asignadas</h3>
+  <p>Contacta a Dirección para asignar aulas a tu usuario auxiliar.</p>
+</div>
+
+<div class="grid" *ngIf="!loading && !errorMsg && aulas.length > 0">
+  <article class="card" *ngFor="let a of aulas; trackBy: trackByAulaId">
+    <div class="top">
+      <div class="title">
+        <h3>{{ a.gradoNombre }} · Sección {{ a.seccionLetra }}</h3>
+        <p>{{ a.aulaDescripcion || '—' }}</p>
+        
+        <!-- Info del curso actual -->
+        <div class="current-course-info" *ngIf="a.cursoActual">
+          <span class="course-tag">📖 {{ a.cursoActual }}</span>
+          <span class="time-tag">⏰ {{ a.horarioClase }}</span>
+        </div>
+        <div class="no-course-info" *ngIf="!a.cursoActual">
+          <span class="muted-tag">🚫 Sin clase programada</span>
+        </div>
+      </div>
+      <span class="semaforo" [class]="estadoClass(a.estadoAsistenciaHoy)">{{ estadoLabel(a.estadoAsistenciaHoy) }}</span>
+    </div>
+
+    <div class="actions">
+      <button
+        class="btn primary"
+        *ngIf="a.estadoAsistenciaHoy === 'Pendiente'"
+        (click)="irAsistencia(a.aulaId)"
+      >
+        ⚠️ Tomar Asistencia (Suplencia)
+      </button>
+
+      <div class="readonly" *ngIf="a.estadoAsistenciaHoy !== 'Pendiente'">
+        {{ estadoLabel(a.estadoAsistenciaHoy) }}
+      </div>
+    </div>
+  </article>
+</div>
+

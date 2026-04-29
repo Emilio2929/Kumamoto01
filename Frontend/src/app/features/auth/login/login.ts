@@ -10,7 +10,7 @@ import { AuthService } from '../../../core/services/auth';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss']
+  styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent {
   loginForm: FormGroup;
@@ -51,7 +51,7 @@ export class LoginComponent {
           } else if (rol === 'padre') {
             this.router.navigate(['/dashboard/padre']);
           } else if (rol === 'auxiliar') {
-            this.router.navigate(['/dashboard/docente']);
+            this.router.navigate(['/dashboard/auxiliar']);
           } else {
             this.router.navigate(['/dashboard/directora']);
           }

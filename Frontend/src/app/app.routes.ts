@@ -53,11 +53,83 @@ export const routes: Routes = [
 	},
 	{
 		path: 'dashboard/docente',
-		loadComponent: () => import('./features/dashboard/docente/docente').then((m) => m.Docente),
+		loadComponent: () =>
+			import('./features/dashboard/docente/docente').then((m) => m.Docente),
+		children: [
+			{
+				path: '',
+				redirectTo: 'resumen',
+				pathMatch: 'full',
+			},
+			{
+				path: 'resumen',
+				loadComponent: () =>
+					import('./features/dashboard/docente/pages/dashboard-docente/dashboard-docente').then(
+						(m) => m.DashboardDocenteComponent
+					),
+			},
+			{
+				path: 'mis-cursos',
+				loadComponent: () =>
+					import('./features/dashboard/docente/pages/lista-cursos/lista-cursos').then(
+						(m) => m.ListaCursosComponent
+					),
+			},
+			{
+				path: 'asistencia',
+				loadComponent: () =>
+					import('./features/dashboard/docente/pages/placeholder/placeholder').then(
+						(m) => m.PlaceholderDocenteComponent
+					),
+				data: { title: 'Registro de Asistencia', description: 'Próximamente: toma de asistencia mobile-first.' },
+			},
+			{
+				path: 'calificaciones',
+				loadComponent: () =>
+					import('./features/dashboard/docente/pages/placeholder/placeholder').then(
+						(m) => m.PlaceholderDocenteComponent
+					),
+				data: { title: 'Calificaciones', description: 'Próximamente: grilla dinámica por competencias.' },
+			},
+			{
+				path: 'avisos',
+				loadComponent: () =>
+					import('./features/dashboard/docente/pages/placeholder/placeholder').then(
+						(m) => m.PlaceholderDocenteComponent
+					),
+				data: { title: 'Mis Avisos', description: 'Próximamente: avisos y comunicaciones.' },
+			},
+		],
 	},
 	{
 		path: 'dashboard/padre',
 		loadComponent: () => import('./features/dashboard/padre/padre').then((m) => m.Padre),
+	},
+	{
+		path: 'dashboard/auxiliar',
+		loadComponent: () =>
+			import('./features/auxiliar').then((m) => m.AuxiliarLayoutComponent),
+		children: [
+			{
+				path: '',
+				redirectTo: 'aulas',
+				pathMatch: 'full',
+			},
+			{
+				path: 'aulas',
+				loadComponent: () =>
+					import('./features/auxiliar/pages/lista-aulas-auxiliar').then(
+						(m) => m.ListaAulasAuxiliarComponent
+					),
+			},
+			{
+				path: 'asistencia/:aulaId',
+				loadComponent: () =>
+					import(
+						'./features/auxiliar/pages/registro-asistencia-auxiliar'
+					).then((m) => m.RegistroAsistenciaAuxiliarComponent),
+			},
+		],
 	},
 	{
 		path: '**',

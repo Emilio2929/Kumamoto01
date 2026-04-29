@@ -14,6 +14,8 @@ public class KumamotoDbContext : DbContext
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Estudiante> Estudiantes { get; set; }
     public DbSet<Asistencia> Asistencias { get; set; }
+    public DbSet<AsignacionAuxiliar> AsignacionesAuxiliar { get; set; }
+    public DbSet<Incidencia> Incidencias { get; set; }
     public DbSet<AlertaRiesgo> AlertasRiesgo { get; set; }
     public DbSet<Curso> Cursos { get; set; }
     public DbSet<CargaAcademica> CargasAcademicas { get; set; }
@@ -31,6 +33,8 @@ public class KumamotoDbContext : DbContext
         modelBuilder.Entity<Usuario>().ToTable("usuario");
         modelBuilder.Entity<Estudiante>().ToTable("estudiante");
         modelBuilder.Entity<Asistencia>().ToTable("asistencia");
+        modelBuilder.Entity<AsignacionAuxiliar>().ToTable("asignacion_auxiliar");
+        modelBuilder.Entity<Incidencia>().ToTable("incidencia");
         modelBuilder.Entity<AlertaRiesgo>().ToTable("alerta_riesgo");
         modelBuilder.Entity<Curso>().ToTable("curso");
         modelBuilder.Entity<CargaAcademica>().ToTable("carga_academica");
@@ -71,5 +75,50 @@ public class KumamotoDbContext : DbContext
             .WithMany(ca => ca.Horarios)
             .HasForeignKey(h => h.CargaId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // AsignacionAuxiliar → Auxiliar(Usuario), Aula
+        modelBuilder.Entity<AsignacionAuxiliar>()
+            .HasOne(a => a.Auxiliar)
+            .WithMany()
+            .HasForeignKey(a => a.AuxiliarId);
+
+        modelBuilder.Entity<AsignacionAuxiliar>()
+            .HasOne(a => a.Aula)
+            .WithMany()
+            .HasForeignKey(a => a.AulaId);
+
+        // Asistencia → Estudiante, RegistradoPor, AsignacionAuxiliar (nullable), CargaAcademica (nullable)
+        modelBuilder.Entity<Asistencia>()
+            .HasOne(a => a.Estudiante)
+            .WithMany()
+            .HasForeignKey(a => a.EstudianteId);
+
+        modelBuilder.Entity<Asistencia>()
+            .HasOne(a => a.RegistradoPor)
+            .WithMany()
+            .HasForeignKey(a => a.RegistradoPorId);
+
+        modelBuilder.Entity<Asistencia>()
+            .HasOne(a => a.AsignacionAuxiliar)
+            .WithMany()
+            .HasForeignKey(a => a.AsignacionAuxiliarId)
+            .IsRequired(false);
+
+        modelBuilder.Entity<Asistencia>()
+            .HasOne(a => a.CargaAcademica)
+            .WithMany()
+            .HasForeignKey(a => a.CargaAcademicaId)
+            .IsRequired(false);
+
+        // Incidencia → Estudiante, RegistradoPor
+        modelBuilder.Entity<Incidencia>()
+            .HasOne(i => i.Estudiante)
+            .WithMany()
+            .HasForeignKey(i => i.EstudianteId);
+
+        modelBuilder.Entity<Incidencia>()
+            .HasOne(i => i.RegistradoPor)
+            .WithMany()
+            .HasForeignKey(i => i.RegistradoPorId);
     }
 }

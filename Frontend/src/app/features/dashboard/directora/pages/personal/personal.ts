@@ -7,6 +7,12 @@ import {
   CreateDocenteDto,
   UpdateDocenteDto,
 } from '../../../../../core/services/docentes';
+import {
+  AuxiliaresAdminService,
+  AuxiliarDetalleDto,
+  CreateAuxiliarDto,
+  UpdateAuxiliarDto,
+} from '../../../../../core/services/auxiliares-admin';
 
 @Component({
   selector: 'app-personal',
@@ -18,6 +24,7 @@ import {
 })
 export class Personal implements OnInit {
   private svc = inject(DocentesService);
+  private auxSvc = inject(AuxiliaresAdminService);
   private cdr = inject(ChangeDetectorRef);
 
   // ── Tab activo ─────────────────────────────────────────────
@@ -25,6 +32,7 @@ export class Personal implements OnInit {
   setTab(tab: 'docentes' | 'auxiliares' | 'admin'): void {
     this.activeTab = tab;
     if (tab === 'docentes' && this.docentes.length === 0) this.cargar();
+    if (tab === 'auxiliares' && this.auxiliares.length === 0) this.cargarAuxiliares();
   }
 
   // ── Lista Docentes ─────────────────────────────────────────
@@ -59,6 +67,34 @@ export class Personal implements OnInit {
 
   // ── Confirmar eliminar ─────────────────────────────────────
   confirmEliminarId: number | null = null;
+  confirmEliminarTipo: 'docente' | 'auxiliar' = 'docente';
+
+  // ── Gestión Auxiliares ─────────────────────────────────────
+  auxiliares: AuxiliarDetalleDto[] = [];
+  auxiliaresFiltrados: AuxiliarDetalleDto[] = [];
+  loadingAux = false;
+  errorLoadAux: string | null = null;
+  busquedaAux = '';
+
+  modalCrearAux = false;
+  formCrearAux: CreateAuxiliarDto = { dni: '', nombres: '', apellidos: '', telefono: null };
+  errorCrearAux: string | null = null;
+  guardandoCrearAux = false;
+  credencialesAux: { correo: string; clave: string } | null = null;
+
+  modalEditarAux = false;
+  auxEditandoId: number | null = null;
+  formEditarAux: UpdateAuxiliarDto = { nombres: '', apellidos: '', correo: null, telefono: null };
+  errorEditarAux: string | null = null;
+  guardandoEditarAux = false;
+
+  modalClaveAux = false;
+  auxClaveId: number | null = null;
+  auxClaveNombre = '';
+  nuevaClaveAux = '';
+  mostrarClaveAux = false;
+  errorClaveAux: string | null = null;
+  guardandoClaveAux = false;
 
   ngOnInit(): void { this.cargar(); }
 
@@ -226,12 +262,170 @@ export class Personal implements OnInit {
     });
   }
 
-  pedirEliminar(id: number): void { this.confirmEliminarId = id; this.cdr.markForCheck(); }
+  pedirEliminar(id: number): void { 
+    this.confirmEliminarId = id; 
+    this.confirmEliminarTipo = 'docente';
+    this.cdr.markForCheck(); 
+  }
+  
+  pedirEliminarAux(id: number): void {
+    this.confirmEliminarId = id;
+    this.confirmEliminarTipo = 'auxiliar';
+    this.cdr.markForCheck();
+  }
+
   cancelarEliminar(): void { this.confirmEliminarId = null; this.cdr.markForCheck(); }
+  
   confirmarEliminar(): void {
     if (this.confirmEliminarId === null) return;
-    this.svc.delete(this.confirmEliminarId).subscribe({
-      next: () => { this.confirmEliminarId = null; this.cargar(); },
+    
+    if (this.confirmEliminarTipo === 'docente') {
+      this.svc.delete(this.confirmEliminarId).subscribe({
+        next: () => { this.confirmEliminarId = null; this.cargar(); },
+      });
+    } else {
+      this.auxSvc.delete(this.confirmEliminarId).subscribe({
+        next: () => { this.confirmEliminarId = null; this.cargarAuxiliares(); },
+      });
+    }
+  }
+
+  // ── Lógica Auxiliares ───────────────────────────────────────
+  cargarAuxiliares(): void {
+    this.loadingAux = true;
+    this.errorLoadAux = null;
+    this.auxSvc.getAll().subscribe({
+      next: (data) => {
+        this.auxiliares = data;
+        this.filtrarAux();
+        this.loadingAux = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.loadingAux = false;
+        this.errorLoadAux = `Error ${err?.status}: No se pudieron cargar los auxiliares.`;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  filtrarAux(): void {
+    const q = this.busquedaAux.toLowerCase().trim();
+    this.auxiliaresFiltrados = q
+      ? this.auxiliares.filter(a =>
+          a.nombres.toLowerCase().includes(q) ||
+          a.apellidos.toLowerCase().includes(q) ||
+          a.dni.includes(q)
+        )
+      : [...this.auxiliares];
+  }
+
+  onBusquedaAux(): void { this.filtrarAux(); }
+
+  abrirModalCrearAux(): void {
+    this.formCrearAux = { dni: '', nombres: '', apellidos: '', telefono: null };
+    this.errorCrearAux = null;
+    this.credencialesAux = null;
+    this.modalCrearAux = true;
+    this.cdr.markForCheck();
+  }
+
+  cerrarModalCrearAux(): void {
+    this.modalCrearAux = false;
+    this.credencialesAux = null;
+    this.cdr.markForCheck();
+  }
+
+  crearAuxiliar(): void {
+    if (!this.formCrearAux.dni.trim() || !this.formCrearAux.nombres.trim() || !this.formCrearAux.apellidos.trim()) {
+      this.errorCrearAux = 'DNI, nombres y apellidos son requeridos.';
+      return;
+    }
+    this.guardandoCrearAux = true;
+    this.errorCrearAux = null;
+
+    this.auxSvc.create(this.formCrearAux).subscribe({
+      next: (res) => {
+        this.guardandoCrearAux = false;
+        this.credencialesAux = { correo: res.correo, clave: res.claveGenerada };
+        this.cargarAuxiliares();
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.guardandoCrearAux = false;
+        this.errorCrearAux = err?.error?.mensaje ?? 'Error al registrar.';
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  abrirModalEditarAux(a: AuxiliarDetalleDto): void {
+    this.auxEditandoId = a.id;
+    this.formEditarAux = { nombres: a.nombres, apellidos: a.apellidos, correo: a.correo, telefono: a.telefono };
+    this.errorEditarAux = null;
+    this.modalEditarAux = true;
+    this.cdr.markForCheck();
+  }
+
+  cerrarModalEditarAux(): void { this.modalEditarAux = false; this.cdr.markForCheck(); }
+
+  guardarEdicionAux(): void {
+    if (!this.formEditarAux.nombres.trim() || !this.formEditarAux.apellidos.trim()) {
+      this.errorEditarAux = 'Nombres y apellidos son requeridos.';
+      return;
+    }
+    this.guardandoEditarAux = true;
+    this.errorEditarAux = null;
+    this.auxSvc.update(this.auxEditandoId!, this.formEditarAux).subscribe({
+      next: () => {
+        this.cargarAuxiliares();
+        this.guardandoEditarAux = false;
+        this.modalEditarAux = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.guardandoEditarAux = false;
+        this.errorEditarAux = err?.error?.mensaje ?? 'Error al actualizar.';
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  abrirModalClaveAux(a: AuxiliarDetalleDto): void {
+    this.auxClaveId = a.id;
+    this.auxClaveNombre = `${a.nombres} ${a.apellidos}`;
+    this.nuevaClaveAux = '';
+    this.mostrarClaveAux = false;
+    this.errorClaveAux = null;
+    this.modalClaveAux = true;
+    this.cdr.markForCheck();
+  }
+
+  cerrarModalClaveAux(): void { this.modalClaveAux = false; this.cdr.markForCheck(); }
+
+  guardarClaveAux(): void {
+    if (this.nuevaClaveAux.length < 4) {
+      this.errorClaveAux = 'Mínimo 4 caracteres.';
+      return;
+    }
+    this.guardandoClaveAux = true;
+    this.auxSvc.cambiarClave(this.auxClaveId!, this.nuevaClaveAux).subscribe({
+      next: () => {
+        this.guardandoClaveAux = false;
+        this.modalClaveAux = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.guardandoClaveAux = false;
+        this.errorClaveAux = err?.error?.mensaje ?? 'Error al cambiar clave.';
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  toggleEstadoAux(a: AuxiliarDetalleDto): void {
+    this.auxSvc.toggleEstado(a.id).subscribe({
+      next: (res) => { a.estado = res.estado; this.cdr.markForCheck(); },
     });
   }
 }

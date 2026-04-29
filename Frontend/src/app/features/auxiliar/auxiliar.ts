@@ -1,16 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, inject } from '@angular/core';
 import { Router, RouterModule, RouterOutlet } from '@angular/router';
-import { AuthService } from '../../../core/services/auth';
+import { AuthService } from '../../core/services/auth';
 
 @Component({
-  selector: 'app-docente',
+  selector: 'app-auxiliar-layout',
   standalone: true,
   imports: [CommonModule, RouterModule, RouterOutlet],
-  templateUrl: './docente.html',
-  styleUrls: ['./docente.scss'],
+  templateUrl: './auxiliar.html',
+  styleUrl: './auxiliar.scss',
 })
-export class Docente {
+export class AuxiliarLayoutComponent {
   isSidebarOpen = false;
   isSidebarCollapsed = false;
   isMobile = false;
@@ -31,7 +31,6 @@ export class Docente {
 
   private checkScreenSize() {
     if (typeof window === 'undefined') return;
-
     this.isMobile = window.innerWidth <= 768;
     if (window.innerWidth > 768 && window.innerWidth <= 1200) {
       this.isSidebarCollapsed = true;
@@ -49,9 +48,7 @@ export class Docente {
   }
 
   closeSidebarOnMobile() {
-    if (this.isMobile) {
-      this.isSidebarOpen = false;
-    }
+    if (this.isMobile) this.isSidebarOpen = false;
   }
 
   logout() {
@@ -59,3 +56,4 @@ export class Docente {
     this.router.navigate(['/login']);
   }
 }
+

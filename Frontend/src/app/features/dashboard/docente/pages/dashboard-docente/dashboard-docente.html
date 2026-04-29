@@ -1,0 +1,67 @@
+<div class="dashboard-header">
+  <h1>Panel Docente</h1>
+  <p>Acceso rápido a tu jornada académica.</p>
+</div>
+
+<div *ngIf="loading" class="state-message loading">
+  <div class="spinner"></div>
+  <span>Cargando tu carga académica...</span>
+</div>
+
+<div *ngIf="errorMsg" class="state-message error">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="12" y1="8" x2="12" y2="12"></line>
+    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+  </svg>
+  <span>{{ errorMsg }}</span>
+</div>
+
+<div class="kpi-grid" *ngIf="!loading && !errorMsg">
+  <div class="kpi-card accent-blue">
+    <div class="kpi-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round" style="width:28px;height:28px;">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      </svg>
+    </div>
+    <div class="kpi-content">
+      <span class="kpi-title">Cursos hoy</span>
+      <span class="kpi-value">{{ cursosHoy ?? '—' }}</span>
+    </div>
+  </div>
+
+  <div class="kpi-card accent-red">
+    <div class="kpi-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--risk-high)" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round" style="width:28px;height:28px;">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+        </path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+    </div>
+    <div class="kpi-content">
+      <span class="kpi-title">Alumnos en riesgo (mis secciones)</span>
+      <span class="kpi-value">{{ alumnosRiesgo ?? '—' }}</span>
+    </div>
+  </div>
+
+  <div class="kpi-card accent-green">
+    <div class="kpi-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--risk-low)" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round" style="width:28px;height:28px;">
+        <path d="M20 7h-9"></path>
+        <path d="M14 17H5"></path>
+        <circle cx="17" cy="17" r="3"></circle>
+        <circle cx="7" cy="7" r="3"></circle>
+      </svg>
+    </div>
+    <div class="kpi-content">
+      <span class="kpi-title">Promedio general (carga)</span>
+      <span class="kpi-value">{{ promedioGeneral ?? '—' }}</span>
+    </div>
+  </div>
+</div>
+

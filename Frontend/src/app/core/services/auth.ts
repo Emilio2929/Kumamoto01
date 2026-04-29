@@ -53,4 +53,23 @@ export class AuthService {
     const raw = localStorage.getItem('kumamoto_user');
     return raw ? JSON.parse(raw) : null;
   }
+
+  obtenerUsuarioIdDesdeToken(): number | null {
+    const token = this.obtenerToken();
+    if (!token) return null;
+
+    try {
+      const payloadPart = token.split('.')[1];
+      if (!payloadPart) return null;
+
+      const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+      const json = atob(padded);
+      const payload = JSON.parse(json) as { sub?: string };
+      const sub = payload.sub ? Number(payload.sub) : NaN;
+      return Number.isFinite(sub) ? sub : null;
+    } catch {
+      return null;
+    }
+  }
 }

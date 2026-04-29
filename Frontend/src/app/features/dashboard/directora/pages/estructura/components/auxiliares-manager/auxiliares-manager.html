@@ -1,0 +1,118 @@
+<div class="manager-container">
+  <div class="header-actions">
+    <div class="stats">
+      <div class="stat-item">
+        <span class="val">{{ asignaciones.length }}</span>
+        <span class="lbl">Auxiliares Asignados</span>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar auxiliar o grado..." [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
+      </div>
+      <button class="btn primary" (click)="abrirModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Asignar Aulas
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="state-block">
+    <div class="spinner"></div>
+    <p>Cargando información...</p>
+  </div>
+
+  <div *ngIf="errorLoad" class="state-block error">
+    <p>{{ errorLoad }}</p>
+    <button class="btn secondary sm" (click)="cargar()">Reintentar</button>
+  </div>
+
+  <div class="card table-card" *ngIf="!loading && !errorLoad">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Auxiliar</th>
+          <th>Aulas Asignadas</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="asignacionesFiltradas.length === 0">
+          <td colspan="2" class="empty">No hay asignaciones registradas.</td>
+        </tr>
+        <tr *ngFor="let group of asignacionesFiltradas">
+          <td class="aux-cell">
+            <div class="aux-profile">
+              <div class="avatar">{{ group.auxiliarNombre.charAt(0) }}</div>
+              <div class="info">
+                <span class="name">{{ group.auxiliarNombre }}</span>
+                <span class="sub">{{ group.aulas.length }} aula(s)</span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="aulas-grid">
+              <div class="aula-badge" *ngFor="let au of group.aulas">
+                <div class="badge-content">
+                  <span class="grado">{{ au.gradoNombre }}</span>
+                  <span class="seccion">{{ au.seccionLetra }}</span>
+                </div>
+                <button class="remove-btn" (click)="eliminarAsignacion(au.asignacionId)" title="Quitar asignación">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL ASIGNAR -->
+<div class="modal-overlay" *ngIf="modal" (click)="cerrarModal()">
+  <div class="modal-card wide" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Asignar Aulas a Auxiliar</h3>
+      <button class="close-btn" (click)="cerrarModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorModal">{{ errorModal }}</div>
+      
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label>Seleccionar Auxiliar</label>
+          <select [(ngModel)]="formAuxiliarId">
+            <option [ngValue]="null" disabled>Seleccione un auxiliar...</option>
+            <option *ngFor="let aux of auxiliares" [value]="aux.id">{{ aux.nombres }} {{ aux.apellidos }}</option>
+          </select>
+        </div>
+        <div class="form-group w-100px">
+          <label>Periodo</label>
+          <input type="text" [(ngModel)]="formPeriodo">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Seleccionar Aulas (Puedes marcar varias)</label>
+        <div class="aulas-selection-grid">
+          <div class="selection-item" 
+               *ngFor="let au of aulas" 
+               [class.selected]="isAulaSelected(au.id)"
+               (click)="toggleAula(au.id)">
+            <div class="check-box">
+              <svg *ngIf="isAulaSelected(au.id)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <span class="aula-label">{{ au.label }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn primary" (click)="guardar()" [disabled]="guardando">
+        {{ guardando ? 'Asignando...' : 'Guardar Cambios' }}
+      </button>
+    </div>
+  </div>
+</div>

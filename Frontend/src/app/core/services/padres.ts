@@ -61,4 +61,20 @@ export class PadresService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.api}/${id}`);
   }
+
+  // --- PORTAL PADRES ---
+
+  getResumenHijo(): Observable<any> {
+    // En un entorno real, el backend identifica al padre por el token (sub)
+    // y devuelve los datos del estudiante vinculado.
+    return this.http.get<any>(`${this.api}/me/estudiante/resumen`);
+  }
+
+  getLibretaHijo(idEstudiante: number): Observable<any> {
+    return this.http.get<any>(`${this.api}/libreta/${idEstudiante}`);
+  }
+
+  getAsistenciasHijo(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.api}/me/estudiante/asistencias`);
+  }
 }

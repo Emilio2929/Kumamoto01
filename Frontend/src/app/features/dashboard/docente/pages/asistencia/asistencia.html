@@ -1,0 +1,54 @@
+<div class="dashboard-header">
+  <div class="header-content">
+    <div>
+      <h1>Registro de Asistencia</h1>
+      <p *ngIf="clase?.activa">{{ clase?.curso }} · {{ clase?.grado }} - Sección {{ clase?.seccion }}</p>
+      <p *ngIf="!clase?.activa && !loading">Estado actual de clases</p>
+    </div>
+  </div>
+</div>
+
+<!-- Cargando -->
+<div class="loading-state" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>Verificando horario actual...</p>
+</div>
+
+<!-- Sin Clase Activa -->
+<div class="empty-state" *ngIf="!loading && !clase?.activa">
+  <div class="coffee-icon">☕</div>
+  <h3>No tienes clases programadas</h3>
+  <p>{{ clase?.mensaje || 'No hay bloques horarios activos para tu usuario en este momento.' }}</p>
+</div>
+
+<!-- Modo Registro -->
+<div class="attendance-container" *ngIf="!loading && clase?.activa">
+  <div class="card students-card">
+    <div class="card-header">
+      <h3>Lista de Alumnos</h3>
+      <span class="count">{{ clase?.estudiantes?.length }} alumnos</span>
+    </div>
+    
+    <div class="student-list">
+      <div class="student-item" *ngFor="let student of clase?.estudiantes" (click)="toggleAsistencia(student.id)">
+        <div class="student-info">
+          <span class="name">{{ student.nombreCompleto }}</span>
+        </div>
+        <div class="status-toggle" [class.present]="asistenciaMarcada[student.id]">
+          <div class="toggle-btn">
+            <span class="label">{{ asistenciaMarcada[student.id] ? 'Presente' : 'Faltó' }}</span>
+            <div class="circle"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-footer">
+    <button class="btn-save" [disabled]="!canSave" (click)="guardarAsistencia()">
+      <svg *ngIf="!guardando" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
+      <span class="loader" *ngIf="guardando"></span>
+      {{ guardando ? 'Guardando...' : 'Guardar Asistencia' }}
+    </button>
+  </div>
+</div>

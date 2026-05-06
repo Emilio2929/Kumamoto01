@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { padresGuard } from './core/guards/padres.guard';
 
 export const routes: Routes = [
 	{
@@ -78,10 +79,10 @@ export const routes: Routes = [
 			{
 				path: 'asistencia',
 				loadComponent: () =>
-					import('./features/dashboard/docente/pages/placeholder/placeholder').then(
-						(m) => m.PlaceholderDocenteComponent
+					import('./features/dashboard/docente/pages/asistencia/asistencia').then(
+						(m) => m.AsistenciaDocenteComponent
 					),
-				data: { title: 'Registro de Asistencia', description: 'Próximamente: toma de asistencia mobile-first.' },
+				data: { title: 'Registro de Asistencia', description: 'Toma de asistencia en tiempo real para la clase actual.' },
 			},
 			{
 				path: 'calificaciones',
@@ -103,7 +104,27 @@ export const routes: Routes = [
 	},
 	{
 		path: 'dashboard/padre',
-		loadComponent: () => import('./features/dashboard/padre/padre').then((m) => m.Padre),
+		canActivate: [padresGuard],
+		loadComponent: () => import('./features/padres/layout/padre-layout').then((m) => m.PadreLayoutComponent),
+		children: [
+			{
+				path: '',
+				redirectTo: 'dashboard',
+				pathMatch: 'full'
+			},
+			{
+				path: 'dashboard',
+				loadComponent: () => import('./features/padres/pages/dashboard/dashboard-padre').then(m => m.DashboardPadresComponent)
+			},
+			{
+				path: 'notas',
+				loadComponent: () => import('./features/padres/pages/dashboard/notas-padre').then(m => m.NotasPadresComponent)
+			},
+			{
+				path: 'asistencia',
+				loadComponent: () => import('./features/padres/pages/dashboard/asistencia-padre').then(m => m.AsistenciaPadresComponent)
+			}
+		]
 	},
 	{
 		path: 'dashboard/auxiliar',

@@ -15,50 +15,44 @@
     </section>
 
     <section class="login-card" aria-label="Formulario de ingreso">
-      <h2>Iniciar Sesion</h2>
-      <p class="card-subtitle">Ingresa con tus credenciales institucionales.</p>
+      <h2>Iniciar Sesión</h2>
+      <p class="card-subtitle">Ingresa con tu correo y contraseña institucional. Si eres Padre de Familia, usa la cuenta asignada (ej. p12345678@kumamoto.edu.pe).</p>
 
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
-        <div class="field" [class.invalid]="loginForm.get('correo')?.invalid && loginForm.get('correo')?.touched">
-          <label for="correo">Correo</label>
-          <input
-            id="correo"
-            type="email"
-            formControlName="correo"
-            placeholder="correo@colegio.edu"
-            autocomplete="email"
-          />
-          <small *ngIf="loginForm.get('correo')?.touched && loginForm.get('correo')?.hasError('required')">
-            El correo es obligatorio.
-          </small>
-          <small *ngIf="loginForm.get('correo')?.touched && loginForm.get('correo')?.hasError('email')">
-            Ingresa un correo valido.
-          </small>
-        </div>
+      <div class="card-content">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+          <div class="field" [class.invalid]="loginForm.get('correo')?.invalid && loginForm.get('correo')?.touched">
+            <label for="correo">Correo</label>
+            <input
+              id="correo"
+              type="email"
+              formControlName="correo"
+              placeholder="correo@colegio.edu"
+              autocomplete="email"
+            />
+            <small class="error-text" *ngIf="loginForm.get('correo')?.touched && loginForm.get('correo')?.hasError('required')">El correo es obligatorio.</small>
+            <small class="error-text" *ngIf="loginForm.get('correo')?.touched && loginForm.get('correo')?.hasError('email')">Formato de correo inválido.</small>
+          </div>
 
-        <div class="field" [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-          <label for="password">Contrasena</label>
-          <input
-            id="password"
-            type="password"
-            formControlName="password"
-            placeholder="Tu contrasena"
-            autocomplete="current-password"
-          />
-          <small *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')">
-            La contrasena es obligatoria.
-          </small>
-          <small *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('minlength')">
-            Debe tener al menos 6 caracteres.
-          </small>
-        </div>
+          <div class="field" [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+            <label for="password">Contraseña</label>
+            <input
+              id="password"
+              type="password"
+              formControlName="password"
+              placeholder="Tu contraseña"
+              autocomplete="current-password"
+            />
+            <small class="error-text" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')">La contraseña es obligatoria.</small>
+            <small class="error-text" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('minlength')">Mínimo 6 caracteres.</small>
+          </div>
 
-        <p class="form-error" *ngIf="mensajeError">{{ mensajeError }}</p>
+          <p class="form-error" *ngIf="mensajeError">{{ mensajeError }}</p>
 
-        <button type="submit" [disabled]="loginForm.invalid || cargando">
-          {{ cargando ? 'Ingresando...' : 'Ingresar' }}
-        </button>
-      </form>
+          <button type="submit" [disabled]="cargando" class="submit-btn highlight">
+            {{ cargando ? 'Validando...' : 'Ingresar' }}
+          </button>
+        </form>
+      </div>
     </section>
   </main>
 

@@ -20,6 +20,9 @@ public class KumamotoDbContext : DbContext
     public DbSet<Curso> Cursos { get; set; }
     public DbSet<CargaAcademica> CargasAcademicas { get; set; }
     public DbSet<HorarioCurso> HorarioDetalle { get; set; }
+    public DbSet<PeriodoAcademico> PeriodosAcademicos { get; set; }
+    public DbSet<Competencia> Competencias { get; set; }
+    public DbSet<Calificacion> Calificaciones { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,6 +42,9 @@ public class KumamotoDbContext : DbContext
         modelBuilder.Entity<Curso>().ToTable("curso");
         modelBuilder.Entity<CargaAcademica>().ToTable("carga_academica");
         modelBuilder.Entity<HorarioCurso>().ToTable("horario_detalle");
+        modelBuilder.Entity<PeriodoAcademico>().ToTable("periodo_academico");
+        modelBuilder.Entity<Competencia>().ToTable("competencia");
+        modelBuilder.Entity<Calificacion>().ToTable("calificacion");
 
         // Unique constraint grado + sección en Aula
         modelBuilder.Entity<Aula>()

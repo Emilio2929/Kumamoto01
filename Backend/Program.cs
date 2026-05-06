@@ -53,6 +53,7 @@ builder.Services.AddAuthorization();
 // ── Servicios propios ──────────────────────────────────────────────────────
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<RiesgoService>();
+builder.Services.AddScoped<EarlyWarningService>();
 
 // ──────────────────────────────────────────────────────────────────────────
 var app = builder.Build();

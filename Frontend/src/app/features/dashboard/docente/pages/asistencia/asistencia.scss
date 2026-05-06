@@ -1,0 +1,151 @@
+.dashboard-header {
+  margin-bottom: 1.5rem;
+  h1 { font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; }
+  p { color: var(--text-muted); font-weight: 500; }
+}
+
+.loading-state {
+  text-align: center;
+  padding: 4rem 0;
+  .spinner {
+    width: 40px; height: 40px; border: 4px solid var(--bg-main);
+    border-top-color: var(--primary); border-radius: 50%;
+    animation: spin 1s linear infinite; margin: 0 auto 1rem;
+  }
+  p { color: var(--text-muted); font-weight: 600; }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 5rem 2rem;
+  background: white;
+  border-radius: 20px;
+  border: 1px dashed var(--border-color);
+  .coffee-icon { font-size: 3rem; margin-bottom: 1rem; }
+  h3 { color: var(--text-main); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; }
+  p { color: var(--text-muted); font-size: 1rem; max-width: 400px; margin: 0 auto; }
+}
+
+.attendance-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 5rem; /* Space for fixed button on mobile */
+}
+
+.students-card {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+
+  .card-header {
+    padding: 1.25rem 1.5rem;
+    background: var(--bg-main);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    h3 { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
+    .count { background: white; padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.85rem; font-weight: 600; color: var(--primary); border: 1px solid var(--border-color); }
+  }
+}
+
+.student-list {
+  .student-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:last-child { border-bottom: none; }
+    &:active { background: var(--bg-main); }
+
+    .student-info {
+      .name { font-weight: 600; color: var(--text-main); font-size: 1rem; }
+    }
+  }
+}
+
+/* Custom Toggle Switch for Mobile First */
+.status-toggle {
+  .toggle-btn {
+    width: 100px;
+    height: 36px;
+    background: #fee2e2; // Rojo suave (Falta)
+    border-radius: 18px;
+    position: relative;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 12px;
+
+    .label { font-size: 0.75rem; font-weight: 800; color: #991b1b; }
+    .circle { width: 28px; height: 28px; background: white; border-radius: 50%; position: absolute; left: 4px; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  }
+
+  &.present {
+    .toggle-btn {
+      background: #dcfce7; // Verde suave (Presente)
+      justify-content: flex-start;
+      .label { color: #166534; }
+      .circle { left: calc(100% - 32px); }
+    }
+  }
+}
+
+.action-footer {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 2rem);
+  max-width: 500px;
+  z-index: 10;
+
+  .btn-save {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    height: 56px;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
+    &:active { transform: scale(0.98); }
+    svg { width: 22px; height: 22px; }
+  }
+}
+
+.loader {
+  width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Desktop adjustments */
+@media (min-width: 769px) {
+  .action-footer {
+    position: relative;
+    bottom: 0;
+    left: 0;
+    transform: none;
+    width: 100%;
+    max-width: none;
+    margin-top: 1rem;
+    .btn-save { max-width: 300px; margin-left: auto; }
+  }
+}

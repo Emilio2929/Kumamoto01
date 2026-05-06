@@ -148,5 +148,128 @@ public static class PadresEndpoints
             await db.SaveChangesAsync();
             return Results.NoContent();
         }).WithName("DeletePadre");
+
+        // ── GET /api/padres/me/estudiante/resumen  → portal del padre
+        group.MapGet("/me/estudiante/resumen", async (System.Security.Claims.ClaimsPrincipal user, KumamotoDbContext db) =>
+        {
+            var userId = GetUserId(user);
+            if (userId is null) return Results.Unauthorized();
+
+            var estudiante = await db.Estudiantes
+                .Include(e => e.Aula).ThenInclude(a => a!.Grado)
+                .Include(e => e.Aula).ThenInclude(a => a!.Seccion)
+                .FirstOrDefaultAsync(e => e.PadreId == userId && e.Estado == 1);
+
+            if (estudiante is null) return Results.NotFound(new { mensaje = "No se encontró un estudiante vinculado activo." });
+
+            // Asistencia (Total % presente)
+            var totalAsistencias = await db.Asistencias.CountAsync(a => a.EstudianteId == estudiante.Id && a.Estado == 1);
+            var totalPresentes = await db.Asistencias.CountAsync(a => a.EstudianteId == estudiante.Id && (a.Valor == "P" || a.Valor == "T") && a.Estado == 1);
+            
+            int porcentajeAsistencia = totalAsistencias > 0 ? (int)Math.Round((double)totalPresentes / totalAsistencias * 100) : 100;
+            var estadoAsistencia = porcentajeAsistencia >= 95 ? "Excelente" : (porcentajeAsistencia >= 85 ? "Regular" : "Crítico");
+
+            // Notas recientes (usando modelo EF Core)
+            var calificaciones = await db.Calificaciones
+                .Include(c => c.Competencia).ThenInclude(comp => comp!.Curso)
+                .Where(c => c.EstudianteId == estudiante.Id && c.Estado == 1)
+                .OrderByDescending(c => c.FechaRegistro)
+                .Take(4)
+                .Select(c => new { curso = c.Competencia!.Curso!.Nombre, nota = c.Nota })
+                .ToListAsync();
+
+            // Alertas de Riesgo
+            var alertas = await db.AlertasRiesgo
+                .Where(a => a.EstudianteId == estudiante.Id && a.Estado == 1 && a.NivelRiesgo == "Alto")
+                .OrderByDescending(a => a.Id)
+                .Select(a => new { tipo = $"Riesgo {a.NivelRiesgo}", mensaje = a.Motivo })
+                .ToListAsync();
+
+            return Results.Ok(new
+            {
+                id = estudiante.Id,
+                estudiante = $"{estudiante.Nombres} {estudiante.Apellidos}",
+                grado = estudiante.Aula != null ? $"{estudiante.Aula.Grado!.Nombre} - Sección {estudiante.Aula.Seccion!.Letra}" : "Sin Aula Asignada",
+                asistencia = new
+                {
+                    porcentaje = porcentajeAsistencia,
+                    estado = estadoAsistencia
+                },
+                rendimiento = calificaciones,
+                alertas = alertas
+            });
+        }).WithName("GetResumenHijo");
+
+        // ── GET /api/padres/me/estudiante/asistencias
+        group.MapGet("/me/estudiante/asistencias", async (System.Security.Claims.ClaimsPrincipal user, KumamotoDbContext db) =>
+        {
+            var userId = GetUserId(user);
+            if (userId is null) return Results.Unauthorized();
+
+            var estudiante = await db.Estudiantes.FirstOrDefaultAsync(e => e.PadreId == userId && e.Estado == 1);
+            if (estudiante is null) return Results.NotFound();
+
+            var asistencias = await db.Asistencias
+                .Where(a => a.EstudianteId == estudiante.Id && a.Estado == 1 && (a.Valor == "F" || a.Valor == "T" || a.Valor == "J"))
+                .OrderByDescending(a => a.Fecha)
+                .Select(a => new 
+                { 
+                    fecha = a.Fecha, 
+                    estado = a.Valor == "F" ? "Falta" : (a.Valor == "T" ? "Tardanza" : "Justificado") 
+                })
+                .ToListAsync();
+
+            return Results.Ok(asistencias);
+        }).WithName("GetAsistenciasHijo");
+
+        // ── GET /api/padres/libreta/{id_estudiante}
+        group.MapGet("/libreta/{id:int}", async (int id, System.Security.Claims.ClaimsPrincipal user, KumamotoDbContext db) =>
+        {
+            var userId = GetUserId(user);
+            if (userId is null) return Results.Unauthorized();
+
+            // Validar que el estudiante pertenezca al padre
+            var estudiante = await db.Estudiantes
+                .Include(e => e.Aula).ThenInclude(a => a!.Grado)
+                .Include(e => e.Aula).ThenInclude(a => a!.Seccion)
+                .FirstOrDefaultAsync(e => e.Id == id && e.PadreId == userId && e.Estado == 1);
+
+            if (estudiante is null) return Results.NotFound(new { mensaje = "No autorizado o estudiante no encontrado." });
+
+            var calificaciones = await db.Calificaciones
+                .Include(c => c.Competencia).ThenInclude(comp => comp!.Curso)
+                .Include(c => c.Periodo)
+                .Where(c => c.EstudianteId == estudiante.Id && c.Estado == 1)
+                .ToListAsync();
+
+            var bimestres = calificaciones
+                .Where(c => c.Periodo != null)
+                .GroupBy(c => c.Periodo!.Nombre)
+                .Select(gb => new
+                {
+                    bimestre = gb.Key,
+                    cursos = gb.GroupBy(c => c.Competencia!.Curso!.Nombre)
+                               .Select(gc => new {
+                                   curso = gc.Key,
+                                   nota = gc.OrderByDescending(c => c.FechaRegistro).First().Nota // Toma la última nota del periodo
+                               }).ToList()
+                }).ToList();
+
+            return Results.Ok(new 
+            {
+                estudiante = $"{estudiante.Nombres} {estudiante.Apellidos}",
+                grado = estudiante.Aula != null ? $"{estudiante.Aula.Grado!.Nombre} - Sección {estudiante.Aula.Seccion!.Letra}" : "",
+                historial = bimestres
+            });
+        }).WithName("GetLibretaEstudiante");
+    }
+
+    private static int? GetUserId(System.Security.Claims.ClaimsPrincipal user)
+    {
+        var claim = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                    ?? user.FindFirst("sub")?.Value;
+
+        if (int.TryParse(claim, out var id)) return id;
+        return null;
     }
 }

@@ -1,0 +1,47 @@
+<div class="dashboard-header" *ngIf="asistencias">
+  <div class="header-content">
+    <div>
+      <h1>Registro de Asistencia Anual</h1>
+      <p>Detalle de faltas, tardanzas y justificaciones en tiempo real</p>
+    </div>
+  </div>
+</div>
+
+<div class="loading-state" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>Cargando registros de asistencia...</p>
+</div>
+
+<div class="empty-state" *ngIf="!loading && asistencias?.length === 0">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+  <h3>Asistencia Perfecta</h3>
+  <p>El estudiante no tiene faltas ni tardanzas registradas hasta el momento.</p>
+</div>
+
+<div class="card" *ngIf="!loading && (asistencias?.length ?? 0) > 0">
+  <div class="card-header">
+    <h3>Detalle de Inasistencias</h3>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+  </div>
+  
+  <div class="table-responsive">
+    <table class="attendance-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let registro of asistencias">
+          <td class="date-cell">{{ registro.fecha | date:'EEEE, d MMMM y' : '' : 'es-PE' }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="registro.estado">
+              {{ registro.estado }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

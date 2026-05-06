@@ -93,6 +93,38 @@ $error-color: #c62828;
   box-shadow: 0 20px 50px rgba(16, 45, 79, 0.14);
   padding: 2rem;
 
+  .login-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0.35rem;
+    background: #f1f5f9;
+    border-radius: 12px;
+
+    button {
+      flex: 1;
+      margin-top: 0;
+      height: 38px;
+      background: transparent;
+      color: $text-muted;
+      font-size: 0.88rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      box-shadow: none;
+
+      &.active {
+        background: white;
+        color: $primary-color;
+        box-shadow: 0 4px 10px rgba(16, 45, 79, 0.08);
+      }
+
+      &:hover:not(.active) {
+        transform: none;
+        color: $text-color;
+      }
+    }
+  }
+
   h2 {
     margin: 0;
     font-size: 1.6rem;
@@ -142,10 +174,11 @@ $error-color: #c62828;
     }
   }
 
-  small {
+  small.error-text {
     min-height: 1.05rem;
     color: $error-color;
     font-size: 0.78rem;
+    font-weight: 600;
   }
 
   &.invalid input {
@@ -181,7 +214,15 @@ button {
     cursor: not-allowed;
     opacity: 0.7;
   }
+
+  &.highlight {
+    background: linear-gradient(120deg, #10b981, #059669); /* Green for parent portal */
+    &:hover:not(:disabled) {
+      box-shadow: 0 10px 18px rgba(#10b981, 0.24);
+    }
+  }
 }
+
 
 .page-footer {
   padding: 1rem 1.5rem 1.4rem;

@@ -24,17 +24,26 @@ export class AuthService {
       .post<LoginResponse>(`${this.apiBase}/auth/login`, { correo, password })
       .pipe(
         tap((response) => {
-          localStorage.setItem('kumamoto_jwt', response.token);
-          localStorage.setItem(
-            'kumamoto_user',
-            JSON.stringify({
-              nombre: `${response.nombres} ${response.apellidos}`,
-              rol: response.rol,
-            })
-          );
+          this.guardarSesion(response);
         })
       );
   }
+
+  iniciarSesionPadre(dniPadre: string, dniEstudiante: string) {
+    // Removed
+  }
+
+  private guardarSesion(response: LoginResponse): void {
+    localStorage.setItem('kumamoto_jwt', response.token);
+    localStorage.setItem(
+      'kumamoto_user',
+      JSON.stringify({
+        nombre: `${response.nombres} ${response.apellidos}`,
+        rol: response.rol,
+      })
+    );
+  }
+
 
   cerrarSesion(): void {
     localStorage.removeItem('kumamoto_jwt');

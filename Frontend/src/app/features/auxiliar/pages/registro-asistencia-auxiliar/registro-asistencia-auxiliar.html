@@ -18,15 +18,28 @@
 </div>
 
 <div *ngIf="!loading && bloqueadaPorDocente" class="lock-banner">
-  ✅ Registrada por Docente. Esta vista es solo lectura.
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+  </svg>
+  <span>Registrada por Docente. Esta vista es solo lectura.</span>
 </div>
 
 <div *ngIf="!loading && !bloqueadaPorDocente && cursoActual" class="info-banner">
-  📖 Clase actual: <strong>{{ cursoActual }}</strong> ({{ horarioClase }})
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+  </svg>
+  <span>Clase actual: <strong>{{ cursoActual }}</strong> ({{ horarioClase }})</span>
 </div>
 
 <div *ngIf="!loading && !bloqueadaPorDocente && fueraDeHorario" class="warning-banner">
-  ⚠️ No hay una clase programada en este momento. Solo puedes registrar asistencia durante el horario de clase.
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+    <line x1="12" y1="9" x2="12" y2="13"></line>
+    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+  </svg>
+  <span>No hay una clase programada en este momento. Solo puedes registrar asistencia durante el horario de clase.</span>
 </div>
 
 <div class="list" *ngIf="!loading && !errorMsg">

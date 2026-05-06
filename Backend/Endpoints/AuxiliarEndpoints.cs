@@ -29,7 +29,6 @@ public static class AuxiliarEndpoints
 
             var hoy = DateOnly.FromDateTime(DateTime.Today);
             var ahora = TimeOnly.FromDateTime(DateTime.Now);
-            var diaEs = GetDiaSemanaEs(DateTime.Today.DayOfWeek);
 
             var asignaciones = await db.AsignacionesAuxiliar
                 .Where(a => a.AuxiliarId == userId && a.Estado == 1)
@@ -317,4 +316,12 @@ public static class AuxiliarEndpoints
         return null;
     }
 }
+
+public enum EstadoAsistenciaHoy
+{
+    Pendiente,
+    RegistradaAuxiliar,
+    RegistradaDocente
+}
+
 

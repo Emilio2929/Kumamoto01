@@ -38,9 +38,9 @@ export class ListaAulasAuxiliarComponent implements OnInit {
   }
 
   estadoLabel(estado: AulaAsignadaAuxiliarDto['estadoAsistenciaHoy']): string {
-    if (estado === 'RegistradaDocente') return '✅ Registrada por Docente';
-    if (estado === 'RegistradaAuxiliar') return '🟡 Registrada (Auxiliar)';
-    return '🔴 Pendiente';
+    if (estado === 'RegistradaDocente') return 'Registrada por Docente';
+    if (estado === 'RegistradaAuxiliar') return 'Registrada (Auxiliar)';
+    return 'Pendiente';
   }
 
   estadoClass(estado: AulaAsignadaAuxiliarDto['estadoAsistenciaHoy']): string {

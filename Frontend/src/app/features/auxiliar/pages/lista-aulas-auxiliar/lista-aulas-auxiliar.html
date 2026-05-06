@@ -31,11 +31,29 @@
         
         <!-- Info del curso actual -->
         <div class="current-course-info" *ngIf="a.cursoActual">
-          <span class="course-tag">📖 {{ a.cursoActual }}</span>
-          <span class="time-tag">⏰ {{ a.horarioClase }}</span>
+          <span class="course-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+            {{ a.cursoActual }}
+          </span>
+          <span class="time-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            {{ a.horarioClase }}
+          </span>
         </div>
         <div class="no-course-info" *ngIf="!a.cursoActual">
-          <span class="muted-tag">🚫 Sin clase programada</span>
+          <span class="muted-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18.36 6.64a9 9 0 1 1-12.73 12.73L18.36 6.64Z"></path>
+              <line x1="6.64" y1="6.64" x2="17.36" y2="17.36"></line>
+            </svg>
+            Sin clase programada
+          </span>
         </div>
       </div>
       <span class="semaforo" [class]="estadoClass(a.estadoAsistenciaHoy)">{{ estadoLabel(a.estadoAsistenciaHoy) }}</span>
@@ -47,7 +65,13 @@
         *ngIf="a.estadoAsistenciaHoy === 'Pendiente'"
         (click)="irAsistencia(a.aulaId)"
       >
-        ⚠️ Tomar Asistencia (Suplencia)
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 7v5l3 3"></path>
+          <path d="m3 3 18 18"></path>
+          <path d="M9.049 4.049 a9 9 0 0 1 10.902 10.902"></path>
+          <path d="M14.951 19.951 a9 9 0 0 1 -10.902 -10.902"></path>
+        </svg>
+        Tomar Asistencia (Suplencia)
       </button>
 
       <div class="readonly" *ngIf="a.estadoAsistenciaHoy !== 'Pendiente'">

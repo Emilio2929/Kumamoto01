@@ -2,7 +2,7 @@
 -- SCRIPT COMPLETO: TABLAS + DATOS INICIALES
 -- BASE DE DATOS: kumamoto
 -- =============================================================
-
+CREATE DATABASE kumamoto;
 CREATE TABLE IF NOT EXISTS Rol (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL,

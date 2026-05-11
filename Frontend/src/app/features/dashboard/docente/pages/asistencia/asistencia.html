@@ -1,54 +1,125 @@
-<div class="dashboard-header">
-  <div class="header-content">
-    <div>
+<div class="attendance-container">
+  <!-- Cabecera -->
+  <div class="attendance-header">
+    <div class="header-titles">
       <h1>Registro de Asistencia</h1>
-      <p *ngIf="clase?.activa">{{ clase?.curso }} · {{ clase?.grado }} - Sección {{ clase?.seccion }}</p>
-      <p *ngIf="!clase?.activa && !loading">Estado actual de clases</p>
+      <p *ngIf="!claseSeleccionada">Selecciona una de tus clases de hoy para pasar asistencia.</p>
+      <div class="clase-info-badge" *ngIf="claseSeleccionada">
+        <span class="curso-name">{{claseSeleccionada.curso}}</span>
+        <span class="aula-name">{{claseSeleccionada.grado}} {{claseSeleccionada.seccion}}</span>
+      </div>
     </div>
+    <button *ngIf="claseSeleccionada" class="btn-back" (click)="claseSeleccionada = null">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      Volver
+    </button>
   </div>
-</div>
 
-<!-- Cargando -->
-<div class="loading-state" *ngIf="loading">
-  <div class="spinner"></div>
-  <p>Verificando horario actual...</p>
-</div>
+  <!-- Estado de Carga -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando información...</p>
+  </div>
 
-<!-- Sin Clase Activa -->
-<div class="empty-state" *ngIf="!loading && !clase?.activa">
-  <div class="coffee-icon">☕</div>
-  <h3>No tienes clases programadas</h3>
-  <p>{{ clase?.mensaje || 'No hay bloques horarios activos para tu usuario en este momento.' }}</p>
-</div>
+  <!-- Mensajes de Feedback -->
+  <div class="feedback-banner success" *ngIf="mensajeExito">
+    <div class="icon">✅</div>
+    <span>{{mensajeExito}}</span>
+  </div>
 
-<!-- Modo Registro -->
-<div class="attendance-container" *ngIf="!loading && clase?.activa">
-  <div class="card students-card">
-    <div class="card-header">
-      <h3>Lista de Alumnos</h3>
-      <span class="count">{{ clase?.estudiantes?.length }} alumnos</span>
+  <div class="feedback-banner error" *ngIf="mensajeError">
+    <div class="icon">❌</div>
+    <span>{{mensajeError}}</span>
+  </div>
+
+  <!-- 1. Lista de Clases del Día -->
+  <div *ngIf="!loading && !claseSeleccionada" class="classes-grid">
+    <div *ngIf="clasesHoy.length === 0" class="empty-state">
+      <div class="icon">📅</div>
+      <h3>No tienes clases programadas para hoy</h3>
+      <p>Tu horario está libre o no se han asignado cursos para este día.</p>
     </div>
-    
-    <div class="student-list">
-      <div class="student-item" *ngFor="let student of clase?.estudiantes" (click)="toggleAsistencia(student.id)">
-        <div class="student-info">
-          <span class="name">{{ student.nombreCompleto }}</span>
-        </div>
-        <div class="status-toggle" [class.present]="asistenciaMarcada[student.id]">
-          <div class="toggle-btn">
-            <span class="label">{{ asistenciaMarcada[student.id] ? 'Presente' : 'Faltó' }}</span>
-            <div class="circle"></div>
-          </div>
-        </div>
+
+    <div *ngFor="let c of clasesHoy" class="class-card" (click)="seleccionarClase(c)">
+      <div class="time-tag">{{c.horaInicio}} - {{c.horaFin}}</div>
+      <div class="class-card-body">
+        <h3>{{c.curso}}</h3>
+        <p>{{c.grado}} · Sección {{c.seccion}}</p>
+      </div>
+      <div class="card-action">
+        <span>Pasar Asistencia</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
       </div>
     </div>
   </div>
 
-  <div class="action-footer">
-    <button class="btn-save" [disabled]="!canSave" (click)="guardarAsistencia()">
-      <svg *ngIf="!guardando" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
-      <span class="loader" *ngIf="guardando"></span>
-      {{ guardando ? 'Guardando...' : 'Guardar Asistencia' }}
-    </button>
+  <!-- 2. Lista de Estudiantes -->
+  <div *ngIf="!loading && claseSeleccionada" class="student-list-view">
+    <div class="list-summary-bar">
+      <div class="summary-info">
+        <span class="count">{{estudiantes.length}}</span>
+        <span class="label">Estudiantes en lista</span>
+      </div>
+      <button class="btn-save-desktop" (click)="guardarAsistencia()" [disabled]="!canSave || guardando">
+        <span *ngIf="!guardando">Guardar Asistencia</span>
+        <span *ngIf="guardando">Guardando...</span>
+      </button>
+    </div>
+
+    <div class="table-container">
+      <div class="table-header-row">
+        <div class="col-estudiante">ESTUDIANTE</div>
+        <div class="col-asistencia">ESTADO DE ASISTENCIA</div>
+      </div>
+
+      <div class="student-item-row" *ngFor="let est of estudiantes; let i = index">
+        <div class="col-estudiante">
+          <span class="order-num">{{i + 1}}.</span>
+          <span class="student-name">{{est.nombreCompleto}}</span>
+        </div>
+        <div class="col-asistencia">
+          <div class="attendance-toggle-group">
+            <button class="btn-toggle p" 
+                    [class.active]="asistenciaMarcada[est.id] === 'P'"
+                    (click)="cambiarEstado(est.id, 'P')">
+              P
+            </button>
+            <button class="btn-toggle f" 
+                    [class.active]="asistenciaMarcada[est.id] === 'F'"
+                    (click)="cambiarEstado(est.id, 'F')">
+              F
+            </button>
+            <button class="btn-toggle t" 
+                    [class.active]="asistenciaMarcada[est.id] === 'T'"
+                    (click)="cambiarEstado(est.id, 'T')">
+              T
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón flotante para móviles -->
+    <div class="mobile-footer-action">
+      <button class="btn-confirm-mobile" (click)="guardarAsistencia()" [disabled]="!canSave || guardando">
+        <span *ngIf="!guardando">Confirmar Asistencia</span>
+        <span *ngIf="guardando">Procesando...</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal Confirmar Guardado -->
+  <div class="modal-overlay" *ngIf="confirmarGuardarOpen" (click)="confirmarGuardarOpen = false"></div>
+  <div class="modal-card" *ngIf="confirmarGuardarOpen">
+    <div class="modal-header">
+      <h3>Confirmar Registro</h3>
+    </div>
+    <div class="modal-body">
+      <p>¿Estás seguro de que deseas guardar la asistencia de esta clase?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="confirmarGuardarOpen = false">Revisar</button>
+      <button class="btn-submit" (click)="ejecutarGuardar()">Sí, Guardar</button>
+    </div>
   </div>
 </div>

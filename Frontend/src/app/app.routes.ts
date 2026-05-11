@@ -87,10 +87,18 @@ export const routes: Routes = [
 			{
 				path: 'calificaciones',
 				loadComponent: () =>
-					import('./features/dashboard/docente/pages/placeholder/placeholder').then(
-						(m) => m.PlaceholderDocenteComponent
+					import('./features/dashboard/docente/pages/calificaciones/calificaciones.component').then(
+						(m) => m.CalificacionesComponent
 					),
-				data: { title: 'Calificaciones', description: 'Próximamente: grilla dinámica por competencias.' },
+				data: { title: 'Calificaciones', description: 'Módulo de gestión de competencias y notas.' },
+			},
+			{
+				path: 'calificaciones/:cargaId',
+				loadComponent: () =>
+					import('./features/dashboard/docente/pages/calificaciones/calificaciones.component').then(
+						(m) => m.CalificacionesComponent
+					),
+				data: { title: 'Calificaciones', description: 'Módulo de gestión de competencias y notas.' },
 			},
 			{
 				path: 'avisos',
@@ -133,8 +141,15 @@ export const routes: Routes = [
 		children: [
 			{
 				path: '',
-				redirectTo: 'aulas',
+				redirectTo: 'dashboard',
 				pathMatch: 'full',
+			},
+			{
+				path: 'dashboard',
+				loadComponent: () =>
+					import('./features/auxiliar/pages/dashboard-auxiliar/dashboard-auxiliar').then(
+						(m) => m.DashboardAuxiliarComponent
+					),
 			},
 			{
 				path: 'aulas',
@@ -144,7 +159,14 @@ export const routes: Routes = [
 					),
 			},
 			{
-				path: 'asistencia/:aulaId',
+				path: 'reportes',
+				loadComponent: () =>
+					import('./features/auxiliar/pages/reportes-auxiliar/reportes-auxiliar').then(
+						(m) => m.ReportesAuxiliarComponent
+					),
+			},
+			{
+				path: 'asistencia/:aulaId/:cargaId',
 				loadComponent: () =>
 					import(
 						'./features/auxiliar/pages/registro-asistencia-auxiliar'

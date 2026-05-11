@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Kumamoto.API.Models;
 
@@ -7,13 +8,21 @@ public class Calificacion
     public int Id { get; set; }
     public int? EstudianteId { get; set; }
     public Estudiante? Estudiante { get; set; }
-    public int? CargaId { get; set; }
-    public CargaAcademica? Carga { get; set; }
-    public int? PeriodoId { get; set; }
-    public PeriodoAcademico? Periodo { get; set; }
+    [Column("competencia_id")]
     public int? CompetenciaId { get; set; }
     public Competencia? Competencia { get; set; }
-    public string Nota { get; set; } = string.Empty;
-    public DateTime FechaRegistro { get; set; } = DateTime.Now;
+
+    [Column("semana_id")]
+    public int SemanaId { get; set; }
+    public SemanaAcademica? Semana { get; set; }
+
+    [Column("escala_id")]
+    public int EscalaId { get; set; }
+    public EscalaCalificacion? Escala { get; set; }
+
+    [Column("fecha_registro")]
+    public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
+
+    [Column("estado")]
     public short Estado { get; set; } = 1;
 }

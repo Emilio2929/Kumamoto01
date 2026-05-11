@@ -23,6 +23,10 @@ public class KumamotoDbContext : DbContext
     public DbSet<PeriodoAcademico> PeriodosAcademicos { get; set; }
     public DbSet<Competencia> Competencias { get; set; }
     public DbSet<Calificacion> Calificaciones { get; set; }
+    public DbSet<EscalaCalificacion> EscalaCalificaciones { get; set; } = null!;
+    public DbSet<SemanaAcademica> SemanaAcademicas { get; set; } = null!;
+    public DbSet<CalificacionBimestral> CalificacionesBimestrales { get; set; } = null!;
+    public DbSet<AlumnoRiesgo> AlumnosRiesgo { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -45,6 +49,47 @@ public class KumamotoDbContext : DbContext
         modelBuilder.Entity<PeriodoAcademico>().ToTable("periodo_academico");
         modelBuilder.Entity<Competencia>().ToTable("competencia");
         modelBuilder.Entity<Calificacion>().ToTable("calificacion");
+        modelBuilder.Entity<EscalaCalificacion>().ToTable("escala_calificacion");
+        modelBuilder.Entity<SemanaAcademica>().ToTable("semana_academica");
+        modelBuilder.Entity<CalificacionBimestral>().ToTable("calificacion_bimestral");
+        modelBuilder.Entity<AlumnoRiesgo>().ToTable("alumno_riesgo");
+
+        // Relaciones de Calificacion (5NF)
+        modelBuilder.Entity<Calificacion>()
+            .HasOne(c => c.Semana)
+            .WithMany()
+            .HasForeignKey(c => c.SemanaId)
+            .IsRequired();
+
+        modelBuilder.Entity<Calificacion>()
+            .HasOne(c => c.Escala)
+            .WithMany()
+            .HasForeignKey(c => c.EscalaId)
+            .IsRequired();
+
+        modelBuilder.Entity<Calificacion>()
+            .HasOne(c => c.Competencia)
+            .WithMany()
+            .HasForeignKey(c => c.CompetenciaId)
+            .IsRequired(false);
+
+        modelBuilder.Entity<Calificacion>()
+            .HasOne(c => c.Estudiante)
+            .WithMany()
+            .HasForeignKey(c => c.EstudianteId)
+            .IsRequired(false);
+
+        // Unicidad de calificación semanal
+        modelBuilder.Entity<Calificacion>()
+            .HasIndex(c => new { c.EstudianteId, c.CompetenciaId, c.SemanaId })
+            .IsUnique()
+            .HasDatabaseName("uc_calificacion_semana");
+
+        // SemanaAcademica → PeriodoAcademico
+        modelBuilder.Entity<SemanaAcademica>()
+            .HasOne(s => s.Periodo)
+            .WithMany()
+            .HasForeignKey(s => s.PeriodoId);
 
         // Unique constraint grado + sección en Aula
         modelBuilder.Entity<Aula>()

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
-import { DocenteService, ClaseActualResponse } from '../../../../../core/services/docente';
+import { DocenteService, ClaseHoy, EstudianteSimple } from '../../../../../core/services/docente';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -15,25 +15,23 @@ export class AsistenciaDocenteComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   loading = true;
-  clase: ClaseActualResponse | null = null;
-  asistenciaMarcada: { [key: number]: boolean } = {};
+  clasesHoy: ClaseHoy[] = [];
+  claseSeleccionada: ClaseHoy | null = null;
+  estudiantes: EstudianteSimple[] = [];
+  
+  // key: estudianteId, value: 'P' | 'F' | 'T'
+  asistenciaMarcada: { [key: number]: string } = {};
   guardando = false;
 
   ngOnInit() {
-    this.cargarClaseActual();
+    this.cargarClasesHoy();
   }
 
-  cargarClaseActual() {
+  cargarClasesHoy() {
     this.loading = true;
-    this.docenteService.getClaseActual().subscribe({
+    this.docenteService.getClasesHoy().subscribe({
       next: (res) => {
-        this.clase = res;
-        if (res.activa && res.estudiantes) {
-          // Inicializar todos como presentes por defecto
-          res.estudiantes.forEach(e => {
-            this.asistenciaMarcada[e.id] = true;
-          });
-        }
+        this.clasesHoy = res;
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -44,34 +42,76 @@ export class AsistenciaDocenteComponent implements OnInit {
     });
   }
 
-  toggleAsistencia(estudianteId: number) {
-    this.asistenciaMarcada[estudianteId] = !this.asistenciaMarcada[estudianteId];
+  seleccionarClase(clase: ClaseHoy) {
+    this.claseSeleccionada = clase;
+    this.loading = true;
+    this.asistenciaMarcada = {};
+    
+    this.docenteService.getEstudiantesCarga(clase.cargaId).subscribe({
+      next: (res: any[]) => {
+        this.estudiantes = res;
+        this.estudiantes.forEach(e => {
+          this.asistenciaMarcada[e.id] = (e as any).valorActual || 'P';
+        });
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  cambiarEstado(estudianteId: number, valor: string) {
+    this.asistenciaMarcada[estudianteId] = valor;
   }
 
   get canSave(): boolean {
     return Object.keys(this.asistenciaMarcada).length > 0 && !this.guardando;
   }
 
-  guardarAsistencia() {
-    if (!this.clase || !this.clase.cargaId) return;
+  confirmarGuardarOpen = false;
 
+  guardarAsistencia() {
+    if (!this.claseSeleccionada) return;
+    this.confirmarGuardarOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  mensajeExito: string | null = null;
+  mensajeError: string | null = null;
+
+  ejecutarGuardar() {
+    if (!this.claseSeleccionada) return;
+    this.confirmarGuardarOpen = false;
     this.guardando = true;
+    this.mensajeExito = null;
+    this.mensajeError = null;
+    this.cdr.detectChanges();
+
     const data = Object.keys(this.asistenciaMarcada).map(id => ({
       estudianteId: parseInt(id),
-      presente: this.asistenciaMarcada[parseInt(id)]
+      valor: this.asistenciaMarcada[parseInt(id)]
     }));
 
-    this.docenteService.registrarAsistencia(this.clase.cargaId, data).subscribe({
+    this.docenteService.registrarAsistencia(this.claseSeleccionada.cargaId, data).subscribe({
       next: () => {
-        alert('Asistencia guardada correctamente.');
-        this.clase = null; // Limpiar para mostrar mensaje de éxito/vacío
-        this.cargarClaseActual();
+        this.mensajeExito = 'Asistencia guardada correctamente.';
+        setTimeout(() => {
+          this.claseSeleccionada = null; // Volver a la lista de clases
+          this.cargarClasesHoy();
+          this.mensajeExito = null;
+          this.cdr.detectChanges();
+        }, 2000);
         this.guardando = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error(err);
-        alert('Error al guardar la asistencia.');
+        this.mensajeError = 'Error al guardar la asistencia.';
         this.guardando = false;
+        this.cdr.detectChanges();
       }
     });
   }

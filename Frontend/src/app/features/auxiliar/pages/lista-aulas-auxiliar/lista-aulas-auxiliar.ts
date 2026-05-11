@@ -49,8 +49,8 @@ export class ListaAulasAuxiliarComponent implements OnInit {
     return 'bad';
   }
 
-  irAsistencia(aulaId: number) {
-    this.router.navigate(['/dashboard/auxiliar/asistencia', aulaId]);
+  irAsistencia(aulaId: number, cargaId: number) {
+    this.router.navigate(['/dashboard/auxiliar/asistencia', aulaId, cargaId]);
   }
 
   trackByAulaId = (_: number, item: AulaAsignadaAuxiliarDto) => item.aulaId;

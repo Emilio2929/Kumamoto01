@@ -60,7 +60,7 @@ public static class AuxiliarEndpoints
                                      join c in db.Cursos on ca.CursoId equals c.Id
                                      where aulaIds.Contains(ca.AulaId) 
                                            && ca.Estado == 1 && hd.Estado == 1
-                                     select new { ca.AulaId, c.Nombre, hd.HoraInicio, hd.HoraFin, hd.DiaSemana }).ToListAsync();
+                                     select new { ca.AulaId, CargaId = ca.Id, c.Nombre, hd.HoraInicio, hd.HoraFin, hd.DiaSemana }).ToListAsync();
             
             // Filtrar en memoria para mayor flexibilidad con acentos/case
             var horariosFiltrados = horariosHoy.Where(h => {
@@ -77,14 +77,22 @@ public static class AuxiliarEndpoints
                 return r;
             }
 
-            var result = new List<AulaAsignadaAuxiliarDto>();
+            var result = new List<object>();
 
             foreach (var asig in asignaciones)
             {
                 var estudianteIds = mapEstudiantes.TryGetValue(asig.AulaId, out var ids) ? ids : [];
                 var asistenciasAula = asistenciasHoy.Where(a => estudianteIds.Contains(a.EstudianteId)).ToList();
 
-                var hActual = horariosFiltrados.FirstOrDefault(h => h.AulaId == asig.AulaId && h.HoraInicio <= ahora && h.HoraFin >= ahora);
+                var cursosHoy = horariosFiltrados
+                    .Where(h => h.AulaId == asig.AulaId)
+                    .OrderBy(h => h.HoraInicio)
+                    .Select(h => new {
+                        cargaId = h.CargaId,
+                        nombre = h.Nombre,
+                        horario = $"{h.HoraInicio:hh\\:mm} - {h.HoraFin:hh\\:mm}",
+                        esActual = h.HoraInicio <= ahora && h.HoraFin >= ahora
+                    }).ToList();
 
                 EstadoAsistenciaHoy estado;
                 if (asistenciasAula.Count == 0)
@@ -97,7 +105,6 @@ public static class AuxiliarEndpoints
                 }
                 else
                 {
-                    // Si alguien ya la registró, verificar si fue docente
                     var algunDocente = false;
                     foreach (var a in asistenciasAula)
                     {
@@ -107,17 +114,15 @@ public static class AuxiliarEndpoints
                     estado = algunDocente ? EstadoAsistenciaHoy.RegistradaDocente : EstadoAsistenciaHoy.RegistradaAuxiliar;
                 }
 
-                result.Add(new AulaAsignadaAuxiliarDto(
-                    AsignacionAuxiliarId: asig.Id,
-                    AulaId: asig.AulaId,
-                    GradoNombre: asig.Aula!.Grado!.Nombre,
-                    SeccionLetra: asig.Aula.Seccion!.Letra,
-                    AulaDescripcion: asig.Aula.Descripcion,
-                    CursoActual: hActual?.Nombre,
-                    HorarioClase: hActual != null ? $"{hActual.HoraInicio:hh\\:mm} - {hActual.HoraFin:hh\\:mm}" : null,
-                    EnHorario: hActual != null,
-                    EstadoAsistenciaHoy: estado.ToString()
-                ));
+                result.Add(new {
+                    asignacionAuxiliarId = asig.Id,
+                    aulaId = asig.AulaId,
+                    gradoNombre = asig.Aula!.Grado!.Nombre,
+                    seccionLetra = asig.Aula.Seccion!.Letra,
+                    aulaDescripcion = asig.Aula.Descripcion,
+                    cursosHoy = cursosHoy,
+                    estadoAsistenciaHoy = estado.ToString()
+                });
             }
 
             return Results.Ok(result);
@@ -125,7 +130,7 @@ public static class AuxiliarEndpoints
         .WithName("GetAuxiliarMisAulas");
 
         // GET /api/auxiliar/aulas/{aulaId}/asistencia/hoy
-        group.MapGet("/aulas/{aulaId:int}/asistencia/hoy", async (int aulaId, ClaimsPrincipal user, KumamotoDbContext db) =>
+        group.MapGet("/aulas/{aulaId:int}/asistencia/hoy", async (int aulaId, int? cargaId, ClaimsPrincipal user, KumamotoDbContext db) =>
         {
             var userId = GetUserId(user);
             if (userId is null) return Results.Unauthorized();
@@ -139,7 +144,7 @@ public static class AuxiliarEndpoints
             var diaEs = GetDiaSemanaEs(DateTime.Today.DayOfWeek).ToLower();
             var diaEsSinAcento = diaEs.Replace("é", "e").Replace("á", "a");
 
-            // Verificar si hay una clase programada AHORA
+            // Verificar clase programada
             var horariosAula = await (from hd in db.HorarioDetalle
                                      join ca in db.CargasAcademicas on hd.CargaId equals ca.Id
                                      join c in db.Cursos on ca.CursoId equals c.Id
@@ -148,30 +153,36 @@ public static class AuxiliarEndpoints
                                            && hd.Estado == 1
                                      select new { c.Nombre, hd.HoraInicio, hd.HoraFin, CargaId = ca.Id, hd.DiaSemana }).ToListAsync();
 
-            var claseActual = horariosAula.FirstOrDefault(h => {
-                var d = h.DiaSemana.ToLower().Trim();
-                return (d == diaEs || d == diaEsSinAcento) && h.HoraInicio <= ahora && h.HoraFin >= ahora;
-            });
+            var claseActual = cargaId.HasValue 
+                ? horariosAula.FirstOrDefault(h => h.CargaId == cargaId.Value)
+                : horariosAula.FirstOrDefault(h => {
+                    var d = h.DiaSemana.ToLower().Trim();
+                    return (d == diaEs || d == diaEsSinAcento) && h.HoraInicio <= ahora && h.HoraFin >= ahora;
+                });
 
-            // Bloqueo si ya registró un docente
-            var hayDocente = await (from a in db.Asistencias
-                                    join e in db.Estudiantes on a.EstudianteId equals e.Id
-                                    join u in db.Usuarios on a.RegistradoPorId equals u.Id
-                                    where a.Estado == 1
-                                          && a.Fecha == hoy
-                                          && e.Estado == 1
-                                          && e.AulaId == aulaId
-                                          && u.RolId == ROL_DOCENTE
-                                    select a.Id).AnyAsync();
+            // Bloqueo si ya registró un docente PARA ESTA CARGA
+            var queryDocente = db.Asistencias
+                .Join(db.Estudiantes, a => a.EstudianteId, e => e.Id, (a, e) => new { a, e })
+                .Join(db.Usuarios, x => x.a.RegistradoPorId, u => u.Id, (x, u) => new { x.a, x.e, u })
+                .Where(x => x.a.Estado == 1 && x.a.Fecha == hoy && x.e.AulaId == aulaId && x.u.RolId == ROL_DOCENTE);
+
+            if (cargaId.HasValue) 
+                queryDocente = queryDocente.Where(x => x.a.CargaAcademicaId == cargaId.Value);
+
+            var hayDocente = await queryDocente.AnyAsync();
 
             var estudiantes = await db.Estudiantes
                 .Where(e => e.Estado == 1 && e.AulaId == aulaId)
                 .OrderBy(e => e.Apellidos).ThenBy(e => e.Nombres)
                 .ToListAsync();
 
-            var asistencias = await db.Asistencias
-                .Where(a => a.Estado == 1 && a.Fecha == hoy && estudiantes.Select(s => s.Id).Contains(a.EstudianteId))
-                .ToListAsync();
+            var asistenciasQuery = db.Asistencias
+                .Where(a => a.Estado == 1 && a.Fecha == hoy && estudiantes.Select(s => s.Id).Contains(a.EstudianteId));
+
+            if (cargaId.HasValue)
+                asistenciasQuery = asistenciasQuery.Where(a => a.CargaAcademicaId == cargaId.Value);
+
+            var asistencias = await asistenciasQuery.ToListAsync();
 
             var map = asistencias.ToDictionary(a => a.EstudianteId, a => a.Valor);
 
@@ -198,7 +209,8 @@ public static class AuxiliarEndpoints
             GuardarAsistenciaAulaRequest request,
             ClaimsPrincipal user,
             KumamotoDbContext db,
-            RiesgoService riesgoService) =>
+            RiesgoService riesgoService,
+            AlertaTempranaService alertaTempranaService) =>
         {
             var userId = GetUserId(user);
             if (userId is null) return Results.Unauthorized();
@@ -212,7 +224,7 @@ public static class AuxiliarEndpoints
             var diaEs = GetDiaSemanaEs(DateTime.Today.DayOfWeek).ToLower();
             var diaEsSinAcento = diaEs.Replace("é", "e").Replace("á", "a");
 
-            // REGLA: Debe tomarse dentro del horario
+            // REGLA: El auxiliar puede rectificar durante todo el día (abierto para justificaciones)
             var horariosAula = await (from hd in db.HorarioDetalle
                                      join ca in db.CargasAcademicas on hd.CargaId equals ca.Id
                                      where ca.AulaId == aulaId 
@@ -225,21 +237,9 @@ public static class AuxiliarEndpoints
                 return (d == diaEs || d == diaEsSinAcento) && h.HoraInicio <= ahora && h.HoraFin >= ahora;
             });
 
-            if (claseActual == null)
-                return Results.BadRequest(new { mensaje = "No puedes registrar asistencia fuera del horario de clase programada." });
-
-            // No permitir suplencia si docente ya registró
-            var hayDocente = await (from a in db.Asistencias
-                                    join e in db.Estudiantes on a.EstudianteId equals e.Id
-                                    join u in db.Usuarios on a.RegistradoPorId equals u.Id
-                                    where a.Estado == 1
-                                          && a.Fecha == hoy
-                                          && e.Estado == 1
-                                          && e.AulaId == aulaId
-                                          && u.RolId == ROL_DOCENTE
-                                    select a.Id).AnyAsync();
-            if (hayDocente)
-                return Results.Conflict(new { mensaje = "La asistencia ya fue registrada por el docente." });
+            // Si no hay clase actual, permitimos guardar igual (justificación extemporánea)
+            // vinculando a la última carga del día o dejando nulo si es necesario.
+            int cargaIdParaVincular = request.CargaId;
 
             var estudiantesAula = await db.Estudiantes
                 .Where(e => e.Estado == 1 && e.AulaId == aulaId)
@@ -251,8 +251,10 @@ public static class AuxiliarEndpoints
             // Procesar los items enviados
             var mapRequest = request.Items?.ToDictionary(i => i.EstudianteId, i => i.Valor) ?? new Dictionary<int, string>();
 
+            // IMPORTANTE: Buscamos CUALQUIER asistencia previa para este bloque, 
+            // ya sea registrada por un docente o por otro auxiliar.
             var existentes = await db.Asistencias
-                .Where(a => a.Estado == 1 && a.Fecha == hoy && setEstIds.Contains(a.EstudianteId))
+                .Where(a => a.Estado == 1 && a.Fecha == hoy && a.CargaAcademicaId == cargaIdParaVincular && setEstIds.Contains(a.EstudianteId))
                 .ToListAsync();
             var mapExist = existentes.ToDictionary(a => a.EstudianteId);
 
@@ -267,10 +269,10 @@ public static class AuxiliarEndpoints
 
                 if (mapExist.TryGetValue(est.Id, out var reg))
                 {
+                    // Actualizamos el registro compartido
                     reg.Valor = valor;
-                    reg.RegistradoPorId = userId.Value;
-                    reg.AsignacionAuxiliarId = asignacion.Id;
-                    reg.CargaAcademicaId = claseActual.CargaId; // Vincular a la carga actual
+                    reg.RegistradoPorId = userId.Value; // El último en modificar
+                    reg.AsignacionAuxiliarId = asignacion.Id; 
                 }
                 else
                 {
@@ -279,7 +281,7 @@ public static class AuxiliarEndpoints
                         EstudianteId = est.Id,
                         RegistradoPorId = userId.Value,
                         AsignacionAuxiliarId = asignacion.Id,
-                        CargaAcademicaId = claseActual.CargaId,
+                        CargaAcademicaId = cargaIdParaVincular,
                         Fecha = hoy,
                         Valor = valor,
                         Estado = 1
@@ -289,6 +291,13 @@ public static class AuxiliarEndpoints
 
             await db.SaveChangesAsync();
             await riesgoService.RecalcularVariableDependiente1PorAulaAsync(aulaId, hoy, db);
+            await alertaTempranaService.RecalcularRiesgoAcademico(aulaId); // Esto debería ser por aula o loop estudiantes, pero el service recibe estudianteId. 
+            // El service recibe estudianteId, así que debemos llamar por cada estudiante modificado o afectado.
+            
+            foreach (var est in estudiantesAula)
+            {
+                await alertaTempranaService.RecalcularRiesgoAcademico(est.Id);
+            }
 
             return Results.NoContent();
         })

@@ -1,83 +1,51 @@
-<div class="page-header">
-  <h1>Mis Aulas</h1>
-  <p>Supervisión diaria y verificación de asistencia.</p>
-</div>
+<div class="page-container">
+  <div class="header">
+    <h1>Mis Aulas Asignadas</h1>
+    <p>Supervisión diaria y verificación de asistencia por curso.</p>
+  </div>
 
-<div *ngIf="loading" class="state-message loading">
-  <div class="spinner"></div>
-  <span>Cargando aulas asignadas...</span>
-</div>
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando aulas...</p>
+  </div>
 
-<div *ngIf="errorMsg" class="state-message error">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <circle cx="12" cy="12" r="10"></circle>
-    <line x1="12" y1="8" x2="12" y2="12"></line>
-    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-  </svg>
-  <span>{{ errorMsg }}</span>
-</div>
+  <div *ngIf="errorMsg" class="error-state">
+    <p>{{ errorMsg }}</p>
+  </div>
 
-<div *ngIf="!loading && !errorMsg && aulas.length === 0" class="empty-state">
-  <h3>Sin aulas asignadas</h3>
-  <p>Contacta a Dirección para asignar aulas a tu usuario auxiliar.</p>
-</div>
-
-<div class="grid" *ngIf="!loading && !errorMsg && aulas.length > 0">
-  <article class="card" *ngFor="let a of aulas; trackBy: trackByAulaId">
-    <div class="top">
-      <div class="title">
-        <h3>{{ a.gradoNombre }} · Sección {{ a.seccionLetra }}</h3>
-        <p>{{ a.aulaDescripcion || '—' }}</p>
-        
-        <!-- Info del curso actual -->
-        <div class="current-course-info" *ngIf="a.cursoActual">
-          <span class="course-tag">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-            </svg>
-            {{ a.cursoActual }}
-          </span>
-          <span class="time-tag">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            {{ a.horarioClase }}
-          </span>
+  <div class="aulas-grid" *ngIf="!loading && !errorMsg">
+    <div class="aula-card" *ngFor="let aula of aulas; trackBy: trackByAulaId">
+      <div class="card-header">
+        <div class="aula-info">
+          <h3>{{ aula.gradoNombre }} · Sección {{ aula.seccionLetra }}</h3>
+          <span class="aula-desc">{{ aula.aulaDescripcion || 'Aula General' }}</span>
         </div>
-        <div class="no-course-info" *ngIf="!a.cursoActual">
-          <span class="muted-tag">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18.36 6.64a9 9 0 1 1-12.73 12.73L18.36 6.64Z"></path>
-              <line x1="6.64" y1="6.64" x2="17.36" y2="17.36"></line>
-            </svg>
-            Sin clase programada
-          </span>
+        <div class="status-badge" [ngClass]="estadoClass(aula.estadoAsistenciaHoy)">
+          {{ estadoLabel(aula.estadoAsistenciaHoy) }}
         </div>
       </div>
-      <span class="semaforo" [class]="estadoClass(a.estadoAsistenciaHoy)">{{ estadoLabel(a.estadoAsistenciaHoy) }}</span>
-    </div>
 
-    <div class="actions">
-      <button
-        class="btn primary"
-        *ngIf="a.estadoAsistenciaHoy === 'Pendiente'"
-        (click)="irAsistencia(a.aulaId)"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 7v5l3 3"></path>
-          <path d="m3 3 18 18"></path>
-          <path d="M9.049 4.049 a9 9 0 0 1 10.902 10.902"></path>
-          <path d="M14.951 19.951 a9 9 0 0 1 -10.902 -10.902"></path>
-        </svg>
-        Tomar Asistencia (Suplencia)
-      </button>
+      <div class="courses-section">
+        <label>Cursos de Hoy</label>
+        <div class="course-list">
+          <div class="course-item" *ngFor="let curso of aula.cursosHoy" 
+               [class.active]="curso.esActual" 
+               (click)="irAsistencia(aula.aulaId, curso.cargaId)">
+            <div class="course-main">
+              <span class="course-name">{{ curso.nombre }}</span>
+              <span class="course-time">{{ curso.horario }}</span>
+            </div>
+            <div class="course-action">
+              <span class="action-label">{{ curso.esActual ? 'En curso' : 'Ver bloque' }}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+          </div>
 
-      <div class="readonly" *ngIf="a.estadoAsistenciaHoy !== 'Pendiente'">
-        {{ estadoLabel(a.estadoAsistenciaHoy) }}
+          <div class="no-courses" *ngIf="aula.cursosHoy?.length === 0">
+            No hay clases programadas para hoy.
+          </div>
+        </div>
       </div>
     </div>
-  </article>
+  </div>
 </div>
-

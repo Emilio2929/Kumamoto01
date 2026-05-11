@@ -77,4 +77,8 @@ export class PadresService {
   getAsistenciasHijo(): Observable<any[]> {
     return this.http.get<any[]>(`${this.api}/me/estudiante/asistencias`);
   }
+
+  getDashboardCompleto(dni: string): Observable<any> {
+    return this.http.get<any>(`http://localhost:5121/api/parent/dashboard/${dni}`);
+  }
 }

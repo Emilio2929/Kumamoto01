@@ -1,0 +1,81 @@
+<div class="dashboard-container">
+  <div class="header">
+    <h1>Panel de Auxiliar</h1>
+    <p>Resumen de asistencia y riesgos en tus aulas asignadas.</p>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Obteniendo estadísticas...</p>
+  </div>
+
+  <div *ngIf="!loading && stats?.sinAsignacion" class="empty-state">
+    <div class="icon">⚠️</div>
+    <h3>Sin aulas asignadas</h3>
+    <p>Aún no tienes aulas bajo tu supervisión. Contacta con la dirección.</p>
+  </div>
+
+  <div *ngIf="!loading && !stats?.sinAsignacion" class="dashboard-content">
+    
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon blue">🏫</div>
+        <div class="kpi-info">
+          <span class="label">Aulas Asignadas</span>
+          <span class="value">{{stats.totalAulas}}</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon purple">👥</div>
+        <div class="kpi-info">
+          <span class="label">Total Estudiantes</span>
+          <span class="value">{{stats.totalEstudiantes}}</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon green">📊</div>
+        <div class="kpi-info">
+          <span class="label">Asistencia Hoy</span>
+          <span class="value">{{stats.asistenciaHoy}}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Secciones Inferiores -->
+    <div class="bottom-grid">
+      
+      <!-- Alertas Recientes -->
+      <div class="card-panel">
+        <div class="panel-header">
+          <h3>Alertas de Riesgo Recientes</h3>
+          <span class="badge">Top 5</span>
+        </div>
+        <div class="alert-list">
+          <div *ngIf="stats.alertas.length === 0" class="no-data">No hay alertas críticas hoy.</div>
+          <div class="alert-item" *ngFor="let a of stats.alertas">
+            <div class="student-info">
+              <span class="name">{{a.estudiante}}</span>
+              <span class="cause">{{a.causa}}</span>
+            </div>
+            <span class="risk-badge" [ngClass]="getRiesgoClass(a.riesgo)">{{a.riesgo}}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tus Aulas -->
+      <div class="card-panel">
+        <div class="panel-header">
+          <h3>Tus Secciones</h3>
+        </div>
+        <div class="aula-list">
+          <div class="aula-tag" *ngFor="let aula of stats.aulasAsignadas">
+            <span class="code">📍</span>
+            <span class="name">{{aula.nombre}}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

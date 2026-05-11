@@ -1,0 +1,131 @@
+<div class="card">
+  <div class="setup-section" *ngIf="!reporteGenerado">
+    <div class="setup-grid">
+      <div class="setup-col">
+        <h4>1. Seleccionar Bimestre</h4>
+        <div class="form-group">
+          <label>Periodo (Bimestre)</label>
+          <div class="select-wrapper">
+            <select [(ngModel)]="periodoSeleccionadoId" class="form-select">
+              <option *ngFor="let p of periodos" [value]="p.id">{{ p.nombre }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="setup-col d-flex align-items-end">
+        <p class="hint-text">
+          El sistema calculará automáticamente los promedios de cada competencia y el promedio final del curso según la escala literal oficial del MINEDU (AD, A, B, C).
+        </p>
+      </div>
+    </div>
+    
+    <div class="setup-actions">
+      <button class="btn-primary" (click)="generarReporte()" [disabled]="isLoading || periodos.length === 0">
+        {{ isLoading ? 'Calculando...' : 'Generar Reporte Oficial' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="planilla-container" *ngIf="reporteGenerado">
+    <div class="planilla-toolbar">
+      <div class="toolbar-info">
+        <span class="badge-week">MINEDU</span>
+        <span class="badge-count">{{ alumnos.length }} Estudiantes Calculados</span>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn-text" (click)="reporteGenerado = false">Cambiar Configuración</button>
+        <button class="btn-save" (click)="descargarLibretas()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar Libretas Digitales
+        </button>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="grades-table">
+        <thead>
+          <tr>
+            <th class="col-num sticky-left shadow">N°</th>
+            <th class="col-name sticky-left shadow" style="left: 60px;">Estudiante</th>
+            <th class="col-grade" *ngFor="let comp of competencias; let cIndex = index">
+              <div class="comp-header">
+                <span class="comp-label" title="{{ comp.nombre }}">C{{ cIndex + 1 }}</span>
+              </div>
+            </th>
+            <th class="col-grade" style="background: var(--primary-light); color: white;">PROMEDIO FINAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let alumno of alumnos; let i = index">
+            <tr class="main-row" (click)="toggleRow(alumno)">
+              <td class="col-num sticky-left">{{ i + 1 }}</td>
+              <td class="col-name sticky-left" style="left: 60px;">
+                <div class="student-cell">
+                  <span class="expand-icon">{{ alumno.isExpanded ? '▼' : '▶' }}</span>
+                  <span class="name">{{ alumno.nombreCompleto }}</span>
+                </div>
+              </td>
+              <td class="col-grade" *ngFor="let comp of competencias">
+                <div class="grade-badge" [ngClass]="alumno.promediosCompetencias[comp.id.toString()]">
+                  {{ alumno.promediosCompetencias[comp.id.toString()] }}
+                </div>
+              </td>
+              <td class="col-grade">
+                <div class="grade-badge final" [ngClass]="alumno.promedioBimestre">
+                  {{ alumno.promedioBimestre }}
+                </div>
+              </td>
+            </tr>
+            
+            <!-- Fila Expandida: Detalles Semanales (Matriz Semanas x Competencias) -->
+            <tr *ngIf="alumno.isExpanded" class="detail-row">
+              <td colspan="2" class="sticky-left">
+                <div class="detail-label">Historial del Bimestre</div>
+              </td>
+              <td [attr.colspan]="competencias.length + 1">
+                <div class="matrix-container">
+                  <table class="matrix-table">
+                    <thead>
+                      <tr>
+                        <th>Semana</th>
+                        <th *ngFor="let comp of competencias; let cIdx = index">C{{ cIdx + 1 }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let sem of semanas">
+                        <td class="sem-label">Semana {{ sem.numeroSemana }}</td>
+                        <td *ngFor="let comp of competencias">
+                          <span class="matrix-grade" [ngClass]="getNotaSemana(alumno, comp.id, sem.id)">
+                            {{ getNotaSemana(alumno, comp.id, sem.id) }}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                    <tfoot>
+                      <tr class="footer-avg">
+                        <td>PROMEDIO</td>
+                        <td *ngFor="let comp of competencias">
+                          <span class="matrix-grade bold" [ngClass]="alumno.promediosCompetencias[comp.id.toString()]">
+                            {{ alumno.promediosCompetencias[comp.id.toString()] }}
+                          </span>
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+          
+          <tr *ngIf="alumnos.length === 0">
+            <td [attr.colspan]="competencias.length + 3" class="text-center py-4">No hay estudiantes en este curso.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-footer-hint">
+      <p>💡 Promedio calculado usando valores numéricos MINEDU: AD (4.0), A (3.0), B (2.0), C (1.0). El promedio es la media matemática redondeada a la letra más cercana.</p>
+    </div>
+  </div>
+</div>

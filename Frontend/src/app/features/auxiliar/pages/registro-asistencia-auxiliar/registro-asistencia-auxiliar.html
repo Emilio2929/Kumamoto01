@@ -1,112 +1,121 @@
-<div class="page-header">
-  <h1>Asistencia (Suplencia)</h1>
-  <p>Aula ID {{ aulaId }} · Hoy</p>
-</div>
+<div class="registration-wrapper">
+  <header class="content-header">
+    <div class="header-left">
+      <h1>Control de Asistencia</h1>
+      <p>Aula: {{ getAulaName() }} · Hoy {{ hoy | date:'dd/MM/yyyy' }}</p>
+    </div>
+  </header>
 
-<div *ngIf="loading" class="state-message loading">
-  <div class="spinner"></div>
-  <span>Cargando alumnos...</span>
-</div>
-
-<div *ngIf="errorMsg" class="state-message error">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <circle cx="12" cy="12" r="10"></circle>
-    <line x1="12" y1="8" x2="12" y2="12"></line>
-    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-  </svg>
-  <span>{{ errorMsg }}</span>
-</div>
-
-<div *ngIf="!loading && bloqueadaPorDocente" class="lock-banner">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-  </svg>
-  <span>Registrada por Docente. Esta vista es solo lectura.</span>
-</div>
-
-<div *ngIf="!loading && !bloqueadaPorDocente && cursoActual" class="info-banner">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-  </svg>
-  <span>Clase actual: <strong>{{ cursoActual }}</strong> ({{ horarioClase }})</span>
-</div>
-
-<div *ngIf="!loading && !bloqueadaPorDocente && fueraDeHorario" class="warning-banner">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-    <line x1="12" y1="9" x2="12" y2="13"></line>
-    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-  </svg>
-  <span>No hay una clase programada en este momento. Solo puedes registrar asistencia durante el horario de clase.</span>
-</div>
-
-<div class="list" *ngIf="!loading && !errorMsg">
-  <article class="row" *ngFor="let r of rows; trackBy: trackByEstudianteId">
-    <div class="left">
-      <div class="name">{{ r.alumno.apellidos }}, {{ r.alumno.nombres }}</div>
-      <div class="sub">ID {{ r.alumno.estudianteId }}</div>
+  <main class="main-content">
+    <div *ngIf="loading" class="state-container loading">
+      <div class="spinner"></div>
+      <span>Cargando lista de alumnos...</span>
     </div>
 
-    <div class="right">
-      <button class="inc-btn" (click)="abrirIncidencia(r.alumno.estudianteId)" [disabled]="incidenciaSaving">
-        Incidencia
-      </button>
-
-      <button
-        class="toggle"
-        [class.on]="r.valor === 'P'"
-        [disabled]="bloqueadaPorDocente || fueraDeHorario"
-        (click)="toggle(r)"
-        type="button"
-      >
-        <span class="pill" [class.ok]="r.valor === 'P'" [class.bad]="r.valor === 'F'">
-          {{ r.valor === 'P' ? 'Presente' : 'Faltó' }}
-        </span>
-      </button>
+    <div *ngIf="errorMsg" class="state-container error">
+      <div class="error-box">{{ errorMsg }}</div>
     </div>
-  </article>
-</div>
 
-<div class="sticky-save" *ngIf="!loading && !errorMsg">
-  <button class="save-btn" (click)="guardar()" [disabled]="saving || bloqueadaPorDocente || fueraDeHorario">
-    {{ saving ? 'Guardando...' : 'Guardar Asistencia' }}
-  </button>
-  <a class="back-link" routerLink="/dashboard/auxiliar/aulas">Volver</a>
+    <div class="banners-stack" *ngIf="!loading && !errorMsg">
+      <div *ngIf="bloqueadaPorDocente" class="banner rectify">
+        <div class="banner-icon">⚠️</div>
+        <div class="banner-text">
+          <strong>Asistencia Registrada por Docente</strong>
+          <p>Puedes rectificar si existe una justificación (Tardanza/Falta).</p>
+        </div>
+      </div>
+
+      <div *ngIf="cursoActual" class="banner info">
+        <div class="banner-icon">📘</div>
+        <div class="banner-text">
+          <strong>Clase: {{ cursoActual }}</strong>
+          <p>Horario: {{ horarioClase }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="students-list" *ngIf="!loading && !errorMsg">
+      <div class="student-card" *ngFor="let r of rows; trackBy: trackByEstudianteId">
+        <div class="student-info">
+          <span class="student-name">{{ r.alumno.apellidos }}, {{ r.alumno.nombres }}</span>
+          <div class="status-labels">
+            <span class="badge p" *ngIf="r.valor === 'P'">PRESENTE</span>
+            <span class="badge t" *ngIf="r.valor === 'T'">TARDANZA</span>
+            <span class="badge f" *ngIf="r.valor === 'F'">FALTÓ</span>
+          </div>
+        </div>
+
+        <div class="student-actions">
+          <button class="btn-incidencia" (click)="abrirIncidencia(r.alumno.estudianteId)" title="Registrar Incidencia">
+            <span>📋</span>
+          </button>
+
+          <!-- Selector de 3 estados (P, T, F) -->
+          <div class="state-selector">
+            <button class="state-btn p" [class.active]="r.valor === 'P'" (click)="setValor(r, 'P')">P</button>
+            <button class="state-btn t" [class.active]="r.valor === 'T'" (click)="setValor(r, 'T')">T</button>
+            <button class="state-btn f" [class.active]="r.valor === 'F'" (click)="setValor(r, 'F')">F</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="content-footer" *ngIf="!loading && !errorMsg">
+    <div class="footer-container">
+      <button class="btn-save" (click)="guardar()" [disabled]="saving">
+        {{ saving ? 'Guardando...' : 'Guardar y Rectificar' }}
+      </button>
+      <button class="btn-back" routerLink="/dashboard/auxiliar/aulas">VOLVER</button>
+    </div>
+  </footer>
 </div>
 
 <!-- Modal incidencia -->
 <div class="modal-overlay" *ngIf="incidenciaOpen" (click)="cerrarIncidencia()"></div>
 <div class="modal-card" *ngIf="incidenciaOpen">
   <div class="modal-header">
-    <h3>Registrar incidencia</h3>
-    <button class="x" (click)="cerrarIncidencia()" aria-label="Cerrar">×</button>
+    <h3>Nueva Incidencia / Justificación</h3>
+    <button class="btn-close" (click)="cerrarIncidencia()">×</button>
   </div>
 
   <form [formGroup]="incidenciaForm" (ngSubmit)="guardarIncidencia()" class="modal-body">
-    <div class="field">
+    <div class="form-group">
       <label>Tipo</label>
       <select formControlName="tipoIncidencia">
         <option value="Conducta">Conducta</option>
         <option value="Salud">Salud</option>
         <option value="Uniforme">Uniforme</option>
+        <option value="Tardanza Justificada">Tardanza Justificada</option>
+        <option value="Falta Justificada">Falta Justificada</option>
       </select>
     </div>
 
-    <div class="field">
-      <label>Descripción (opcional)</label>
-      <textarea rows="3" formControlName="descripcion" placeholder="Detalle breve..."></textarea>
+    <div class="form-group">
+      <label>Descripción en Base de Datos</label>
+      <textarea rows="4" formControlName="descripcion" placeholder="Detalle la incidencia para el registro oficial..."></textarea>
     </div>
 
-    <p class="form-error" *ngIf="incidenciaError">{{ incidenciaError }}</p>
-
-    <div class="modal-actions">
-      <button type="button" class="btn ghost" (click)="cerrarIncidencia()">Cancelar</button>
-      <button type="submit" class="btn primary" [disabled]="incidenciaSaving">
-        {{ incidenciaSaving ? 'Guardando...' : 'Guardar' }}
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="cerrarIncidencia()">Cancelar</button>
+      <button type="submit" class="btn-submit" [disabled]="incidenciaSaving">
+        {{ incidenciaSaving ? 'Registrando...' : 'Guardar' }}
       </button>
     </div>
   </form>
 </div>
 
+<!-- Modal Confirmar Guardado -->
+<div class="modal-overlay" *ngIf="confirmarGuardarOpen" (click)="confirmarGuardarOpen = false"></div>
+<div class="modal-card confirm-modal" *ngIf="confirmarGuardarOpen">
+  <div class="modal-header">
+    <h3>Confirmar Registro</h3>
+  </div>
+  <div class="modal-body">
+    <p>¿Estás seguro de que deseas guardar y rectificar la asistencia para este bloque?</p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-cancel" (click)="confirmarGuardarOpen = false">Revisar</button>
+    <button class="btn-submit" (click)="ejecutarGuardar()">Sí, Guardar</button>
+  </div>
+</div>

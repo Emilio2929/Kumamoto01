@@ -54,6 +54,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<RiesgoService>();
 builder.Services.AddScoped<EarlyWarningService>();
+builder.Services.AddScoped<AlertaTempranaService>();
 
 // ──────────────────────────────────────────────────────────────────────────
 var app = builder.Build();
@@ -83,6 +84,9 @@ app.MapAuxiliarEndpoints();
 app.MapAuxiliaresAdminEndpoints();
 app.MapAsignacionAuxiliarEndpoints();
 app.MapIncidenciasEndpoints();
+app.MapCalificacionesEndpoints();
+app.MapDocentePortalEndpoints();
+app.MapAuxiliarPortalEndpoints();
 
 
 app.Run();

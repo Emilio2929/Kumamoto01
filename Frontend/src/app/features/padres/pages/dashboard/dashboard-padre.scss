@@ -1,173 +1,258 @@
-.dashboard-header {
-  margin-bottom: 2rem;
-  h1 { font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; }
-  p { color: var(--text-muted); font-weight: 500; }
+.dashboard-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: 'Outfit', sans-serif;
+  background: #f8fafc;
+  min-height: 100vh;
 }
 
-.grid-container {
-  display: grid;
-  gap: 1.5rem;
-}
-
-/* Empty State */
-.empty-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  background: white;
-  border-radius: 20px;
-  border: 1px dashed #cbd5e1;
-  svg { width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 1rem; }
-  h3 { color: var(--text-main); font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
-  p { color: var(--text-muted); font-size: 0.95rem; max-width: 400px; margin: 0 auto; }
-}
-
-/* Alertas */
-.alert-section {
-  display: grid;
+/* Selector de Hijos */
+.hijos-selector {
+  display: flex;
   gap: 1rem;
-}
+  margin-bottom: 2.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
 
-.alert-card {
-  display: flex;
-  gap: 1.25rem;
-  padding: 1.25rem;
-  border-radius: 16px;
-  align-items: flex-start;
-  
-  &.risk-high {
-    background-color: #fef2f2;
-    border: 1px solid #fee2e2;
-    color: #991b1b;
-    .icon { color: var(--risk-high); }
-  }
-
-  .icon svg { width: 28px; height: 28px; }
-  
-  .content {
-    h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.25rem; }
-    p { font-size: 0.95rem; font-weight: 500; line-height: 1.5; color: var(--text-main); }
-  }
-}
-
-/* Main Grid */
-.main-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 1.5rem;
-}
-
-.card {
-  background: white;
-  border-radius: 20px;
-  padding: 1.5rem;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    h3 { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
-    svg { width: 20px; height: 20px; color: var(--primary); }
-  }
-}
-
-/* Asistencia */
-.attendance-card .card-body {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-
-  @media (max-width: 480px) {
-    flex-direction: column;
-    text-align: center;
-    gap: 1.25rem;
-  }
-
-  .percentage-circle {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
+  button {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    font-weight: 800;
-    border: 8px solid #f1f5f9;
-    
-    &.ok { color: var(--risk-low); border-color: var(--risk-low); }
-    &.mid { color: var(--risk-medium); border-color: var(--risk-medium); }
-    &.bad { color: var(--risk-high); border-color: var(--risk-high); }
-  }
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 99px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
 
-  .info {
-    .status-label { font-size: 1rem; color: var(--text-main); margin-bottom: 0.25rem; }
-    .hint { font-size: 0.8rem; color: var(--text-muted); }
-  }
-}
+    .avatar { font-size: 1.25rem; }
+    .name { font-weight: 800; color: #64748b; font-size: 0.95rem; }
 
-/* Notas */
-.grades-list {
-  list-style: none;
-  display: grid;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+    &:hover { border-color: #cbd5e1; background: #f1f5f9; }
 
-  li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    background-color: #f8fafc;
-    border-radius: 12px;
-    
-    .course { font-weight: 600; color: var(--text-main); font-size: 0.95rem; }
-    
-    .grade-badge {
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      font-weight: 800;
-      
-      &.A { background-color: #dcfce7; color: #166534; }
-      &.B { background-color: #fef9c3; color: #854d0e; }
-      &.C { background-color: #fee2e2; color: #991b1b; }
+    &.active {
+      background: #4f46e5;
+      border-color: #4f46e5;
+      box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+      .name { color: white; }
+      transform: translateY(-2px);
     }
   }
 }
 
-.view-more {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #e2e8f0;
+.hijo-card {
   background: white;
-  color: var(--primary);
-  font-weight: 700;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  &:hover { background-color: #f1f5f9; }
-}
-
-.loading-state {
-  text-align: center;
-  padding: 4rem 0;
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f1f5f9;
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 1rem;
+  border-radius: 32px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  
+  &:hover { 
+    transform: translateY(-8px);
+    box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.12);
   }
-  p { color: var(--text-muted); font-weight: 600; }
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+/* Semáforo (Banner) */
+.alert-banner {
+  padding: 1.25rem 1.5rem;
+  color: white;
+  
+  &.risk-high { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); }
+  &.risk-medium { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+  &.risk-low { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+
+  .risk-label {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 99px;
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+  .risk-motivo { font-size: 0.95rem; font-weight: 600; }
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.student-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  .avatar { font-size: 2.5rem; }
+  h2 { font-size: 1.25rem; font-weight: 850; color: #1e293b; margin: 0; }
+  p { color: #64748b; font-weight: 700; margin: 0; }
+}
+
+/* Recomendación */
+.recommendation-box {
+  padding: 1rem;
+  border-radius: 16px;
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+
+  &.risk-high { background: #fee2e2; color: #991b1b; }
+  &.risk-medium { background: #fef3c7; color: #92400e; }
+  &.risk-low { background: #dcfce7; color: #166534; }
+
+  .rec-icon { font-size: 1.25rem; }
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 2.5rem;
+  align-items: center;
+  @media (max-width: 550px) { grid-template-columns: 1fr; }
+}
+
+/* Gauge de Asistencia */
+.gauge-container {
+  width: 180px;
+  height: 90px;
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.gauge-body {
+  width: 180px;
+  height: 180px;
+  background: #f1f5f9;
+  border-radius: 50%;
+  position: relative;
+}
+
+.gauge-fill {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  position: absolute;
+  clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+  transform-origin: 50% 50%;
+  transition: transform 1s ease-in-out;
+}
+
+.gauge-cover {
+  width: 130px;
+  height: 130px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 25px;
+  left: 25px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 45px;
+
+  .pct { font-size: 1.5rem; font-weight: 900; color: #1e293b; }
+  .sub { font-size: 0.7rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+}
+
+.gauge-footer {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #94a3b8;
+  margin-top: 0.75rem;
+}
+
+/* Lista de Notas */
+.incidencias-list {
+  background: #fcfcfd;
+  padding: 1.25rem;
+  border-radius: 20px;
+  border: 1px solid #f1f5f9;
+
+  h3 { font-size: 0.8rem; font-weight: 900; color: #94a3b8; text-transform: uppercase; margin-bottom: 1.25rem; letter-spacing: 0.05em; }
+  .incidencia-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    &:last-child { border: none; margin-bottom: 0; padding-bottom: 0; }
+
+    .course-detail {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+
+      .course-info {
+        .course-name { font-size: 0.95rem; font-weight: 850; color: #1e293b; }
+      }
+
+      .comp-info {
+        display: flex;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #64748b;
+        .comp-label { color: #4f46e5; font-weight: 800; }
+        .comp-desc { 
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      }
+    }
+
+    .nota-badge {
+      padding: 0.3rem 0.8rem;
+      background: #f1f5f9;
+      border-radius: 8px;
+      font-weight: 900;
+      font-size: 0.85rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      &.low { background: #fee2e2; color: #ef4444; }
+    }
+  }
+}
+
+.card-footer {
+  padding: 1rem 1.5rem;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  .btn-detail {
+    width: 100%;
+    padding: 0.75rem;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-weight: 800;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+    &:hover { border-color: #4f46e5; color: #4f46e5; }
+  }
+}
+
+/* Spinner */
+.spinner {
+  width: 40px; height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #4f46e5;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+.state-container { text-align: center; padding: 4rem 2rem; }

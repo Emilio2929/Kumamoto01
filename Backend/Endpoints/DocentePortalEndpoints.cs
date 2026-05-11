@@ -12,89 +12,113 @@ public static class DocentePortalEndpoints
     {
         var group = app.MapGroup("/api/docente-portal").WithTags("Portal Docente").RequireAuthorization();
 
-        // ── GET /api/docente-portal/clase-actual
-        group.MapGet("/clase-actual", async (ClaimsPrincipal user, KumamotoDbContext db) =>
+        // ── GET /api/docente-portal/clases-hoy
+        group.MapGet("/clases-hoy", async (ClaimsPrincipal user, KumamotoDbContext db) =>
         {
             var userId = GetUserId(user);
             if (userId is null) return Results.Unauthorized();
 
-            // 1. Obtener día y hora actual
-            var now = DateTime.Now;
-            var diaSpanish = GetDiaSemanaSpanish(now.DayOfWeek);
-            var horaActual = TimeOnly.FromDateTime(now);
+            var diaSpanish = GetDiaSemanaSpanish(DateTime.Now.DayOfWeek);
 
-            // 2. Buscar si hay una carga académica con horario activo ahora
-            var horarioActivo = await db.HorarioDetalle
+            var clases = await db.HorarioDetalle
                 .Include(h => h.Carga).ThenInclude(c => c!.Curso)
                 .Include(h => h.Carga).ThenInclude(c => c!.Aula).ThenInclude(a => a!.Grado)
                 .Include(h => h.Carga).ThenInclude(c => c!.Aula).ThenInclude(a => a!.Seccion)
                 .Where(h => h.Carga!.DocenteId == userId && 
                             h.DiaSemana == diaSpanish && 
-                            h.HoraInicio <= horaActual && 
-                            h.HoraFin >= horaActual &&
                             h.Estado == 1)
-                .FirstOrDefaultAsync();
+                .OrderBy(h => h.HoraInicio)
+                .Select(h => new 
+                {
+                    cargaId = h.Carga!.Id,
+                    curso = h.Carga.Curso!.Nombre,
+                    grado = h.Carga.Aula!.Grado!.Nombre,
+                    seccion = h.Carga.Aula.Seccion!.Letra,
+                    horaInicio = h.HoraInicio.ToString("HH:mm"),
+                    horaFin = h.HoraFin.ToString("HH:mm")
+                })
+                .ToListAsync();
 
-            if (horarioActivo?.Carga == null)
-            {
-                return Results.Ok(new { activa = false, mensaje = "No tienes clases programadas en este bloque horario." });
-            }
+            return Results.Ok(clases);
+        }).WithName("GetClasesHoyDocente");
 
-            var carga = horarioActivo.Carga;
+        // ── GET /api/docente-portal/estudiantes-carga/{cargaId}
+        group.MapGet("/estudiantes-carga/{cargaId}", async (int cargaId, ClaimsPrincipal user, KumamotoDbContext db) =>
+        {
+            var userId = GetUserId(user);
+            if (userId is null) return Results.Unauthorized();
 
-            // 3. Obtener lista de estudiantes del aula
+            var carga = await db.CargasAcademicas.FirstOrDefaultAsync(c => c.Id == cargaId && c.DocenteId == userId);
+            if (carga == null) return Results.NotFound();
+
+            var hoy = DateOnly.FromDateTime(DateTime.Today);
+            var asistenciasHoy = await db.Asistencias
+                .Where(a => a.CargaAcademicaId == cargaId && a.Fecha == hoy && a.Estado == 1)
+                .ToDictionaryAsync(a => a.EstudianteId, a => a.Valor);
+
             var estudiantes = await db.Estudiantes
                 .Where(e => e.AulaId == carga.AulaId && e.Estado == 1)
                 .OrderBy(e => e.Apellidos).ThenBy(e => e.Nombres)
-                .Select(e => new { e.Id, NombreCompleto = $"{e.Apellidos}, {e.Nombres}" })
+                .Select(e => new { 
+                    e.Id, 
+                    NombreCompleto = $"{e.Apellidos}, {e.Nombres}",
+                    valorActual = asistenciasHoy.ContainsKey(e.Id) ? asistenciasHoy[e.Id] : null
+                })
                 .ToListAsync();
 
-            return Results.Ok(new
-            {
-                activa = true,
-                cargaId = carga.Id,
-                aulaId = carga.AulaId,
-                curso = carga.Curso?.Nombre,
-                grado = carga.Aula?.Grado?.Nombre,
-                seccion = carga.Aula?.Seccion?.Letra,
-                estudiantes
-            });
-        }).WithName("GetClaseActualDocente");
+            return Results.Ok(estudiantes);
+        }).WithName("GetEstudiantesCargaDocente");
 
         // ── POST /api/docente-portal/registrar-asistencia
-        group.MapPost("/registrar-asistencia", async (AsistenciaDocenteRequest request, ClaimsPrincipal user, KumamotoDbContext db, EarlyWarningService earlyWarning) =>
+        group.MapPost("/registrar-asistencia", async (AsistenciaDocenteRequest request, ClaimsPrincipal user, KumamotoDbContext db, AlertaTempranaService alertaTempranaService) =>
         {
             var userId = GetUserId(user);
             if (userId is null) return Results.Unauthorized();
 
             if (request.Estudiantes == null || !request.Estudiantes.Any())
-                return Results.BadRequest(new { mensaje = "Debe marcar la asistencia de al menos un estudiante." });
+                return Results.BadRequest(new { mensaje = "Debe marcar la asistencia." });
 
             var hoy = DateOnly.FromDateTime(DateTime.Now);
 
+            // Buscamos asistencias previas para este bloque/día para actualizarlas en lugar de duplicarlas
+            var existentes = await db.Asistencias
+                .Where(a => a.CargaAcademicaId == request.CargaId && a.Fecha == hoy && a.Estado == 1)
+                .ToListAsync();
+            var mapExist = existentes.ToDictionary(a => a.EstudianteId);
+
             foreach (var item in request.Estudiantes)
             {
-                var asistencia = new Asistencia
+                if (mapExist.TryGetValue(item.EstudianteId, out var reg))
                 {
-                    EstudianteId = item.EstudianteId,
-                    RegistradoPorId = userId.Value,
-                    CargaAcademicaId = request.CargaId,
-                    Fecha = hoy,
-                    Valor = item.Presente ? "P" : "F",
-                    Estado = 1
-                };
-                db.Asistencias.Add(asistencia);
+                    // Actualizar registro compartido
+                    reg.Valor = item.Valor;
+                    reg.RegistradoPorId = userId.Value; // El último en modificar
+                }
+                else
+                {
+                    // Crear nuevo si no existe
+                    var asistencia = new Asistencia
+                    {
+                        EstudianteId = item.EstudianteId,
+                        RegistradoPorId = userId.Value,
+                        CargaAcademicaId = request.CargaId,
+                        Fecha = hoy,
+                        Valor = item.Valor,
+                        Estado = 1
+                    };
+                    db.Asistencias.Add(asistencia);
+                }
             }
 
             await db.SaveChangesAsync();
 
-            // Recalcular riesgo académico en tiempo real (Variable VD1)
+            // Recalcular riesgo académico en tiempo real (Cerebro Alerta Temprana)
             foreach (var item in request.Estudiantes)
             {
-                await earlyWarning.RecalcularRiesgoAcademico(item.EstudianteId);
+                await alertaTempranaService.RecalcularRiesgoAcademico(item.EstudianteId);
             }
 
-            return Results.Ok(new { mensaje = "Asistencia registrada exitosamente y riesgo recalculado." });
+            return Results.Ok(new { mensaje = "Asistencia registrada exitosamente." });
         }).WithName("RegistrarAsistenciaDocente");
     }
 
@@ -119,4 +143,4 @@ public static class DocentePortalEndpoints
 }
 
 public record AsistenciaDocenteRequest(int CargaId, List<EstudianteAsistenciaItem> Estudiantes);
-public record EstudianteAsistenciaItem(int EstudianteId, bool Presente);
+public record EstudianteAsistenciaItem(int EstudianteId, string Valor);

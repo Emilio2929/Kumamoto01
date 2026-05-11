@@ -1,0 +1,153 @@
+<div class="report-container">
+  <!-- Cabecera -->
+  <div class="report-header-section no-print">
+    <div class="titles">
+      <h1>Reportes de Asistencia</h1>
+      <p>Genera el registro de asistencia detallado por aula, curso y periodo.</p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-card no-print">
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>Grado y Sección</label>
+        <select [(ngModel)]="selectedAulaId" (change)="onAulaChange()">
+          <option [ngValue]="null" disabled>Seleccionar aula...</option>
+          <option *ngFor="let a of aulas" [value]="a.aulaId">{{a.gradoNombre}} {{a.seccionLetra}}</option>
+        </select>
+      </div>
+
+      <div class="filter-group" [class.disabled]="!selectedAulaId">
+        <label>Curso <span class="required">*</span></label>
+        <select [(ngModel)]="selectedCursoId" [disabled]="!selectedAulaId || loadingCursos">
+          <option [ngValue]="null" disabled>Seleccionar curso...</option>
+          <option *ngFor="let c of cursos" [value]="c.id">{{c.nombre}}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="filter-row mt-1">
+      <div class="filter-group">
+        <label>Desde</label>
+        <input type="date" [(ngModel)]="fechaInicio">
+      </div>
+      <div class="filter-group">
+        <label>Hasta</label>
+        <input type="date" [(ngModel)]="fechaFin">
+      </div>
+      <div class="filter-actions">
+        <button class="btn-generate" (click)="generarReporte()" [disabled]="!selectedAulaId || !selectedCursoId || loadingReport">
+          <span *ngIf="!loadingReport">Generar Reporte</span>
+          <span *ngIf="loadingReport" class="loading-btn">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estados de carga -->
+  <div *ngIf="loadingReport" class="loading-state">
+    <div class="spinner"></div>
+    <p>Procesando información de asistencia...</p>
+  </div>
+
+  <!-- El Reporte -->
+  <div *ngIf="reportData && !loadingReport" class="report-paper">
+    <div class="toolbar no-print">
+      <div class="view-toggles">
+        <button [class.active]="vista === 'resumen'" (click)="setVista('resumen')">📊 Resumen</button>
+        <button [class.active]="vista === 'detallado'" (click)="setVista('detallado')">📝 Detallado</button>
+      </div>
+      <button class="btn-export" (click)="imprimir()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar / Imprimir
+      </button>
+    </div>
+
+    <div class="paper-content">
+      <div class="paper-header">
+        <div class="logo-placeholder">K</div>
+        <div class="report-titles">
+          <h2>{{vista === 'resumen' ? 'Resumen de Asistencia' : 'Registro Detallado por Sesión'}}</h2>
+          <div class="meta-info">
+            <span><strong>Aula:</strong> {{getAulaSelectedName()}}</span>
+            <span><strong>Periodo:</strong> {{fechaInicio | date:'dd/MM/yyyy'}} - {{fechaFin | date:'dd/MM/yyyy'}}</span>
+            <span><strong>Curso:</strong> {{cursoNombreReporte}}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA RESUMEN -->
+      <div class="table-container" *ngIf="vista === 'resumen'">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th style="width: 40%">Estudiante</th>
+              <th class="center">Sesiones</th>
+              <th class="center">P</th>
+              <th class="center">F</th>
+              <th class="center">T</th>
+              <th class="center" style="width: 20%">% Asist.</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of reportData">
+              <td class="name-cell">{{s.nombre}}</td>
+              <td class="center">{{s.total}}</td>
+              <td class="center val-p">{{s.presentes}}</td>
+              <td class="center val-f">{{s.faltas}}</td>
+              <td class="center val-t">{{s.tardes}}</td>
+              <td class="center">
+                <div class="progress-container">
+                  <div class="progress-bar" [style.width.%]="s.porcentaje" [ngClass]="s.porcentaje < 80 ? 'low' : 'high'"></div>
+                  <span class="pct-text">{{s.porcentaje}}%</span>
+                </div>
+              </td>
+              <td>
+                <span class="risk-badge" [ngClass]="s.porcentaje < 80 ? 'risk-high' : 'risk-low'">
+                  {{s.porcentaje < 80 ? 'Riesgo' : 'Regular'}}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- VISTA DETALLADA -->
+      <div class="table-container" *ngIf="vista === 'detallado'">
+        <table class="modern-table detailed">
+          <thead>
+            <tr>
+              <th style="width: 15%">Fecha</th>
+              <th style="width: 25%">Curso</th>
+              <th style="width: 40%">Estudiante</th>
+              <th class="center" style="width: 20%">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of detailedLogs">
+              <td class="date-cell">{{log.fecha | date:'dd/MM/yyyy'}}</td>
+              <td class="course-cell">{{log.curso}}</td>
+              <td class="name-cell">{{log.nombreEstudiante}}</td>
+              <td class="center">
+                <span class="status-pill" [ngClass]="getStatusClass(log.valor)">
+                  {{getStatusLabel(log.valor)}}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado vacío -->
+  <div *ngIf="!loadingReport && !reportData" class="empty-state no-print">
+    <div class="empty-icon">📂</div>
+    <h3>Consulta de Asistencia</h3>
+    <p>Selecciona grado, sección y el curso obligatorio para generar el reporte consolidado.</p>
+  </div>
+</div>

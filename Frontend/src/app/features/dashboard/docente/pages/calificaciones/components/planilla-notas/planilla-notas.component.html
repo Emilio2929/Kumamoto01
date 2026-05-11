@@ -1,0 +1,161 @@
+<div class="card table-card">
+  <div class="card-header">
+    <h3>Registro de Evaluación Semanal</h3>
+  </div>
+
+  <!-- Paso 1: Configuración de la Evaluación (Sólo visible si no se ha generado la planilla) -->
+  <div class="card-body setup-section" *ngIf="!planillaGenerada">
+    <div *ngIf="competencias.length === 0" class="state-message empty">
+      <span>Debes agregar competencias generales del curso antes de poder calificar.</span>
+    </div>
+
+    <div *ngIf="competencias.length > 0" class="setup-grid">
+      <!-- Selector de Bimestre y Semana -->
+      <div class="setup-col">
+        <h4>1. Selecciona el Periodo y Semana</h4>
+        <div class="form-group">
+          <label>Bimestre</label>
+          <div class="select-wrapper">
+            <select [(ngModel)]="periodoSeleccionadoId" (change)="onPeriodoChange()" class="form-select">
+              <option *ngFor="let p of periodos" [value]="p.id" [disabled]="isPeriodDisabled(p)">
+                {{ p.nombre }} {{ isPeriodDisabled(p) ? '(Próximamente)' : '' }}
+              </option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-group mt-3">
+          <label>Semana</label>
+          <div class="select-wrapper">
+            <select [(ngModel)]="semanaSeleccionadaId" class="form-select">
+              <option *ngFor="let s of semanasDelPeriodo" 
+                      [value]="s.id" 
+                      [disabled]="isWeekIdDisabled(s.numeroSemana)">
+                Semana {{ s.numeroSemana }} {{ isWeekIdDisabled(s.numeroSemana) ? '(Bloqueada)' : '' }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selector de Competencias -->
+      <div class="setup-col">
+        <h4>2. ¿Qué vas a evaluar esta semana?</h4>
+        <div class="competencies-checkbox-list">
+          <label class="checkbox-item" *ngFor="let comp of competencias">
+            <input type="checkbox" 
+                   [checked]="competenciasSeleccionadasIds.has(comp.id)"
+                   (change)="toggleCompetencia(comp.id)">
+            <span class="checkmark"></span>
+            <span class="comp-label-text">{{ comp.nombre }}</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-actions" *ngIf="competencias.length > 0">
+      <button class="btn-primary" 
+              (click)="generarPlanilla()" 
+              [disabled]="competenciasSeleccionadasIds.size === 0">
+        Generar Planilla
+      </button>
+      <p class="hint-text" *ngIf="competenciasSeleccionadasIds.size === 0">
+        Selecciona al menos una competencia para continuar.
+      </p>
+    </div>
+  </div>
+
+  <!-- Paso 2: Planilla Generada -->
+  <div class="card-body p-0" *ngIf="planillaGenerada">
+    <div class="planilla-toolbar">
+      <div class="toolbar-info">
+        <span class="badge-week">Semana Evaluada</span>
+        <span class="badge-count">{{ alumnos.length }} Alumnos</span>
+        <button class="btn-text" (click)="cambiarConfiguracion()">Cambiar Configuración</button>
+      </div>
+
+      <button (click)="guardarCambios()" [disabled]="dirtyCells.size === 0 || isSaving" class="btn-save">
+        <span *ngIf="isSaving" class="loader"></span>
+        <span *ngIf="!isSaving">Guardar Cambios</span>
+        <span *ngIf="dirtyCells.size > 0 && !isSaving" class="dirty-badge">{{dirtyCells.size}}</span>
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="table-state loading">
+      <div class="spinner"></div>
+      <p>Cargando planilla...</p>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-responsive" *ngIf="!isLoading">
+      <table class="grades-table">
+        <thead>
+          <tr>
+            <th class="col-num sticky-left">N°</th>
+            <th class="col-name sticky-left shadow">Estudiante</th>
+            <th *ngFor="let comp of competenciasAGradear; let i = index" class="col-grade">
+              <div class="comp-header" [title]="comp.nombre">
+                <span class="comp-label">C{{i+1}}</span>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let alumno of alumnos; let rowIdx = index">
+            <td class="col-num sticky-left">{{ rowIdx + 1 }}</td>
+            <td class="col-name sticky-left shadow">
+              <div class="student-cell">
+                <span class="name" [title]="alumno.nombreCompleto">{{ alumno.nombreCompleto }}</span>
+                <span *ngIf="alumno.tieneAlerta" class="alert-dot" title="Estudiante en riesgo"></span>
+              </div>
+            </td>
+            <td *ngFor="let comp of competenciasAGradear; let colIdx = index" class="col-grade">
+              <!-- El input verifica si existe la nota y si está bloqueada -->
+              <ng-container *ngIf="alumno.notas[comp.id.toString()] as celda">
+                <div class="input-wrapper" [class.locked]="celda.bloqueado">
+                  <input type="text" 
+                         class="grade-input nota-input"
+                         [ngClass]="{
+                           'is-risk': isRiesgo(celda.valor),
+                           'is-dirty': isDirty(alumno.estudianteId, comp.id)
+                         }"
+                         [(ngModel)]="celda.valor" 
+                         (input)="onNotaChange(alumno.estudianteId, comp.id, $event)"
+                         (keydown)="handleKeydown($event, alumno.estudianteId, colIdx, rowIdx)"
+                         maxlength="2"
+                         placeholder="-"
+                         [disabled]="celda.bloqueado"
+                         style="text-transform: uppercase;">
+                  <span *ngIf="celda.bloqueado" class="lock-icon" title="Evaluación cerrada (pasaron 24h)">🔒</span>
+                </div>
+              </ng-container>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="table-footer-hint">
+        <p>🔒 Las calificaciones se bloquean automáticamente después de 24 horas de haber sido registradas.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Modal System -->
+<div class="modal-overlay" *ngIf="modal.show">
+  <div class="modal-content">
+    <div class="modal-icon" [ngClass]="modal.type">
+      <span *ngIf="modal.type === 'success'">✓</span>
+      <span *ngIf="modal.type === 'error'">✕</span>
+      <span *ngIf="modal.type === 'confirm'">?</span>
+    </div>
+    <div class="modal-message">
+      {{ modal.message }}
+    </div>
+    <div class="modal-actions">
+      <button *ngIf="modal.type === 'confirm'" (click)="closeModal()" class="btn-modal btn-cancel">Cancelar</button>
+      <button (click)="confirmAction()" class="btn-modal btn-confirm">Aceptar</button>
+    </div>
+  </div>
+</div>
+

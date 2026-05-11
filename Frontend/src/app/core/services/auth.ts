@@ -12,6 +12,7 @@ export interface LoginResponse {
   nombres: string;
   apellidos: string;
   rol: string;
+  dni: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -40,6 +41,7 @@ export class AuthService {
       JSON.stringify({
         nombre: `${response.nombres} ${response.apellidos}`,
         rol: response.rol,
+        dni: response.dni
       })
     );
   }
@@ -58,9 +60,13 @@ export class AuthService {
     return localStorage.getItem('kumamoto_jwt');
   }
 
-  obtenerUsuario(): { nombre: string; rol: string } | null {
+  obtenerUsuario(): { nombre: string; rol: string; dni: string } | null {
     const raw = localStorage.getItem('kumamoto_user');
     return raw ? JSON.parse(raw) : null;
+  }
+
+  obtenerDni(): string | null {
+    return this.obtenerUsuario()?.dni || null;
   }
 
   obtenerUsuarioIdDesdeToken(): number | null {

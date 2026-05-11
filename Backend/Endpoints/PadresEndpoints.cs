@@ -169,13 +169,14 @@ public static class PadresEndpoints
             int porcentajeAsistencia = totalAsistencias > 0 ? (int)Math.Round((double)totalPresentes / totalAsistencias * 100) : 100;
             var estadoAsistencia = porcentajeAsistencia >= 95 ? "Excelente" : (porcentajeAsistencia >= 85 ? "Regular" : "Crítico");
 
-            // Notas recientes (usando modelo EF Core)
+            // Notas recientes (usando modelo EF Core 5NF)
             var calificaciones = await db.Calificaciones
                 .Include(c => c.Competencia).ThenInclude(comp => comp!.Curso)
+                .Include(c => c.Escala)
                 .Where(c => c.EstudianteId == estudiante.Id && c.Estado == 1)
                 .OrderByDescending(c => c.FechaRegistro)
                 .Take(4)
-                .Select(c => new { curso = c.Competencia!.Curso!.Nombre, nota = c.Nota })
+                .Select(c => new { curso = c.Competencia!.Curso!.Nombre, nota = c.Escala!.Letra })
                 .ToListAsync();
 
             // Alertas de Riesgo
@@ -222,6 +223,79 @@ public static class PadresEndpoints
             return Results.Ok(asistencias);
         }).WithName("GetAsistenciasHijo");
 
+        // ── GET /api/padres/dashboard/{dni}  → portal multi-hijo
+        app.MapGet("/api/parent/dashboard/{dni}", async (string dni, KumamotoDbContext db) =>
+        {
+            var padre = await db.Usuarios.FirstOrDefaultAsync(u => u.Dni == dni && u.RolId == ROL_PADRE && u.Estado == 1);
+            if (padre == null) return Results.NotFound(new { mensaje = "Padre no encontrado." });
+
+            var hijos = await db.Estudiantes
+                .Include(e => e.Aula).ThenInclude(a => a!.Grado)
+                .Include(e => e.Aula).ThenInclude(a => a!.Seccion)
+                .Where(e => e.PadreId == padre.Id && e.Estado == 1)
+                .ToListAsync();
+
+            var hoy = DateOnly.FromDateTime(DateTime.Today);
+            var resultados = new List<object>();
+
+            foreach (var hijo in hijos)
+            {
+                // Riesgo actual
+                var riesgo = await db.AlumnosRiesgo
+                    .Where(r => r.EstudianteId == hijo.Id && r.Estado == 1)
+                    .OrderByDescending(r => r.FechaCalculo)
+                    .FirstOrDefaultAsync();
+
+                // Asistencia
+                var totalAsistencias = await db.Asistencias.CountAsync(a => a.EstudianteId == hijo.Id && a.Estado == 1);
+                var totalFaltas = await db.Asistencias.CountAsync(a => a.EstudianteId == hijo.Id && a.Valor == "F" && a.Estado == 1);
+                var pctAsistencia = totalAsistencias > 0 ? (double)(totalAsistencias - totalFaltas) / totalAsistencias * 100 : 100;
+
+                // Notas recientes con detalle de competencia
+                var notas = await db.Calificaciones
+                    .Include(c => c.Competencia).ThenInclude(comp => comp!.Curso)
+                    .Include(c => c.Escala)
+                    .Where(c => c.EstudianteId == hijo.Id && c.Estado == 1)
+                    .OrderByDescending(c => c.FechaRegistro)
+                    .Take(4)
+                    .Select(c => new { 
+                        curso = c.Competencia!.Curso!.Nombre, 
+                        competencia = c.Competencia.Nombre,
+                        codigo = c.Competencia.Codigo,
+                        nota = c.Escala!.Letra, 
+                        fecha = c.FechaRegistro 
+                    })
+                    .ToListAsync();
+
+                resultados.Add(new
+                {
+                    id = hijo.Id,
+                    nombre = $"{hijo.Nombres} {hijo.Apellidos}",
+                    grado = hijo.Aula != null ? $"{hijo.Aula.Grado!.Nombre} {hijo.Aula.Seccion!.Letra}" : "N/A",
+                    riesgo = new
+                    {
+                        nivel = riesgo?.NivelRiesgo ?? "Bajo",
+                        motivo = riesgo?.Motivo ?? "Sin incidencias reportadas.",
+                        recomendacion = riesgo?.Recomendacion ?? "Siga apoyando el progreso de su hijo.",
+                        fecha = riesgo?.FechaCalculo
+                    },
+                    asistencia = new
+                    {
+                        porcentaje = Math.Round(pctAsistencia, 0),
+                        faltas = totalFaltas,
+                        total = totalAsistencias
+                    },
+                    ultimasNotas = notas
+                });
+            }
+
+            return Results.Ok(new
+            {
+                padre = $"{padre.Nombres} {padre.Apellidos}",
+                hijos = resultados
+            });
+        }).AllowAnonymous(); // Permitimos acceso por DNI para el dashboard de padres según requerimiento
+
         // ── GET /api/padres/libreta/{id_estudiante}
         group.MapGet("/libreta/{id:int}", async (int id, System.Security.Claims.ClaimsPrincipal user, KumamotoDbContext db) =>
         {
@@ -238,20 +312,21 @@ public static class PadresEndpoints
 
             var calificaciones = await db.Calificaciones
                 .Include(c => c.Competencia).ThenInclude(comp => comp!.Curso)
-                .Include(c => c.Periodo)
+                .Include(c => c.Semana).ThenInclude(s => s!.Periodo)
+                .Include(c => c.Escala)
                 .Where(c => c.EstudianteId == estudiante.Id && c.Estado == 1)
                 .ToListAsync();
 
             var bimestres = calificaciones
-                .Where(c => c.Periodo != null)
-                .GroupBy(c => c.Periodo!.Nombre)
+                .Where(c => c.Semana?.Periodo != null)
+                .GroupBy(c => c.Semana!.Periodo!.Nombre)
                 .Select(gb => new
                 {
                     bimestre = gb.Key,
                     cursos = gb.GroupBy(c => c.Competencia!.Curso!.Nombre)
                                .Select(gc => new {
                                    curso = gc.Key,
-                                   nota = gc.OrderByDescending(c => c.FechaRegistro).First().Nota // Toma la última nota del periodo
+                                   nota = gc.OrderByDescending(c => c.FechaRegistro).First().Escala!.Letra
                                }).ToList()
                 }).ToList();
 

@@ -6,6 +6,7 @@ public record GuardarAsistenciaAulaItemDto(
 );
 
 public record GuardarAsistenciaAulaRequest(
+    int CargaId,
     List<GuardarAsistenciaAulaItemDto> Items
 );
 

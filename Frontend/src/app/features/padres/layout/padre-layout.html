@@ -77,6 +77,16 @@
             <line x1="3" y1="18" x2="21" y2="18"></line>
           </svg>
         </button>
+
+        <!-- Selector de Hijos en Topbar -->
+        <div class="topbar-hijos-selector" *ngIf="(stateService.hijos$ | async)?.length! > 1">
+          <button *ngFor="let h of (stateService.hijos$ | async)"
+                  [class.active]="(stateService.hijoSeleccionado$ | async)?.id === h.id"
+                  (click)="seleccionarHijo(h)">
+            <span class="avatar-sm">🎓</span>
+            <span class="name-sm">{{ h.nombre.split(' ')[0] }}</span>
+          </button>
+        </div>
       </div>
 
       <div class="user-profile">

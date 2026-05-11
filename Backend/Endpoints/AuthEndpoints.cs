@@ -30,7 +30,8 @@ public static class AuthEndpoints
                 Token: token,
                 Nombres: usuario.Nombres,
                 Apellidos: usuario.Apellidos,
-                Rol: usuario.Rol?.Nombre ?? ""
+                Rol: usuario.Rol?.Nombre ?? "",
+                Dni: usuario.Dni
             ));
         })
         .WithName("Login")

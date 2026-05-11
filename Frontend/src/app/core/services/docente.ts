@@ -2,27 +2,34 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-export interface ClaseActualResponse {
-  activa: boolean;
-  mensaje?: string;
-  cargaId?: number;
-  aulaId?: number;
-  curso?: string;
-  grado?: string;
-  seccion?: string;
-  estudiantes?: { id: number; nombreCompleto: string }[];
+export interface ClaseHoy {
+  cargaId: number;
+  curso: string;
+  grado: string;
+  seccion: string;
+  horaInicio: string;
+  horaFin: string;
+}
+
+export interface EstudianteSimple {
+  id: number;
+  nombreCompleto: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class DocenteService {
   private http = inject(HttpClient);
-  private api = 'http://localhost:5121/api/docentes/portal';
+  private api = 'http://localhost:5121/api/docente-portal';
 
-  getClaseActual(): Observable<ClaseActualResponse> {
-    return this.http.get<ClaseActualResponse>(`${this.api}/clase-actual`);
+  getClasesHoy(): Observable<ClaseHoy[]> {
+    return this.http.get<ClaseHoy[]>(`${this.api}/clases-hoy`);
   }
 
-  registrarAsistencia(cargaId: number, estudiantes: { estudianteId: number; presente: boolean }[]): Observable<any> {
+  getEstudiantesCarga(cargaId: number): Observable<EstudianteSimple[]> {
+    return this.http.get<EstudianteSimple[]>(`${this.api}/estudiantes-carga/${cargaId}`);
+  }
+
+  registrarAsistencia(cargaId: number, estudiantes: { estudianteId: number; valor: string }[]): Observable<any> {
     return this.http.post(`${this.api}/registrar-asistencia`, { cargaId, estudiantes });
   }
 }

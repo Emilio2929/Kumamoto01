@@ -97,6 +97,15 @@ public class KumamotoDbContext : DbContext
             .IsUnique()
             .HasDatabaseName("uc_grado_seccion");
 
+        // Aula → Tutor (Docente, nullable)
+        modelBuilder.Entity<Aula>()
+            .HasOne(a => a.Tutor)
+            .WithMany()
+            .HasForeignKey(a => a.TutorId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
+
+
         // Unique en DNI y Correo de usuario
         modelBuilder.Entity<Usuario>()
             .HasIndex(u => u.Dni).IsUnique();

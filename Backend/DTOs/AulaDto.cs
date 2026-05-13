@@ -34,3 +34,6 @@ public record UpdateAulaDto(
 // Dropdowns
 public record GradoSimpleDto(int Id, string Nombre);
 public record SeccionSimpleDto(int Id, string Letra);
+
+// Tutoría
+public record AsignarTutorDto(int? TutorId);

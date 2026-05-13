@@ -222,5 +222,17 @@ export class EstructuraService {
   removerAsignacionCurso(cargaId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiBase}/cursos/asignaciones/${cargaId}`);
   }
+
+  // ══════════════════════════════════════════════════════
+  //  TUTORÍA
+  // ══════════════════════════════════════════════════════
+
+  getDocentes(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiBase}/docentes`);
+  }
+
+  asignarTutor(aulaId: number, tutorId: number | null): Observable<any> {
+    return this.http.patch(`${this.apiBase}/aulas/${aulaId}/tutor`, { tutorId });
+  }
 }
 

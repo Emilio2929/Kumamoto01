@@ -83,7 +83,9 @@
           <button *ngFor="let h of (stateService.hijos$ | async)"
                   [class.active]="(stateService.hijoSeleccionado$ | async)?.id === h.id"
                   (click)="seleccionarHijo(h)">
-            <span class="avatar-sm">🎓</span>
+            <span class="avatar-sm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            </span>
             <span class="name-sm">{{ h.nombre.split(' ')[0] }}</span>
           </button>
         </div>

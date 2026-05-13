@@ -17,6 +17,9 @@
     <button class="tab-btn" [class.active]="activeTab === 'auxiliares'" (click)="setTab('auxiliares')">
       Asignación Auxiliares
     </button>
+    <button class="tab-btn" [class.active]="activeTab === 'tutoria'" (click)="setTab('tutoria')">
+      Tutoría
+    </button>
   </div>
 
   <div class="tab-content">
@@ -25,5 +28,6 @@
     <app-grados-secciones-manager *ngIf="activeTab === 'grados'"></app-grados-secciones-manager>
     <app-carga-academica-manager *ngIf="activeTab === 'carga'"></app-carga-academica-manager>
     <app-auxiliares-manager *ngIf="activeTab === 'auxiliares'"></app-auxiliares-manager>
+    <app-tutoria-manager *ngIf="activeTab === 'tutoria'"></app-tutoria-manager>
   </div>
 </div>

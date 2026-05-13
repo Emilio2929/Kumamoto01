@@ -1,0 +1,116 @@
+<div class="manager-container">
+
+  <!-- Header -->
+  <div class="header-actions">
+    <div class="stats">
+      <div class="stat-item">
+        <span class="val">{{ aulas.length }}</span>
+        <span class="lbl">Aulas en el sistema</span>
+      </div>
+      <div class="stat-item">
+        <span class="val">{{ tutoriasAsignadas }}</span>
+        <span class="lbl">Con tutor asignado</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="state-block">
+    <div class="spinner"></div>
+    <p>Cargando información...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="errorLoad" class="state-block error">
+    <p>{{ errorLoad }}</p>
+    <button class="btn secondary sm" (click)="cargarDatos()">Reintentar</button>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card table-card" *ngIf="!loading && !errorLoad">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Aula</th>
+            <th>Tutor Actual</th>
+            <th>Asignar Docente</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="aulas.length === 0">
+            <td colspan="4" class="empty">No hay aulas registradas.</td>
+          </tr>
+          <tr *ngFor="let a of aulas">
+            <!-- Aula -->
+            <td>
+              <div class="aula-info">
+                <span class="bold">{{ a.gradoNombre }}</span>
+                <span class="badge-seccion">{{ a.seccionLetra }}</span>
+              </div>
+            </td>
+
+            <!-- Tutor actual -->
+            <td>
+              <div *ngIf="a.tutorId; else sinTutor" class="tutor-info">
+                <span class="tutor-name">{{ a.tutorNombre }}</span>
+              </div>
+              <ng-template #sinTutor>
+                <span class="sin-asignar">Sin asignar</span>
+              </ng-template>
+            </td>
+
+            <!-- Selector docente -->
+            <td>
+              <select
+                class="docente-select"
+                [(ngModel)]="selecciones[a.id]"
+                [disabled]="a.estado !== 1"
+              >
+                <option [ngValue]="null">— Seleccionar docente —</option>
+                <option *ngFor="let d of docentes" [ngValue]="d.id">
+                  {{ d.apellidos }}, {{ d.nombres }}
+                </option>
+              </select>
+            </td>
+
+            <!-- Botones -->
+            <td>
+              <div class="action-btns">
+                <button
+                  class="btn primary sm"
+                  [disabled]="!selecciones[a.id] || guardando[a.id] || a.estado !== 1 || selecciones[a.id] === a.tutorId"
+                  (click)="asignarTutor(a)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  {{ guardando[a.id] ? '...' : 'Asignar' }}
+                </button>
+                <button
+                  class="btn danger sm"
+                  *ngIf="a.tutorId"
+                  [disabled]="guardando[a.id]"
+                  (click)="quitarTutor(a)"
+                  title="Quitar tutor"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" [class.show]="toast.visible" [class.error]="toast.error">
+  {{ toast.mensaje }}
+</div>

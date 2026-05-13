@@ -12,31 +12,44 @@ public static class DashboardEndpoints
         // GET /api/dashboard/kpis
         group.MapGet("/kpis", async (KumamotoDbContext db) =>
         {
-            var totalAlumnos = await db.Estudiantes.CountAsync(e => e.Estado == 1);
-            
-            // Asistencia de hoy
             var hoy = DateOnly.FromDateTime(DateTime.Today);
-            var totalAsistenciasHoy = await db.Asistencias
-                .CountAsync(a => a.Fecha == hoy && a.Estado == 1);
-            var presentesHoy = await db.Asistencias
-                .CountAsync(a => a.Fecha == hoy && a.Valor == "P" && a.Estado == 1);
 
-            double porcentajeAsistencia = totalAsistenciasHoy > 0 
-                ? Math.Round((double)presentesHoy / totalAsistenciasHoy * 100, 1) 
-                : 100.0; // Si no hay registros asumimos 100% o 0% dependiendo de la regla de negocio, ponemos 100 para demo
+            // 3 queries secuenciales con GroupBy (antes eran 4 queries separados)
+            // DbContext NO es thread-safe: no se puede usar Task.WhenAll aquí
+            var totalAlumnos = await db.Estudiantes.CountAsync(e => e.Estado == 1);
 
-            // Riesgos
-            var riesgoMedio = await db.AlertasRiesgo
-                .CountAsync(a => a.NivelRiesgo == "Medio" && a.Estado == 1);
-            var riesgoAlto = await db.AlertasRiesgo
-                .CountAsync(a => a.NivelRiesgo == "Alto" && a.Estado == 1);
+            // Asistencia hoy: 1 query con GroupBy en vez de 2 Count separados
+            var asist = await db.Asistencias
+                .Where(a => a.Fecha == hoy && a.Estado == 1)
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    Total    = g.Count(),
+                    Presentes = g.Count(a => a.Valor == "P")
+                })
+                .FirstOrDefaultAsync();
+
+            // Alertas: 1 query con GroupBy en vez de 2 Count separados
+            var alertas = await db.AlertasRiesgo
+                .Where(a => a.Estado == 1)
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    Medio = g.Count(a => a.NivelRiesgo == "Medio"),
+                    Alto  = g.Count(a => a.NivelRiesgo == "Alto")
+                })
+                .FirstOrDefaultAsync();
+
+            double porcentajeAsistencia = asist is { Total: > 0 }
+                ? Math.Round((double)asist.Presentes / asist.Total * 100, 1)
+                : 100.0;
 
             return Results.Ok(new
             {
-                TotalAlumnos = totalAlumnos,
+                TotalAlumnos  = totalAlumnos,
                 AsistenciaHoy = porcentajeAsistencia,
-                RiesgoMedio = riesgoMedio,
-                RiesgoAlto = riesgoAlto
+                RiesgoMedio   = alertas?.Medio ?? 0,
+                RiesgoAlto    = alertas?.Alto  ?? 0
             });
         })
         .WithName("GetDashboardKpis")

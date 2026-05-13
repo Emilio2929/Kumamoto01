@@ -8,7 +8,9 @@
   <!-- Error -->
   <div *ngIf="error" class="state-container error">
     <div class="error-card">
-      <span class="icon">⚠️</span>
+      <span class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 32px; height: 32px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </span>
       <h3>Algo salió mal</h3>
       <p>{{ error }}</p>
       <button (click)="ngOnInit()">Reintentar</button>
@@ -33,7 +35,9 @@
 
       <div class="card-body">
         <div class="student-header">
-          <div class="avatar">🎓</div>
+          <div class="avatar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 40px; height: 40px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          </div>
           <div class="info">
             <h2>{{ hijoSeleccionado.nombre }}</h2>
             <p>{{ hijoSeleccionado.grado }}</p>
@@ -41,7 +45,9 @@
         </div>
 
         <div class="recommendation-box" [ngClass]="getRiesgoClass(hijoSeleccionado.riesgo.nivel)">
-          <div class="rec-icon">💡</div>
+          <div class="rec-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </div>
           <div class="rec-text">
             <strong>Recomendación:</strong> {{ hijoSeleccionado.riesgo.recomendacion }}
           </div>

@@ -10,30 +10,63 @@ public static class AulasEndpoints
     {
         var group = app.MapGroup("/api/aulas").WithTags("Aulas").RequireAuthorization();
 
-        // ── GET /api/aulas  → lista completa (activas e inactivas) con detalle
+        // ── GET /api/aulas  → lista completa con detalle + tutor
         group.MapGet("/", async (KumamotoDbContext db) =>
         {
             var aulas = await db.Aulas
                 .Include(a => a.Grado)
                 .Include(a => a.Seccion)
+                .Include(a => a.Tutor)
                 .OrderBy(a => a.Grado!.Nombre)
                 .ThenBy(a => a.Seccion!.Letra)
-                .Select(a => new AulaDetalleDto(
+                .Select(a => new
+                {
                     a.Id,
-                    a.Grado!.Nombre,
-                    a.Seccion!.Letra,
+                    gradoNombre = a.Grado!.Nombre,
+                    seccionLetra = a.Seccion!.Letra,
                     a.Descripcion,
                     a.Capacidad,
                     a.GradoId,
                     a.SeccionId,
-                    a.Estado
-                ))
+                    a.Estado,
+                    tutorId    = a.TutorId,
+                    tutorNombre = a.Tutor != null ? $"{a.Tutor.Apellidos}, {a.Tutor.Nombres}" : null
+                })
                 .ToListAsync();
 
             return Results.Ok(aulas);
         })
         .WithName("GetAulas")
-        .WithSummary("Lista completa de aulas con estado");
+        .WithSummary("Lista completa de aulas con estado y tutor asignado");
+
+        // ── PATCH /api/aulas/{id}/tutor  → asignar o quitar tutor docente
+        group.MapPatch("/{id:int}/tutor", async (int id, AsignarTutorDto dto, KumamotoDbContext db) =>
+        {
+            var aula = await db.Aulas.FindAsync(id);
+            if (aula is null) return Results.NotFound(new { mensaje = "Aula no encontrada." });
+
+            if (dto.TutorId.HasValue)
+            {
+                // Verificar que el docente exista y sea rol Docente (rol_id = 2)
+                var docente = await db.Usuarios.FirstOrDefaultAsync(u => u.Id == dto.TutorId.Value && u.RolId == 2 && u.Estado == 1);
+                if (docente is null)
+                    return Results.BadRequest(new { mensaje = "Docente no encontrado o inactivo." });
+
+                // Verificar que el docente no sea tutor de otra aula
+                var tutoraOtraAula = await db.Aulas.AnyAsync(a => a.TutorId == dto.TutorId.Value && a.Id != id);
+                if (tutoraOtraAula)
+                    return Results.Conflict(new { mensaje = "Este docente ya es tutor de otra aula." });
+            }
+
+            aula.TutorId = dto.TutorId; // null = quitar tutor
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { mensaje = dto.TutorId.HasValue ? "Tutor asignado correctamente." : "Tutor removido." });
+        })
+        .WithName("AsignarTutorAula")
+        .WithSummary("Asignar o quitar docente tutor de un aula");
+
+
 
         // ── GET /api/aulas/combo  → lista plana {id, label} para combos externos
         group.MapGet("/combo", async (KumamotoDbContext db) =>

@@ -8,49 +8,52 @@ public class EarlyWarningService(KumamotoDbContext db)
 {
     public async Task RecalcularRiesgoAcademico(int estudianteId)
     {
-        // 1. Obtener total de asistencias tomadas para este estudiante
-        var totalSesiones = await db.Asistencias.CountAsync(a => a.EstudianteId == estudianteId && a.Estado == 1);
-        if (totalSesiones == 0) return;
+        // 1 SOLA query con agregación — evita 3 roundtrips a Supabase
+        var stats = await db.Asistencias
+            .Where(a => a.EstudianteId == estudianteId && a.Estado == 1)
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Total    = g.Count(),
+                Faltas   = g.Count(a => a.Valor == "F"),
+                Tardanzas = g.Count(a => a.Valor == "T")
+            })
+            .FirstOrDefaultAsync();
 
-        // 2. Calcular peso de inasistencias
-        // Regla: Falta (F) = 1.0, Tardanza (T) = 0.5
-        var faltas = await db.Asistencias.CountAsync(a => a.EstudianteId == estudianteId && a.Valor == "F" && a.Estado == 1);
-        var tardanzas = await db.Asistencias.CountAsync(a => a.EstudianteId == estudianteId && a.Valor == "T" && a.Estado == 1);
+        if (stats == null || stats.Total == 0) return;
 
-        double ratioInasistencia = (double)(faltas + (tardanzas * 0.5)) / totalSesiones;
+        double ratioInasistencia = (double)(stats.Faltas + (stats.Tardanzas * 0.5)) / stats.Total;
 
         string? nivelRiesgo = null;
         string motivo = "";
 
-        if (ratioInasistencia >= 0.25) // 25% o más de inasistencia acumulada
+        if (ratioInasistencia >= 0.25)
         {
             nivelRiesgo = "Alto";
-            motivo = $"Inasistencia Crítica: {faltas} faltas y {tardanzas} tardanzas ({ratioInasistencia:P0} de inasistencia).";
+            motivo = $"Inasistencia Crítica: {stats.Faltas} faltas y {stats.Tardanzas} tardanzas ({ratioInasistencia:P0} de inasistencia).";
         }
-        else if (ratioInasistencia >= 0.15) // 15% a 25%
+        else if (ratioInasistencia >= 0.15)
         {
             nivelRiesgo = "Medio";
-            motivo = $"Inasistencia Regular: {faltas} faltas y {tardanzas} tardanzas ({ratioInasistencia:P0} de inasistencia).";
+            motivo = $"Inasistencia Regular: {stats.Faltas} faltas y {stats.Tardanzas} tardanzas ({ratioInasistencia:P0} de inasistencia).";
         }
 
         if (nivelRiesgo != null)
         {
-            // Desactivar alertas anteriores para este estudiante
+            // Desactivar alertas anteriores y registrar la nueva — 1 SaveChanges
             var alertasViejas = await db.AlertasRiesgo
                 .Where(a => a.EstudianteId == estudianteId && a.Estado == 1)
                 .ToListAsync();
-            
+
             foreach (var av in alertasViejas) av.Estado = 0;
 
-            // Registrar nueva alerta
-            var alerta = new AlertaRiesgo
+            db.AlertasRiesgo.Add(new AlertaRiesgo
             {
                 EstudianteId = estudianteId,
-                NivelRiesgo = nivelRiesgo,
-                Motivo = motivo,
-                Estado = 1
-            };
-            db.AlertasRiesgo.Add(alerta);
+                NivelRiesgo  = nivelRiesgo,
+                Motivo       = motivo,
+                Estado       = 1
+            });
             await db.SaveChangesAsync();
         }
     }

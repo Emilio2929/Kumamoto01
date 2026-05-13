@@ -39,7 +39,7 @@
   }
 
   .tab-count {
-    background: rgba(255,255,255,0.25);
+    background: #4f46e5;
     border-radius: 99px;
     padding: 0 0.5rem;
     font-size: 0.7rem;
@@ -164,7 +164,7 @@
   width: 36px; height: 36px;
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
   font-size: 0.7rem; font-weight: 700; color: #fff; flex-shrink: 0; text-transform: uppercase;
-  &.docente { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+  &.docente { background: #4f46e5; }
 }
 
 .correo-badge {
@@ -180,7 +180,7 @@
   padding: 0.22rem 0.65rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600;
   &::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
   &.activo { background: rgba(16,185,129,0.12); color: #059669; &::before { background: #059669; } }
-  &.inactivo { background: rgba(107,114,128,0.12); color: #6B7280; &::before { background: #6B7280; } }
+  &.inactivo { background: #1f5ea8; color: #6B7280; &::before { background: #6B7280; } }
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────────
@@ -192,7 +192,7 @@
   svg { width: 14px; height: 14px; }
   &.edit { color: var(--primary); &:hover { background: rgba(79,70,229,0.1); } }
   &.key { color: #0891b2; &:hover { background: rgba(8,145,178,0.1); } }
-  &.toggle { color: #D97706; &:hover { background: rgba(217,119,6,0.1); } &.on { color: #059669; &:hover { background: rgba(5,150,105,0.1); } } }
+  &.toggle { color: #D97706; &:hover { background: #10b981; } &.on { color: #059669; &:hover { background: rgba(5,150,105,0.1); } } }
   &.delete { color: var(--risk-high); &:hover { background: rgba(239,68,68,0.1); } }
 }
 

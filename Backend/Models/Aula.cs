@@ -7,8 +7,10 @@ public class Aula
     public int Capacidad { get; set; }
     public int GradoId { get; set; }
     public int SeccionId { get; set; }
+    public int? TutorId { get; set; }
     public short Estado { get; set; } = 1;
 
     public Grado? Grado { get; set; }
     public Seccion? Seccion { get; set; }
+    public Usuario? Tutor { get; set; }
 }

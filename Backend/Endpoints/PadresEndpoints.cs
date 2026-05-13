@@ -162,11 +162,20 @@ public static class PadresEndpoints
 
             if (estudiante is null) return Results.NotFound(new { mensaje = "No se encontró un estudiante vinculado activo." });
 
-            // Asistencia (Total % presente)
-            var totalAsistencias = await db.Asistencias.CountAsync(a => a.EstudianteId == estudiante.Id && a.Estado == 1);
-            var totalPresentes = await db.Asistencias.CountAsync(a => a.EstudianteId == estudiante.Id && (a.Valor == "P" || a.Valor == "T") && a.Estado == 1);
-            
-            int porcentajeAsistencia = totalAsistencias > 0 ? (int)Math.Round((double)totalPresentes / totalAsistencias * 100) : 100;
+            // Asistencia: 1 query con GroupBy en vez de 2 Count separados
+            var statsAsist = await db.Asistencias
+                .Where(a => a.EstudianteId == estudiante.Id && a.Estado == 1)
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    Total    = g.Count(),
+                    Presentes = g.Count(a => a.Valor == "P" || a.Valor == "T")
+                })
+                .FirstOrDefaultAsync();
+
+            int porcentajeAsistencia = statsAsist is { Total: > 0 }
+                ? (int)Math.Round((double)statsAsist.Presentes / statsAsist.Total * 100)
+                : 100;
             var estadoAsistencia = porcentajeAsistencia >= 95 ? "Excelente" : (porcentajeAsistencia >= 85 ? "Regular" : "Crítico");
 
             // Notas recientes (usando modelo EF Core 5NF)
@@ -238,54 +247,77 @@ public static class PadresEndpoints
             var hoy = DateOnly.FromDateTime(DateTime.Today);
             var resultados = new List<object>();
 
+            // ── Cargar datos de TODOS los hijos en 3 queries (antes era N×3) ──
+            var hijoIds = hijos.Select(h => h.Id).ToList();
+
+            // Riesgos: último por estudiante
+            var riesgosDict = await db.AlumnosRiesgo
+                .Where(r => hijoIds.Contains(r.EstudianteId) && r.Estado == 1)
+                .OrderByDescending(r => r.FechaCalculo)
+                .ToListAsync();
+            var riesgosPorHijo = riesgosDict
+                .GroupBy(r => r.EstudianteId)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            // Asistencia: stats por estudiante en 1 query
+            var asistStats = await db.Asistencias
+                .Where(a => hijoIds.Contains(a.EstudianteId) && a.Estado == 1)
+                .GroupBy(a => a.EstudianteId)
+                .Select(g => new
+                {
+                    EstudianteId = g.Key,
+                    Total  = g.Count(),
+                    Faltas = g.Count(a => a.Valor == "F")
+                })
+                .ToListAsync();
+            var asistPorHijo = asistStats.ToDictionary(s => s.EstudianteId);
+
+            // Notas recientes: Top 4 por estudiante en 1 query
+            var notasTodas = await db.Calificaciones
+                .Where(c => c.EstudianteId != null && hijoIds.Contains(c.EstudianteId.Value) && c.Estado == 1)
+                .OrderByDescending(c => c.FechaRegistro)
+                .Select(c => new
+                {
+                    EstudianteId = c.EstudianteId!.Value,
+                    curso        = c.Competencia!.Curso!.Nombre,
+                    competencia  = c.Competencia.Nombre,
+                    codigo       = c.Competencia.Codigo,
+                    nota         = c.Escala!.Letra,
+                    fecha        = c.FechaRegistro
+                })
+                .ToListAsync();
+            var notasPorHijo = notasTodas
+                .GroupBy(n => n.EstudianteId)
+                .ToDictionary(g => g.Key, g => g.Take(4).ToList());
+
+            // ── Ensamblar respuesta en memoria (sin más queries) ──
             foreach (var hijo in hijos)
             {
-                // Riesgo actual
-                var riesgo = await db.AlumnosRiesgo
-                    .Where(r => r.EstudianteId == hijo.Id && r.Estado == 1)
-                    .OrderByDescending(r => r.FechaCalculo)
-                    .FirstOrDefaultAsync();
-
-                // Asistencia
-                var totalAsistencias = await db.Asistencias.CountAsync(a => a.EstudianteId == hijo.Id && a.Estado == 1);
-                var totalFaltas = await db.Asistencias.CountAsync(a => a.EstudianteId == hijo.Id && a.Valor == "F" && a.Estado == 1);
-                var pctAsistencia = totalAsistencias > 0 ? (double)(totalAsistencias - totalFaltas) / totalAsistencias * 100 : 100;
-
-                // Notas recientes con detalle de competencia
-                var notas = await db.Calificaciones
-                    .Include(c => c.Competencia).ThenInclude(comp => comp!.Curso)
-                    .Include(c => c.Escala)
-                    .Where(c => c.EstudianteId == hijo.Id && c.Estado == 1)
-                    .OrderByDescending(c => c.FechaRegistro)
-                    .Take(4)
-                    .Select(c => new { 
-                        curso = c.Competencia!.Curso!.Nombre, 
-                        competencia = c.Competencia.Nombre,
-                        codigo = c.Competencia.Codigo,
-                        nota = c.Escala!.Letra, 
-                        fecha = c.FechaRegistro 
-                    })
-                    .ToListAsync();
+                riesgosPorHijo.TryGetValue(hijo.Id, out var riesgo);
+                asistPorHijo.TryGetValue(hijo.Id, out var asist);
+                var pctAsistencia = asist is { Total: > 0 }
+                    ? (double)(asist.Total - asist.Faltas) / asist.Total * 100
+                    : 100;
 
                 resultados.Add(new
                 {
-                    id = hijo.Id,
+                    id     = hijo.Id,
                     nombre = $"{hijo.Nombres} {hijo.Apellidos}",
-                    grado = hijo.Aula != null ? $"{hijo.Aula.Grado!.Nombre} {hijo.Aula.Seccion!.Letra}" : "N/A",
+                    grado  = hijo.Aula != null ? $"{hijo.Aula.Grado!.Nombre} {hijo.Aula.Seccion!.Letra}" : "N/A",
                     riesgo = new
                     {
-                        nivel = riesgo?.NivelRiesgo ?? "Bajo",
-                        motivo = riesgo?.Motivo ?? "Sin incidencias reportadas.",
+                        nivel         = riesgo?.NivelRiesgo ?? "Bajo",
+                        motivo        = riesgo?.Motivo ?? "Sin incidencias reportadas.",
                         recomendacion = riesgo?.Recomendacion ?? "Siga apoyando el progreso de su hijo.",
-                        fecha = riesgo?.FechaCalculo
+                        fecha         = riesgo?.FechaCalculo
                     },
                     asistencia = new
                     {
                         porcentaje = Math.Round(pctAsistencia, 0),
-                        faltas = totalFaltas,
-                        total = totalAsistencias
+                        faltas     = asist?.Faltas ?? 0,
+                        total      = asist?.Total  ?? 0
                     },
-                    ultimasNotas = notas
+                    ultimasNotas = notasPorHijo.TryGetValue(hijo.Id, out var notas) ? notas : new()
                 });
             }
 
@@ -318,7 +350,7 @@ public static class PadresEndpoints
                 .ToListAsync();
 
             var bimestres = calificaciones
-                .Where(c => c.Semana?.Periodo != null)
+                .Where(c => c.Semana?.Periodo != null && c.Competencia?.Curso != null && c.Escala != null)
                 .GroupBy(c => c.Semana!.Periodo!.Nombre)
                 .Select(gb => new
                 {
@@ -326,7 +358,7 @@ public static class PadresEndpoints
                     cursos = gb.GroupBy(c => c.Competencia!.Curso!.Nombre)
                                .Select(gc => new {
                                    curso = gc.Key,
-                                   nota = gc.OrderByDescending(c => c.FechaRegistro).First().Escala!.Letra
+                                   nota = gc.OrderByDescending(c => c.FechaRegistro).FirstOrDefault()?.Escala?.Letra ?? "-"
                                }).ToList()
                 }).ToList();
 

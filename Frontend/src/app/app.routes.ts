@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { directoraGuard, docenteGuard, auxiliarGuard } from './core/guards/auth.guard';
 import { padresGuard } from './core/guards/padres.guard';
 
 export const routes: Routes = [
@@ -14,6 +15,7 @@ export const routes: Routes = [
 	},
 	{
 		path: 'dashboard/directora',
+		canActivate: [directoraGuard],
 		loadComponent: () =>
 			import('./features/dashboard/directora/directora').then((m) => m.Directora),
 		children: [
@@ -54,6 +56,7 @@ export const routes: Routes = [
 	},
 	{
 		path: 'dashboard/docente',
+		canActivate: [docenteGuard],
 		loadComponent: () =>
 			import('./features/dashboard/docente/docente').then((m) => m.Docente),
 		children: [
@@ -136,6 +139,7 @@ export const routes: Routes = [
 	},
 	{
 		path: 'dashboard/auxiliar',
+		canActivate: [auxiliarGuard],
 		loadComponent: () =>
 			import('./features/auxiliar').then((m) => m.AuxiliarLayoutComponent),
 		children: [
@@ -179,3 +183,4 @@ export const routes: Routes = [
 		redirectTo: 'login',
 	},
 ];
+

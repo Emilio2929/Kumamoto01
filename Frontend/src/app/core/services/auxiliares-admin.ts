@@ -16,6 +16,7 @@ export interface CreateAuxiliarDto {
   dni: string;
   nombres: string;
   apellidos: string;
+  correo: string;
   telefono: string | null;
 }
 

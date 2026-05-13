@@ -36,24 +36,29 @@ public static class AuxiliaresAdminEndpoints
             if (string.IsNullOrWhiteSpace(dto.Apellidos))
                 return Results.BadRequest(new { mensaje = "Los apellidos son requeridos." });
 
+            if (string.IsNullOrWhiteSpace(dto.Correo))
+                return Results.BadRequest(new { mensaje = "El correo electrónico es requerido." });
+
             var existeDni = await db.Usuarios.AnyAsync(u => u.Dni == dto.Dni);
             if (existeDni)
                 return Results.Conflict(new { mensaje = "Ya existe un usuario con ese DNI." });
+
+            var existeCorreo = await db.Usuarios.AnyAsync(u => u.Correo == dto.Correo);
+            if (existeCorreo)
+                return Results.Conflict(new { mensaje = "Ese correo ya está registrado." });
 
             var existeEstudiante = await db.Estudiantes.AnyAsync(e => e.Dni == dto.Dni);
             if (existeEstudiante)
                 return Results.Conflict(new { mensaje = "El DNI ya está registrado como estudiante." });
 
-            // Genera correo: [1ra letra nombre][primer apellido]@kumamoto.edu.pe
-            var correo = await GenerarCorreoUnicoAsync(dto.Nombres.Trim(), dto.Apellidos.Trim(), db);
-            var clave  = $"Kuma{dto.Dni}";
+            var clave = $"Kuma{dto.Dni}";
 
             var auxiliar = new Usuario
             {
                 Dni       = dto.Dni.Trim(),
                 Nombres   = dto.Nombres.Trim(),
                 Apellidos = dto.Apellidos.Trim(),
-                Correo    = correo,
+                Correo    = dto.Correo.Trim().ToLower(),
                 Telefono  = dto.Telefono?.Trim(),
                 ClaveHash = clave,
                 RolId     = ROL_AUXILIAR,
@@ -65,10 +70,11 @@ public static class AuxiliaresAdminEndpoints
             return Results.Created($"/api/auxiliares-admin/{auxiliar.Id}", new
             {
                 auxiliar.Id,
-                correo,
+                correo = auxiliar.Correo,
                 claveGenerada = clave,
-                mensaje = $"Credenciales: correo={correo} | clave={clave}"
+                mensaje = $"Credenciales enviadas a {auxiliar.Correo}. Clave temporal: {clave}"
             });
+
         }).WithName("CreateAuxiliarAdmin");
 
         // PUT /api/auxiliares-admin/{id} → editar datos

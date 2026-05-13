@@ -87,6 +87,10 @@ app.MapIncidenciasEndpoints();
 app.MapCalificacionesEndpoints();
 app.MapDocentePortalEndpoints();
 app.MapAuxiliarPortalEndpoints();
+app.MapAdministrativosEndpoints();
+app.MapComunicadoEndpoints();
+
+
 
 
 app.Run();

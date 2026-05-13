@@ -27,6 +27,7 @@ public static class DashboardEndpoints
                     Total    = g.Count(),
                     Presentes = g.Count(a => a.Valor == "P")
                 })
+                .OrderBy(_ => 1)
                 .FirstOrDefaultAsync();
 
             // Alertas: 1 query con GroupBy en vez de 2 Count separados
@@ -38,6 +39,7 @@ public static class DashboardEndpoints
                     Medio = g.Count(a => a.NivelRiesgo == "Medio"),
                     Alto  = g.Count(a => a.NivelRiesgo == "Alto")
                 })
+                .OrderBy(_ => 1)
                 .FirstOrDefaultAsync();
 
             double porcentajeAsistencia = asist is { Total: > 0 }

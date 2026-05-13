@@ -27,6 +27,8 @@ public class KumamotoDbContext : DbContext
     public DbSet<SemanaAcademica> SemanaAcademicas { get; set; } = null!;
     public DbSet<CalificacionBimestral> CalificacionesBimestrales { get; set; } = null!;
     public DbSet<AlumnoRiesgo> AlumnosRiesgo { get; set; } = null!;
+    public DbSet<Comunicado> Comunicados { get; set; } = null!;
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -53,6 +55,8 @@ public class KumamotoDbContext : DbContext
         modelBuilder.Entity<SemanaAcademica>().ToTable("semana_academica");
         modelBuilder.Entity<CalificacionBimestral>().ToTable("calificacion_bimestral");
         modelBuilder.Entity<AlumnoRiesgo>().ToTable("alumno_riesgo");
+        modelBuilder.Entity<Comunicado>().ToTable("comunicado");
+
 
         // Relaciones de Calificacion (5NF)
         modelBuilder.Entity<Calificacion>()

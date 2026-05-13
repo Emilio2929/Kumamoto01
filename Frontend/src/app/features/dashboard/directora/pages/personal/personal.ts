@@ -13,6 +13,13 @@ import {
   CreateAuxiliarDto,
   UpdateAuxiliarDto,
 } from '../../../../../core/services/auxiliares-admin';
+import {
+  AdministrativosService,
+  AdministrativoDetalleDto,
+  CreateAdministrativoDto,
+  UpdateAdministrativoDto,
+} from '../../../../../core/services/administrativos';
+
 
 @Component({
   selector: 'app-personal',
@@ -25,7 +32,9 @@ import {
 export class Personal implements OnInit {
   private svc = inject(DocentesService);
   private auxSvc = inject(AuxiliaresAdminService);
+  private adminSvc = inject(AdministrativosService);
   private cdr = inject(ChangeDetectorRef);
+
 
   // ── Tab activo ─────────────────────────────────────────────
   activeTab: 'docentes' | 'auxiliares' | 'admin' = 'docentes';
@@ -33,7 +42,9 @@ export class Personal implements OnInit {
     this.activeTab = tab;
     if (tab === 'docentes' && this.docentes.length === 0) this.cargar();
     if (tab === 'auxiliares' && this.auxiliares.length === 0) this.cargarAuxiliares();
+    if (tab === 'admin' && this.administrativos.length === 0) this.cargarAdmin();
   }
+
 
   // ── Lista Docentes ─────────────────────────────────────────
   docentes: DocenteDetalleDto[] = [];
@@ -67,7 +78,8 @@ export class Personal implements OnInit {
 
   // ── Confirmar eliminar ─────────────────────────────────────
   confirmEliminarId: number | null = null;
-  confirmEliminarTipo: 'docente' | 'auxiliar' = 'docente';
+  confirmEliminarTipo: 'docente' | 'auxiliar' | 'administrativo' = 'docente';
+
 
   // ── Gestión Auxiliares ─────────────────────────────────────
   auxiliares: AuxiliarDetalleDto[] = [];
@@ -77,7 +89,8 @@ export class Personal implements OnInit {
   busquedaAux = '';
 
   modalCrearAux = false;
-  formCrearAux: CreateAuxiliarDto = { dni: '', nombres: '', apellidos: '', telefono: null };
+  formCrearAux: CreateAuxiliarDto = { dni: '', nombres: '', apellidos: '', correo: '', telefono: null };
+
   errorCrearAux: string | null = null;
   guardandoCrearAux = false;
   credencialesAux: { correo: string; clave: string } | null = null;
@@ -274,7 +287,14 @@ export class Personal implements OnInit {
     this.cdr.markForCheck();
   }
 
+  pedirEliminarAdmin(id: number): void {
+    this.confirmEliminarId = id;
+    this.confirmEliminarTipo = 'administrativo';
+    this.cdr.markForCheck();
+  }
+
   cancelarEliminar(): void { this.confirmEliminarId = null; this.cdr.markForCheck(); }
+
   
   confirmarEliminar(): void {
     if (this.confirmEliminarId === null) return;
@@ -283,12 +303,17 @@ export class Personal implements OnInit {
       this.svc.delete(this.confirmEliminarId).subscribe({
         next: () => { this.confirmEliminarId = null; this.cargar(); },
       });
-    } else {
+    } else if (this.confirmEliminarTipo === 'auxiliar') {
       this.auxSvc.delete(this.confirmEliminarId).subscribe({
         next: () => { this.confirmEliminarId = null; this.cargarAuxiliares(); },
       });
+    } else {
+      this.adminSvc.delete(this.confirmEliminarId).subscribe({
+        next: () => { this.confirmEliminarId = null; this.cargarAdmin(); },
+      });
     }
   }
+
 
   // ── Lógica Auxiliares ───────────────────────────────────────
   cargarAuxiliares(): void {
@@ -323,7 +348,8 @@ export class Personal implements OnInit {
   onBusquedaAux(): void { this.filtrarAux(); }
 
   abrirModalCrearAux(): void {
-    this.formCrearAux = { dni: '', nombres: '', apellidos: '', telefono: null };
+    this.formCrearAux = { dni: '', nombres: '', apellidos: '', correo: '', telefono: null };
+
     this.errorCrearAux = null;
     this.credencialesAux = null;
     this.modalCrearAux = true;
@@ -337,10 +363,12 @@ export class Personal implements OnInit {
   }
 
   crearAuxiliar(): void {
-    if (!this.formCrearAux.dni.trim() || !this.formCrearAux.nombres.trim() || !this.formCrearAux.apellidos.trim()) {
-      this.errorCrearAux = 'DNI, nombres y apellidos son requeridos.';
+    if (!this.formCrearAux.dni.trim() || !this.formCrearAux.nombres.trim() || !this.formCrearAux.apellidos.trim() || !this.formCrearAux.correo.trim()) {
+
+      this.errorCrearAux = 'DNI, nombres, apellidos y correo son requeridos.';
       return;
     }
+
     this.guardandoCrearAux = true;
     this.errorCrearAux = null;
 
@@ -428,4 +456,174 @@ export class Personal implements OnInit {
       next: (res) => { a.estado = res.estado; this.cdr.markForCheck(); },
     });
   }
+
+  // ── Lógica Administrativos ──────────────────────────────────
+  administrativos: AdministrativoDetalleDto[] = [];
+  administrativosFiltrados: AdministrativoDetalleDto[] = [];
+  loadingAdmin = false;
+  errorLoadAdmin: string | null = null;
+  busquedaAdmin = '';
+
+  modalCrearAdmin = false;
+  formCrearAdmin: CreateAdministrativoDto = { dni: '', nombres: '', apellidos: '', correo: '', telefono: null };
+
+  errorCrearAdmin: string | null = null;
+  guardandoCrearAdmin = false;
+  credencialesAdmin: { correo: string; clave: string } | null = null;
+
+  modalEditarAdmin = false;
+  adminEditandoId: number | null = null;
+  formEditarAdmin: UpdateAdministrativoDto = { nombres: '', apellidos: '', correo: null, telefono: null };
+  errorEditarAdmin: string | null = null;
+  guardandoEditarAdmin = false;
+
+  modalClaveAdmin = false;
+  adminClaveId: number | null = null;
+  adminClaveNombre = '';
+  nuevaClaveAdmin = '';
+  mostrarClaveAdmin = false;
+  errorClaveAdmin: string | null = null;
+  guardandoClaveAdmin = false;
+
+  cargarAdmin(): void {
+    this.loadingAdmin = true;
+    this.errorLoadAdmin = null;
+    this.adminSvc.getAll().subscribe({
+      next: (data) => {
+        this.administrativos = data;
+        this.filtrarAdmin();
+        this.loadingAdmin = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.loadingAdmin = false;
+        this.errorLoadAdmin = `Error ${err?.status}: No se pudieron cargar los administrativos.`;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  filtrarAdmin(): void {
+    const q = this.busquedaAdmin.toLowerCase().trim();
+    this.administrativosFiltrados = q
+      ? this.administrativos.filter(a =>
+          a.nombres.toLowerCase().includes(q) ||
+          a.apellidos.toLowerCase().includes(q) ||
+          a.dni.includes(q)
+        )
+      : [...this.administrativos];
+  }
+
+  onBusquedaAdmin(): void { this.filtrarAdmin(); }
+
+  abrirModalCrearAdmin(): void {
+    this.formCrearAdmin = { dni: '', nombres: '', apellidos: '', correo: '', telefono: null };
+
+    this.errorCrearAdmin = null;
+    this.credencialesAdmin = null;
+    this.modalCrearAdmin = true;
+    this.cdr.markForCheck();
+  }
+
+  cerrarModalCrearAdmin(): void {
+    this.modalCrearAdmin = false;
+    this.credencialesAdmin = null;
+    this.cdr.markForCheck();
+  }
+
+  crearAdministrativo(): void {
+    if (!this.formCrearAdmin.dni.trim() || !this.formCrearAdmin.nombres.trim() || !this.formCrearAdmin.apellidos.trim() || !this.formCrearAdmin.correo.trim()) {
+
+      this.errorCrearAdmin = 'DNI, nombres, apellidos y correo son requeridos.';
+      return;
+    }
+
+    this.guardandoCrearAdmin = true;
+    this.errorCrearAdmin = null;
+
+    this.adminSvc.create(this.formCrearAdmin).subscribe({
+      next: (res) => {
+        this.guardandoCrearAdmin = false;
+        this.credencialesAdmin = { correo: res.correo, clave: res.claveGenerada };
+        this.cargarAdmin();
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.guardandoCrearAdmin = false;
+        this.errorCrearAdmin = err?.error?.mensaje ?? 'Error al registrar.';
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  abrirModalEditarAdmin(a: AdministrativoDetalleDto): void {
+    this.adminEditandoId = a.id;
+    this.formEditarAdmin = { nombres: a.nombres, apellidos: a.apellidos, correo: a.correo, telefono: a.telefono };
+    this.errorEditarAdmin = null;
+    this.modalEditarAdmin = true;
+    this.cdr.markForCheck();
+  }
+
+  cerrarModalEditarAdmin(): void { this.modalEditarAdmin = false; this.cdr.markForCheck(); }
+
+  guardarEdicionAdmin(): void {
+    if (!this.formEditarAdmin.nombres.trim() || !this.formEditarAdmin.apellidos.trim()) {
+      this.errorEditarAdmin = 'Nombres y apellidos son requeridos.';
+      return;
+    }
+    this.guardandoEditarAdmin = true;
+    this.errorEditarAdmin = null;
+    this.adminSvc.update(this.adminEditandoId!, this.formEditarAdmin).subscribe({
+      next: () => {
+        this.cargarAdmin();
+        this.guardandoEditarAdmin = false;
+        this.modalEditarAdmin = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.guardandoEditarAdmin = false;
+        this.errorEditarAdmin = err?.error?.mensaje ?? 'Error al actualizar.';
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  abrirModalClaveAdmin(a: AdministrativoDetalleDto): void {
+    this.adminClaveId = a.id;
+    this.adminClaveNombre = `${a.nombres} ${a.apellidos}`;
+    this.nuevaClaveAdmin = '';
+    this.mostrarClaveAdmin = false;
+    this.errorClaveAdmin = null;
+    this.modalClaveAdmin = true;
+    this.cdr.markForCheck();
+  }
+
+  cerrarModalClaveAdmin(): void { this.modalClaveAdmin = false; this.cdr.markForCheck(); }
+
+  guardarClaveAdmin(): void {
+    if (this.nuevaClaveAdmin.length < 4) {
+      this.errorClaveAdmin = 'Mínimo 4 caracteres.';
+      return;
+    }
+    this.guardandoClaveAdmin = true;
+    this.adminSvc.cambiarClave(this.adminClaveId!, this.nuevaClaveAdmin).subscribe({
+      next: () => {
+        this.guardandoClaveAdmin = false;
+        this.modalClaveAdmin = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.guardandoClaveAdmin = false;
+        this.errorClaveAdmin = err?.error?.mensaje ?? 'Error al cambiar clave.';
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  toggleEstadoAdmin(a: AdministrativoDetalleDto): void {
+    this.adminSvc.toggleEstado(a.id).subscribe({
+      next: (res) => { a.estado = res.estado; this.cdr.markForCheck(); },
+    });
+  }
 }
+

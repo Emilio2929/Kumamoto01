@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Kumamoto.API.Data;
 using Kumamoto.API.DTOs.Auth;
 using Kumamoto.API.Services;
@@ -19,9 +21,17 @@ public static class AuthEndpoints
 
             var usuario = await db.Usuarios
                 .Include(u => u.Rol)
+                .OrderBy(u => u.Id)
                 .FirstOrDefaultAsync(u => u.Correo == request.Correo && u.Estado == 1);
 
-            if (usuario is null || usuario.ClaveHash != request.Password)
+            if (usuario is null)
+                return Results.Unauthorized();
+
+            // Verificación híbrida de contraseña (Transición Segura)
+            var hashedInput = HashPassword(request.Password);
+            bool esValido = (usuario.ClaveHash == request.Password) || (usuario.ClaveHash == hashedInput);
+
+            if (!esValido)
                 return Results.Unauthorized();
 
             var token = tokenService.GenerarToken(usuario);
@@ -37,5 +47,11 @@ public static class AuthEndpoints
         .WithName("Login")
         .WithSummary("Autenticación de usuarios — devuelve JWT")
         .WithOpenApi();
+    }
+
+    private static string HashPassword(string password)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
+        return Convert.ToHexString(bytes).ToLower();
     }
 }

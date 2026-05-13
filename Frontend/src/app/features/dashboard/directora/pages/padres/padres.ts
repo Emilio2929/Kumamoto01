@@ -29,7 +29,8 @@ export class Padres implements OnInit {
 
   // ── Modal Crear ────────────────────────────────────────────
   modalCrear = false;
-  formCrear: CreatePadreDto = { dni: '', nombres: '', apellidos: '', telefono: null };
+  formCrear: CreatePadreDto = { dni: '', nombres: '', apellidos: '', correo: '', telefono: null };
+
   errorCrear: string | null = null;
   guardandoCrear = false;
   credencialesGeneradas: { correo: string; clave: string } | null = null;
@@ -90,7 +91,8 @@ export class Padres implements OnInit {
 
   // ── Modal Crear ───────────────────────────────────────────
   abrirModalCrear(): void {
-    this.formCrear = { dni: '', nombres: '', apellidos: '', telefono: null };
+    this.formCrear = { dni: '', nombres: '', apellidos: '', correo: '', telefono: null };
+
     this.errorCrear = null;
     this.credencialesGeneradas = null;
     this.modalCrear = true;
@@ -108,6 +110,7 @@ export class Padres implements OnInit {
       this.errorCrear = 'DNI, nombres y apellidos son requeridos.';
       return;
     }
+
     if (this.formCrear.dni.length !== 8) {
       this.errorCrear = 'El DNI debe tener exactamente 8 dígitos.';
       return;

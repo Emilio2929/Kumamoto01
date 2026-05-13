@@ -34,6 +34,11 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* Compensa la barra de navegación fija */
+}
+
 body {
   font-family: 'Inter', sans-serif;
   background-color: var(--bg-main);

@@ -47,31 +47,27 @@ public static class PadresEndpoints
         // ── POST /api/padres  → crear padre con credenciales auto-generadas
         group.MapPost("/", async (CreatePadreDto dto, KumamotoDbContext db) =>
         {
-            if (string.IsNullOrWhiteSpace(dto.Dni) || dto.Dni.Length != 8)
-                return Results.BadRequest(new { mensaje = "El DNI debe tener 8 dígitos." });
-            if (string.IsNullOrWhiteSpace(dto.Nombres))
-                return Results.BadRequest(new { mensaje = "El nombre es requerido." });
-            if (string.IsNullOrWhiteSpace(dto.Apellidos))
-                return Results.BadRequest(new { mensaje = "Los apellidos son requeridos." });
+            // El correo es opcional para padres. Si no se provee, se genera uno institucional p[DNI]
+            var correoFinal = string.IsNullOrWhiteSpace(dto.Correo) 
+                ? $"p{dto.Dni}@kumamoto.edu.pe" 
+                : dto.Correo.Trim().ToLower();
 
             var existeDni = await db.Usuarios.AnyAsync(u => u.Dni == dto.Dni);
             if (existeDni)
                 return Results.Conflict(new { mensaje = "Ya existe un usuario con ese DNI." });
 
-            // Generar correo y contraseña institucional
-            var correo = $"p{dto.Dni}@kumamoto.edu.pe";
-            var clave = $"Kuma{dto.Dni}";
-
-            var existeCorreo = await db.Usuarios.AnyAsync(u => u.Correo == correo);
+            var existeCorreo = await db.Usuarios.AnyAsync(u => u.Correo == correoFinal);
             if (existeCorreo)
-                return Results.Conflict(new { mensaje = "Ya existe un usuario con ese correo institucional." });
+                return Results.Conflict(new { mensaje = "Ese correo ya está registrado." });
+
+            var clave = $"Kuma{dto.Dni}";
 
             var padre = new Usuario
             {
                 Dni = dto.Dni.Trim(),
                 Nombres = dto.Nombres.Trim(),
                 Apellidos = dto.Apellidos.Trim(),
-                Correo = correo,
+                Correo = correoFinal,
                 Telefono = dto.Telefono?.Trim(),
                 ClaveHash = clave,
                 RolId = ROL_PADRE,
@@ -80,13 +76,19 @@ public static class PadresEndpoints
             db.Usuarios.Add(padre);
             await db.SaveChangesAsync();
 
+            var msg = string.IsNullOrWhiteSpace(dto.Correo)
+                ? $"Padre registrado con correo institucional: {correoFinal}. Clave: {clave}"
+                : $"Padre registrado. Credenciales enviadas a {correoFinal}. Clave: {clave}";
+
             return Results.Created($"/api/padres/{padre.Id}", new
             {
                 padre.Id,
-                correo,
+                correo = padre.Correo,
                 claveGenerada = clave,
-                mensaje = $"Credenciales generadas: correo={correo} | clave={clave}"
+                mensaje = msg
             });
+
+
         }).WithName("CreatePadre");
 
         // ── PUT /api/padres/{id}  → editar datos del padre

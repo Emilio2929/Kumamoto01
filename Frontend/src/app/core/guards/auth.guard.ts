@@ -19,7 +19,9 @@ export const directoraGuard: CanActivateFn = () => {
   const router = inject(Router);
   const user   = auth.obtenerUsuario();
 
-  if (auth.estaAutenticado() && user?.rol?.toLowerCase() === 'director') return true;
+  const isDirectorOrAdmin = user?.rol?.toLowerCase() === 'director' || user?.rol?.toLowerCase() === 'administrativo';
+  if (auth.estaAutenticado() && isDirectorOrAdmin) return true;
+
 
   // Si está autenticado pero con otro rol → redirige a su módulo
   if (auth.estaAutenticado() && user) {
@@ -68,9 +70,10 @@ export const auxiliarGuard: CanActivateFn = () => {
 /** Redirige al módulo correcto según el rol del usuario autenticado */
 function redirectByRole(rol: string, router: Router): void {
   const r = rol?.toLowerCase();
-  if (r === 'director') router.navigate(['/dashboard/directora']);
+  if (r === 'director' || r === 'administrativo') router.navigate(['/dashboard/directora']);
   else if (r === 'docente')  router.navigate(['/dashboard/docente']);
   else if (r === 'auxiliar') router.navigate(['/dashboard/auxiliar']);
   else if (r === 'padre')    router.navigate(['/dashboard/padre']);
   else router.navigate(['/login']);
+
 }

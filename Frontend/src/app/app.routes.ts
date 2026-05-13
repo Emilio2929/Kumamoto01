@@ -45,13 +45,14 @@ export const routes: Routes = [
 				loadComponent: () => import('./features/dashboard/directora/pages/personal/personal').then(m => m.Personal)
 			},
 			{
-				path: 'incidencias',
-				loadComponent: () => import('./features/dashboard/directora/pages/incidencias/incidencias').then(m => m.Incidencias)
+				path: 'comunicados',
+				loadComponent: () => import('./features/dashboard/directora/pages/comunicados/comunicados').then(m => m.Comunicados)
 			},
 			{
 				path: 'perfil',
 				loadComponent: () => import('./features/dashboard/directora/pages/perfil/perfil').then(m => m.Perfil)
 			}
+
 		]
 	},
 	{

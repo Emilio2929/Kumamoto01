@@ -14,8 +14,10 @@ public record CreateAuxiliarDto(
     string Dni,
     string Nombres,
     string Apellidos,
+    string Correo,
     string? Telefono
 );
+
 
 public record UpdateAuxiliarDto(
     string Nombres,

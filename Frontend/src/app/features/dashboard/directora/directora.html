@@ -6,8 +6,11 @@
   <!-- Sidebar Flotante -->
   <aside class="sidebar" [class.open]="isSidebarOpen" [class.collapsed]="isSidebarCollapsed">
     <div class="logo">
-      <div class="logo-icon">K</div>
-      <span>Portal Director</span>
+      <img src="/assets/img/insignia_colegio.png" alt="Insignia" class="logo-img">
+      <div class="brand-info">
+        <span class="name">Kumamoto I</span>
+        <span class="portal-type">Portal Directivo</span>
+      </div>
     </div>
 
     <nav class="nav-menu">
@@ -76,17 +79,18 @@
           </a>
         </li>
         <li>
-          <a routerLink="incidencias" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <!-- SVG: Incidencias/Alerta -->
+          <a routerLink="comunicados" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <!-- SVG: Megaphone/Announcements -->
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
               stroke-linejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
+              <path d="M18 8a3 3 0 0 0-3-3H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a3 3 0 0 0 3-3V8z" />
+              <path d="M10 8v4" />
+              <path d="M18 8l4-4v16l-4-4" />
             </svg>
-            <span>Incidencias</span>
+            <span>Comunicados</span>
           </a>
         </li>
+
       </ul>
     </nav>
 

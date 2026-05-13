@@ -1,60 +1,292 @@
-<div class="login-page">
-  <header class="topbar">
-    <div class="brand">SISTEMA KUMAMOTO</div>
-    <a class="support-link" href="#" aria-label="Soporte Tecnico">Soporte Tecnico</a>
+<div class="landing-wrapper">
+
+  <!-- NAVBAR -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <div class="brand">
+        <img src="/assets/img/insignia_colegio.png" alt="Insignia" class="logo">
+        <div class="brand-text">
+          <span class="name">I.E. 3092 - Kumamoto I</span>
+          <span class="motto">Excelencia y Valores</span>
+        </div>
+      </div>
+      <ul class="nav-links">
+        <li><a (click)="scrollToSection('inicio')" style="cursor: pointer;">Inicio</a></li>
+        <li><a (click)="scrollToSection('nosotros')" style="cursor: pointer;">Identidad</a></li>
+        <li><a (click)="scrollToSection('contacto')" style="cursor: pointer;">Contacto</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="btn-portal admin" (click)="abrirLogin('portal')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; margin-right: 8px;">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3" />
+          </svg>
+          Ingresar al Portal
+        </button>
+        <a href="https://wa.me/51987654321" target="_blank" class="phone-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.18-1.42a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+          </svg>
+          <span>Soporte Académico</span>
+        </a>
+        
+        <!-- Botón Hamburguesa -->
+        <button class="hamburger" (click)="toggleMobileMenu()" [class.open]="showMobileMenu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- MENÚ MÓVIL DESPLEGABLE -->
+    <div class="mobile-menu" [class.active]="showMobileMenu">
+      <ul class="mobile-nav-links">
+        <li><button class="mobile-btn-portal" (click)="abrirLogin('portal'); toggleMobileMenu()">Ingresar al Portal</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION: FULL WIDTH CARRUSEL -->
+  <header id="inicio" class="hero-section">
+    <div class="hero-grid full-width">
+
+      <!-- Noticias (Carrusel Multitarjeta) -->
+      <div class="hero-news">
+        <div class="carousel-container">
+
+          <!-- Botones de navegación (Flechas) - Ahora más visibles y dentro de la card -->
+          <ng-container *ngIf="comunicados.length > getVisibleCards()">
+            <button class="nav-arrow prev" (click)="anteriorGrupo()" [disabled]="currentIndex === 0" style="z-index: 100; left: 10px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <button class="nav-arrow next" (click)="siguienteGrupo()"
+              [disabled]="currentIndex >= comunicados.length - getVisibleCards()" style="z-index: 100; right: 10px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          </ng-container>
+
+          <div class="carousel-top-nav" *ngIf="comunicados.length > getVisibleCards()">
+            <div class="carousel-label">Novedades Institucionales</div>
+          </div>
+
+          <!-- Si hay pocos, mostramos un título simple centrado -->
+          <div class="carousel-simple-header" *ngIf="comunicados.length <= getVisibleCards() && comunicados.length > 0">
+            Novedades Institucionales
+          </div>
+
+          <div class="news-slider-wrapper">
+            <div class="news-slider"
+              [style.transform]="getTransform()"
+              [class.justify-center]="comunicados.length <= getVisibleCards()">
+
+              <div class="news-card" *ngFor="let c of comunicados">
+                <div class="card-img">
+                  <div class="important-tag" *ngIf="c.esImportante">DESTACADO</div>
+                  <img *ngIf="c.urlImagen" [src]="c.urlImagen" [alt]="c.titulo">
+                  <!-- Placeholder institucional si no hay imagen -->
+                  <div class="image-placeholder" *ngIf="!c.urlImagen">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                    <span>Comunicado Institucional</span>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <h3>{{ c.titulo }}</h3>
+                  <p>{{ c.contenido | slice:0:150 }}{{ c.contenido.length > 150 ? '...' : '' }}</p>
+                  <button class="btn-card" (click)="verDetalle(c)">Ver Detalle</button>
+                </div>
+              </div>
+
+              <!-- Fallback si no hay noticias -->
+              <div class="news-card" *ngIf="comunicados.length === 0">
+                <div class="card-img">
+                  <img
+                    src="https://images.unsplash.com/photo-1541339907198-e08756ebafe3?q=80&w=1000&auto=format&fit=crop"
+                    alt="Bienvenida">
+                </div>
+                <div class="card-body">
+                  <h3>Bienvenidos a Kumamoto I</h3>
+                  <p>Estamos trabajando para brindarle la mejor experiencia educativa.</p>
+                  <button class="btn-card">Explorar</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="carousel-pagination" *ngIf="comunicados.length > getVisibleCards()">
+            <span *ngFor="let dot of paginas; let i = index" [class.active]="i === currentPagina"
+              (click)="setPagina(i)"></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </header>
 
-  <main class="content-grid">
-    <section class="hero">
-      <p class="hero-kicker">Portal Institucional</p>
-      <h1>Gestion Academica de Excelencia</h1>
-      <p>
-        Bienvenidos al ecosistema digital del Colegio Kumamoto. Administra procesos
-        escolares con orden, claridad y acompanamiento para toda la comunidad educativa.
-      </p>
-    </section>
+  <!-- MODAL DE DETALLE DE COMUNICADO -->
+  <div class="modal-overlay detail-mode" *ngIf="showDetailModal" (click)="cerrarDetalle()">
+    <div class="detail-modal-card" (click)="$event.stopPropagation()">
+      <button class="close-modal" (click)="cerrarDetalle()">&times;</button>
 
-    <section class="login-card" aria-label="Formulario de ingreso">
-      <h2>Iniciar Sesión</h2>
-      <p class="card-subtitle">Ingresa con tu correo y contraseña institucional. Si eres Padre de Familia, usa la cuenta asignada (ej. p12345678@kumamoto.edu.pe).</p>
+      <div class="detail-content" *ngIf="selectedComunicado as c">
+        <div class="detail-img">
+          <img
+            [src]="c.urlImagen || 'https://images.unsplash.com/photo-1541339907198-e08756ebafe3?q=80&w=1000&auto=format&fit=crop'"
+            [alt]="c.titulo">
+        </div>
+        <div class="detail-info">
+          <span class="detail-date">{{ c.fechaPublicacion | date:'fullDate' }}</span>
+          <h2>{{ c.titulo }}</h2>
+          <div class="detail-text">
+            <p>{{ c.contenido }}</p>
+          </div>
+          <div class="detail-actions" *ngIf="c.urlArchivo">
+            <a [href]="c.urlArchivo" target="_blank" class="btn-download">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+              </svg>
+              Descargar Documento Adjunto
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      <div class="card-content">
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
-          <div class="field" [class.invalid]="loginForm.get('correo')?.invalid && loginForm.get('correo')?.touched">
-            <label for="correo">Correo</label>
-            <input
-              id="correo"
-              type="email"
-              formControlName="correo"
-              placeholder="correo@colegio.edu"
-              autocomplete="email"
-            />
-            <small class="error-text" *ngIf="loginForm.get('correo')?.touched && loginForm.get('correo')?.hasError('required')">El correo es obligatorio.</small>
-            <small class="error-text" *ngIf="loginForm.get('correo')?.touched && loginForm.get('correo')?.hasError('email')">Formato de correo inválido.</small>
+  <!-- MODAL DE LOGIN (GLASSMORPHISM) -->
+  <div class="modal-overlay" *ngIf="showLoginModal" (click)="cerrarLogin()">
+    <div class="login-modal-card" (click)="$event.stopPropagation()">
+      <button class="close-modal" (click)="cerrarLogin()">&times;</button>
+
+      <div class="modal-header">
+        <div class="modal-badge" [ngClass]="loginPortal">
+          {{ loginPortal === 'personal' ? 'Acceso Personal' : loginPortal === 'padres' ? 'Acceso Padres' : 'Portal Institucional' }}
+        </div>
+        <h3>Ingreso al Sistema</h3>
+        <p>Acceda a su panel de gestión académica y administrativa.</p>
+      </div>
+
+      <div class="modal-body">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <div class="error-msg" *ngIf="mensajeError">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            {{ mensajeError }}
           </div>
 
-          <div class="field" [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-            <label for="password">Contraseña</label>
-            <input
-              id="password"
-              type="password"
-              formControlName="password"
-              placeholder="Tu contraseña"
-              autocomplete="current-password"
-            />
-            <small class="error-text" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')">La contraseña es obligatoria.</small>
-            <small class="error-text" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('minlength')">Mínimo 6 caracteres.</small>
+          <div class="input-group">
+            <label>Correo Institucional</label>
+            <div class="input-wrapper">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+              <input type="email" formControlName="correo" placeholder="ejemplo@kumamoto.edu.pe">
+            </div>
           </div>
 
-          <p class="form-error" *ngIf="mensajeError">{{ mensajeError }}</p>
+          <div class="input-group">
+            <label>Contraseña</label>
+            <div class="input-wrapper">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <input type="password" formControlName="password" placeholder="••••••••••••">
+            </div>
+          </div>
 
-          <button type="submit" [disabled]="cargando" class="submit-btn highlight">
-            {{ cargando ? 'Validando...' : 'Ingresar' }}
+          <button type="submit" class="btn-login" [disabled]="loginForm.invalid || cargando">
+            <span *ngIf="!cargando">Ingresar ahora</span>
+            <div class="loader" *ngIf="cargando"></div>
           </button>
         </form>
       </div>
-    </section>
-  </main>
+    </div>
+  </div>
 
-  <footer class="page-footer">© 2026 Colegio Kumamoto. Todos los derechos reservados.</footer>
+  <!-- SECCIÓN IDENTIDAD -->
+  <section id="nosotros" class="institutional-section">
+    <div class="section-container">
+      <div class="section-heading">
+        <span class="pre-title">Nuestra Esencia</span>
+        <h2>Valores que nos Distinguen</h2>
+      </div>
+
+      <div class="cards-grid">
+        <div class="info-card">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg></div>
+          <h3>Misión</h3>
+          <p>Formamos líderes íntegros a través de una educación de vanguardia, promoviendo el pensamiento crítico y la
+            responsabilidad social.</p>
+        </div>
+        <div class="info-card">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg></div>
+          <h3>Visión</h3>
+          <p>Ser el referente educativo regional en innovación y calidad humana, trascendiendo fronteras en la formación
+            académica.</p>
+        </div>
+        <div class="info-card">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg></div>
+          <h3>Legado</h3>
+          <p>Años de historia construyendo el futuro de nuestra comunidad con perseverancia, honor y excelencia
+            académica constante.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- FOOTER PREMIUM -->
+  <footer id="contacto" class="main-footer">
+    <div class="footer-grid">
+      <div class="footer-info">
+        <img src="/assets/img/insignia_colegio.png" alt="Logo" class="footer-logo">
+        <p>I.E. 3092 - Kumamoto I<br>Educación de calidad para un mundo global.</p>
+      </div>
+      <div class="footer-contact">
+        <h4>Central Telefónica</h4>
+        <p>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="f-icon">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+            <polyline points="22,6 12,13 2,6" />
+          </svg>
+          contacto@kumamoto.edu.pe
+        </p>
+        <p>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="f-icon">
+            <path
+              d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.18-1.42a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+          </svg>
+          (01) 789-4560 / +51 987 654 321
+        </p>
+      </div>
+      <div class="footer-links">
+        <h4>Nuestra Red</h4>
+        <a href="#">Intranet Alumno</a>
+        <a href="#">Portal del Padre</a>
+        <a href="#">Admisiones 2026</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 I.E. 3092 Kumamoto I. Diseñado para la excelencia académica.</p>
+    </div>
+  </footer>
+
 </div>

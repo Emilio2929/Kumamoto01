@@ -14,8 +14,11 @@ public record CreatePadreDto(
     string Dni,
     string Nombres,
     string Apellidos,
+    string? Correo,
     string? Telefono
 );
+
+
 
 public record UpdatePadreDto(
     string Nombres,

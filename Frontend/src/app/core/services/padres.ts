@@ -16,6 +16,7 @@ export interface CreatePadreDto {
   dni: string;
   nombres: string;
   apellidos: string;
+  correo: string | null;
   telefono: string | null;
 }
 
@@ -65,8 +66,6 @@ export class PadresService {
   // --- PORTAL PADRES ---
 
   getResumenHijo(): Observable<any> {
-    // En un entorno real, el backend identifica al padre por el token (sub)
-    // y devuelve los datos del estudiante vinculado.
     return this.http.get<any>(`${this.api}/me/estudiante/resumen`);
   }
 

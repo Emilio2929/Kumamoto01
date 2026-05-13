@@ -21,32 +21,45 @@
 
   &.collapsed {
     width: 84px;
-    .logo span { opacity: 0; width: 0; display: none; }
+    .logo .brand-info { opacity: 0; width: 0; display: none; }
     .nav-menu li a span { opacity: 0; width: 0; display: none; }
     .sidebar-footer .logout-btn span { opacity: 0; width: 0; display: none; }
   }
 
   .logo {
-    height: 80px;
+    height: 90px;
     display: flex;
     align-items: center;
-    padding: 0 1.5rem;
-    font-weight: 700;
-    font-size: 1.25rem;
-    color: var(--text-main);
+    padding: 0 1.25rem;
     gap: 1rem;
     white-space: nowrap;
+    border-bottom: 1px solid #f1f5f9;
 
-    .logo-icon {
-      background: var(--primary);
-      color: white;
-      min-width: 36px;
-      height: 36px;
+    .logo-img {
+      height: 45px;
+      width: auto;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    }
+
+    .brand-info {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 10px;
-      font-size: 1.1rem;
+      flex-direction: column;
+      transition: opacity 0.3s;
+      
+      .name {
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: #1e293b;
+        letter-spacing: -0.02em;
+      }
+      
+      .portal-type {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
     }
   }
 
@@ -210,8 +223,8 @@
     box-shadow: 10px 0 30px rgba(0,0,0,0.1);
     &.open { left: 0; }
 
-    .logo span, .nav-menu li a span, .sidebar-footer .logout-btn span {
-      display: inline !important;
+    .logo .brand-info, .nav-menu li a span, .sidebar-footer .logout-btn span {
+      display: inline-flex !important;
       opacity: 1 !important;
     }
   }

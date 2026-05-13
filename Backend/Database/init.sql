@@ -86,7 +86,36 @@ ALTER SEQUENCE public.alerta_riesgo_id_seq OWNED BY public.alerta_riesgo.id;
 -- Name: alumno_riesgo; Type: TABLE; Schema: public; Owner: -
 --
 
+CREATE TABLE public.comunicado (
+    id integer NOT NULL,
+    titulo character varying(200) NOT NULL,
+    contenido text NOT NULL,
+    url_imagen character varying(500),
+    url_archivo character varying(500),
+    fecha_publicacion timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    fecha_expiracion timestamp with time zone,
+    es_importante boolean DEFAULT false,
+    estado smallint DEFAULT 1,
+    usuario_id integer
+);
+
+CREATE SEQUENCE public.comunicado_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE public.comunicado_id_seq OWNED BY public.comunicado.id;
+ALTER TABLE ONLY public.comunicado ALTER COLUMN id SET DEFAULT nextval('public.comunicado_id_seq'::regclass);
+ALTER TABLE ONLY public.comunicado ADD CONSTRAINT comunicado_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.comunicado ADD CONSTRAINT comunicado_usuario_fkey FOREIGN KEY (usuario_id) REFERENCES public.usuario(id);
+
+
+
 CREATE TABLE public.alumno_riesgo (
+
     id integer NOT NULL,
     estudiante_id integer NOT NULL,
     nivel_riesgo character varying(20) DEFAULT 'Bajo'::character varying NOT NULL,
@@ -1204,6 +1233,8 @@ INSERT INTO public.rol (id, nombre, estado) VALUES (1, 'Director', 1);
 INSERT INTO public.rol (id, nombre, estado) VALUES (2, 'Docente', 1);
 INSERT INTO public.rol (id, nombre, estado) VALUES (3, 'Auxiliar', 1);
 INSERT INTO public.rol (id, nombre, estado) VALUES (4, 'Padre', 1);
+INSERT INTO public.rol (id, nombre, estado) VALUES (5, 'Administrativo', 1);
+
 
 
 --

@@ -110,7 +110,8 @@
     <div class="modal-header">
       <div>
         <h3>Registrar Padre de Familia</h3>
-        <p class="modal-sub">Se generará correo y contraseña automáticamente.</p>
+        <p class="modal-sub">Se enviarán las credenciales al correo electrónico registrado.</p>
+
       </div>
       <button class="modal-close" (click)="cerrarModalCrear()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -148,6 +149,12 @@
           <input type="text" placeholder="999 999 999" [(ngModel)]="formCrear.telefono">
         </div>
         <div class="form-group full">
+          <label>Correo Electrónico (Opcional)</label>
+          <input type="email" placeholder="ejemplo@correo.com" [(ngModel)]="formCrear.correo">
+        </div>
+
+
+        <div class="form-group full">
           <label>Nombres <span class="required">*</span></label>
           <input type="text" placeholder="Ej. Juan Carlos" [(ngModel)]="formCrear.nombres">
         </div>
@@ -157,8 +164,9 @@
         </div>
         <div class="info-note full">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          El correo institucional se generará automáticamente: <strong>p[DNI]&#64;kumamoto.edu.pe</strong>
+          Las credenciales de acceso (DNI y clave temporal) se enviarán al correo electrónico proporcionado.
         </div>
+
       </div>
     </div>
     <div class="modal-footer" *ngIf="!credencialesGeneradas">

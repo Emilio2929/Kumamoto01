@@ -35,17 +35,18 @@
   &.active {
     background: var(--primary);
     color: #fff;
-    box-shadow: 0 4px 12px rgba(79,70,229,0.3);
   }
 
+
   .tab-count {
-    background: #4f46e5;
+    background: var(--primary-dark);
     border-radius: 99px;
     padding: 0 0.5rem;
     font-size: 0.7rem;
     font-weight: 700;
     line-height: 1.6;
   }
+
 }
 
 // ── Tab pane ─────────────────────────────────────────────────────────────────
@@ -164,8 +165,11 @@
   width: 36px; height: 36px;
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
   font-size: 0.7rem; font-weight: 700; color: #fff; flex-shrink: 0; text-transform: uppercase;
-  &.docente { background: #4f46e5; }
+  &.docente { background: var(--primary); }
+  &.admin { background: var(--primary); }
 }
+
+
 
 .correo-badge {
   font-size: 0.78rem; color: var(--primary); background: rgba(79,70,229,0.07);
@@ -191,10 +195,11 @@
   background: transparent; transition: all 0.15s;
   svg { width: 14px; height: 14px; }
   &.edit { color: var(--primary); &:hover { background: rgba(79,70,229,0.1); } }
-  &.key { color: #0891b2; &:hover { background: rgba(8,145,178,0.1); } }
-  &.toggle { color: #D97706; &:hover { background: #10b981; } &.on { color: #059669; &:hover { background: rgba(5,150,105,0.1); } } }
+  &.key { color: var(--primary); &:hover { background: rgba(79,70,229,0.1); } }
+  &.toggle { color: var(--risk-medium); &:hover { background: rgba(245,158,11,0.1); } &.on { color: var(--risk-low); &:hover { background: rgba(16,185,129,0.1); } } }
   &.delete { color: var(--risk-high); &:hover { background: rgba(239,68,68,0.1); } }
 }
+
 
 // ── Coming soon ───────────────────────────────────────────────────────────────
 .coming-soon {
@@ -299,6 +304,7 @@
 .credentials-box {
   background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.25);
   border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;
+
 
   .cred-header {
     display: flex; align-items: center; gap: 0.5rem;

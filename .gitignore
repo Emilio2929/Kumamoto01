@@ -1,0 +1,14 @@
+# --- Frontend (Angular) ---
+**/node_modules/
+**/dist/
+**/.angular/cache/
+
+# --- Backend (.NET) ---
+**/bin/
+**/obj/
+**/.vs/
+**/appsettings.Development.json
+**/*.user
+
+# --- Secretos y Entorno ---
+**/.env

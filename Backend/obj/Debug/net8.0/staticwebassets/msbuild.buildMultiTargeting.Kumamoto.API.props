@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\Kumamoto.API.props" />
-</Project>

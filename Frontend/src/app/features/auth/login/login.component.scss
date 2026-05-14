@@ -177,6 +177,63 @@ $text-muted: #cbd5e1;
   }
 }
 
+// ── BIENVENIDA ESTÁTICA (FALLBACK SIN NOTICIAS) ──────────────────────────────
+.hero-welcome-static {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 500px;
+  animation: fadeIn 1s ease-out;
+
+  .welcome-content {
+    max-width: 800px;
+    padding: 3rem;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(15px);
+    border-radius: 3rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.3);
+
+    h1 {
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 900;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.04em;
+      background: linear-gradient(135deg, $white 30%, $celeste 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p {
+      font-size: 1.5rem;
+      color: $text-muted;
+      margin-bottom: 3rem;
+      font-weight: 500;
+    }
+
+    .btn-portal-hero {
+      padding: 1.2rem 3rem;
+      font-size: 1.2rem;
+      font-weight: 800;
+      background: white;
+      color: $navy-dark;
+      border: none;
+      border-radius: 1.2rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+      &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        background: $celeste;
+        color: white;
+      }
+    }
+  }
+}
+
 // ── CARRUSEL MULTITARJETA (ESTILO CARD SLIDER) ──────────────────────────────
 .carousel-container {
   width: 100%;

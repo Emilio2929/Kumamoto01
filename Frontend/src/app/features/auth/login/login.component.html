@@ -49,11 +49,11 @@
   <header id="inicio" class="hero-section">
     <div class="hero-grid full-width">
 
-      <!-- Noticias (Carrusel Multitarjeta) -->
-      <div class="hero-news">
+      <!-- Noticias (Carrusel Multitarjeta) - Solo se muestra si hay datos -->
+      <div class="hero-news" *ngIf="comunicados.length > 0">
         <div class="carousel-container">
 
-          <!-- Botones de navegación (Flechas) - Ahora más visibles y dentro de la card -->
+          <!-- Botones de navegación (Flechas) -->
           <ng-container *ngIf="comunicados.length > getVisibleCards()">
             <button class="nav-arrow prev" (click)="anteriorGrupo()" [disabled]="currentIndex === 0" style="z-index: 100; left: 10px;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4">
@@ -72,7 +72,7 @@
             <div class="carousel-label">Novedades Institucionales</div>
           </div>
 
-          <!-- Si hay pocos, mostramos un título simple centrado -->
+          <!-- Título simple si hay pocos -->
           <div class="carousel-simple-header" *ngIf="comunicados.length <= getVisibleCards() && comunicados.length > 0">
             Novedades Institucionales
           </div>
@@ -101,26 +101,23 @@
                 </div>
               </div>
 
-              <!-- Fallback si no hay noticias -->
-              <div class="news-card" *ngIf="comunicados.length === 0">
-                <div class="card-img">
-                  <img
-                    src="https://images.unsplash.com/photo-1541339907198-e08756ebafe3?q=80&w=1000&auto=format&fit=crop"
-                    alt="Bienvenida">
-                </div>
-                <div class="card-body">
-                  <h3>Bienvenidos a Kumamoto I</h3>
-                  <p>Estamos trabajando para brindarle la mejor experiencia educativa.</p>
-                  <button class="btn-card">Explorar</button>
-                </div>
-              </div>
-
             </div>
           </div>
 
           <div class="carousel-pagination" *ngIf="comunicados.length > getVisibleCards()">
             <span *ngFor="let dot of paginas; let i = index" [class.active]="i === currentPagina"
               (click)="setPagina(i)"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mensaje de bienvenida alternativo cuando no hay noticias -->
+      <div class="hero-welcome-static" *ngIf="comunicados.length === 0 && !loadingComunicados">
+        <div class="welcome-content">
+          <h1>I.E. 3092 - Kumamoto I</h1>
+          <p>Excelencia Educativa y Formación en Valores para el Futuro.</p>
+          <div class="welcome-actions">
+            <button class="btn-portal-hero" (click)="abrirLogin('portal')">Ingresar al Sistema</button>
           </div>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -24,7 +25,7 @@ export interface CreateComunicadoDto {
 @Injectable({ providedIn: 'root' })
 export class ComunicadosService {
   private http = inject(HttpClient);
-  private api = 'http://localhost:5121/api/comunicados';
+  private api = `${environment.apiUrl}/api/comunicados`;
 
   getAll(): Observable<Comunicado[]> {
     return this.http.get<Comunicado[]>(this.api);

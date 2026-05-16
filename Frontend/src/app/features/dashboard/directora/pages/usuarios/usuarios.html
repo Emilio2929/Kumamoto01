@@ -1,0 +1,570 @@
+<div class="usuarios-layout">
+  <div class="page-header">
+    <div class="header-left">
+      <div class="page-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div>
+        <h1>Usuarios del Sistema</h1>
+        <p class="sub">Gestión de cuentas y credenciales de acceso</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs-container">
+    <button class="tab-btn" [class.active]="activeTab === 'docentes'" (click)="setTab('docentes')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      Docentes
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'auxiliares'" (click)="setTab('auxiliares')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      Auxiliares
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'admin'" (click)="setTab('admin')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Directivos
+    </button>
+    <button class="tab-btn highlight" [class.active]="activeTab === 'padres'" (click)="setTab('padres')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Padres (Credenciales)
+    </button>
+  </div>
+
+  <div class="tab-content">
+    
+    <!-- DOCENTES -->
+    <ng-container *ngIf="activeTab === 'docentes'">
+      <div class="filters-row">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Buscar docente..." [(ngModel)]="busquedaDocentes" (ngModelChange)="onBusquedaDocentes()">
+        </div>
+        <button class="btn primary" (click)="abrirModalCrearDocente()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Registrar Docente
+        </button>
+      </div>
+      <div class="card table-card">
+        <table class="data-table">
+          <thead><tr><th>Docente</th><th>DNI</th><th>Correo Institucional</th><th>Correo Personal</th><th>Teléfono</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody>
+            <tr *ngIf="docentesFiltrados.length === 0"><td colspan="7" class="empty-row">No hay docentes registrados.</td></tr>
+            <tr *ngFor="let u of docentesFiltrados">
+              <td>{{ u.nombres }} {{ u.apellidos }}</td>
+              <td class="mono">{{ u.dni }}</td>
+              <td><span class="correo-institucional">{{ u.correo || '—' }}</span></td>
+              <td><span>{{ u.correoPersonal || '—' }}</span></td>
+              <td><span>{{ u.telefono || '—' }}</span></td>
+              <td><span class="badge" [class.activo]="u.estado === 1" [class.inactivo]="u.estado === 0">{{ u.estado === 1 ? 'Activo' : 'Inactivo' }}</span></td>
+              <td>
+                <div class="action-group">
+                  <button class="action-btn edit" (click)="abrirModalEditarDocente(u)" title="Editar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button class="action-btn edit" (click)="abrirModalClaveDocente(u)" title="Cambiar Clave">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </button>
+                  <button class="action-btn toggle" (click)="pedirToggleEstado(u.id, 'docente', u.estado)" title="Alternar Estado">
+                    <svg *ngIf="u.estado === 1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64A9 9 0 1 1 5.64 19.36"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                    <svg *ngIf="u.estado === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  </button>
+                  <button class="action-btn delete" (click)="pedirEliminar(u.id, 'docente')" title="Eliminar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+
+    <!-- AUXILIARES -->
+    <ng-container *ngIf="activeTab === 'auxiliares'">
+      <div class="filters-row">
+        <div class="search-box"><input type="text" placeholder="Buscar auxiliar..." [(ngModel)]="busquedaAux" (ngModelChange)="onBusquedaAux()"></div>
+        <button class="btn primary" (click)="abrirModalCrearAux()">Registrar Auxiliar</button>
+      </div>
+      <div class="card table-card">
+        <table class="data-table">
+          <thead><tr><th>Auxiliar</th><th>DNI</th><th>Correo Institucional</th><th>Correo Personal</th><th>Teléfono</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody>
+            <tr *ngIf="auxiliaresFiltrados.length === 0"><td colspan="7" class="empty-row">No hay auxiliares registrados.</td></tr>
+            <tr *ngFor="let u of auxiliaresFiltrados">
+              <td>{{ u.nombres }} {{ u.apellidos }}</td>
+              <td class="mono">{{ u.dni }}</td>
+              <td><span class="correo-institucional">{{ u.correo || '—' }}</span></td>
+              <td><span>{{ u.correoPersonal || '—' }}</span></td>
+              <td><span>{{ u.telefono || '—' }}</span></td>
+              <td><span class="badge" [class.activo]="u.estado === 1" [class.inactivo]="u.estado === 0">{{ u.estado === 1 ? 'Activo' : 'Inactivo' }}</span></td>
+              <td>
+                <div class="action-group">
+                  <button class="action-btn edit" (click)="abrirModalEditarAux(u)" title="Editar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button class="action-btn edit" (click)="abrirModalClaveAux(u)" title="Cambiar Clave">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </button>
+                  <button class="action-btn toggle" (click)="pedirToggleEstado(u.id, 'auxiliar', u.estado)" title="Alternar Estado">
+                    <svg *ngIf="u.estado === 1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64A9 9 0 1 1 5.64 19.36"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                    <svg *ngIf="u.estado === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  </button>
+                  <button class="action-btn delete" (click)="pedirEliminar(u.id, 'auxiliar')" title="Eliminar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+
+    <!-- ADMINISTRATIVOS -->
+    <ng-container *ngIf="activeTab === 'admin'">
+      <div class="filters-row">
+        <div class="search-box"><input type="text" placeholder="Buscar directivo..." [(ngModel)]="busquedaAdmin" (ngModelChange)="onBusquedaAdmin()"></div>
+        <button class="btn primary" (click)="abrirModalCrearAdmin()">Registrar Directivo</button>
+      </div>
+      <div class="card table-card">
+        <table class="data-table">
+          <thead><tr><th>Directivo</th><th>DNI</th><th>Correo Institucional</th><th>Correo Personal</th><th>Teléfono</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody>
+            <tr *ngIf="administrativosFiltrados.length === 0"><td colspan="7" class="empty-row">No hay directivos registrados.</td></tr>
+            <tr *ngFor="let u of administrativosFiltrados">
+              <td>{{ u.nombres }} {{ u.apellidos }}</td>
+              <td class="mono">{{ u.dni }}</td>
+              <td><span class="correo-institucional">{{ u.correo || '—' }}</span></td>
+              <td><span>{{ u.correoPersonal || '—' }}</span></td>
+              <td><span>{{ u.telefono || '—' }}</span></td>
+              <td><span class="badge" [class.activo]="u.estado === 1" [class.inactivo]="u.estado === 0">{{ u.estado === 1 ? 'Activo' : 'Inactivo' }}</span></td>
+              <td>
+                <div class="action-group">
+                  <button class="action-btn edit" (click)="abrirModalEditarAdmin(u)" title="Editar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button class="action-btn edit" (click)="abrirModalClaveAdmin(u)" title="Cambiar Clave">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </button>
+                  <button class="action-btn toggle" (click)="pedirToggleEstado(u.id, 'admin', u.estado)" title="Alternar Estado">
+                    <svg *ngIf="u.estado === 1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64A9 9 0 1 1 5.64 19.36"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                    <svg *ngIf="u.estado === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  </button>
+                  <button class="action-btn delete" (click)="pedirEliminar(u.id, 'admin')" title="Eliminar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+
+    <!-- PADRES -->
+    <ng-container *ngIf="activeTab === 'padres'">
+      <div class="filters-row">
+        <div class="search-box"><input type="text" placeholder="Buscar padre..." [(ngModel)]="busquedaPadres" (ngModelChange)="onBusquedaPadres()"></div>
+      </div>
+      <div class="card table-card">
+        <table class="data-table">
+          <thead><tr><th>Padre / Apoderado</th><th>DNI</th><th>Correo Institucional</th><th>Correo Personal</th><th>Teléfono</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody>
+            <tr *ngIf="padresFiltrados.length === 0"><td colspan="7" class="empty-row">No hay padres registrados.</td></tr>
+            <tr *ngFor="let u of padresFiltrados">
+              <td>{{ u.nombres }} {{ u.apellidos }}</td>
+              <td class="mono">{{ u.dni }}</td>
+              <td><span class="correo-institucional">{{ u.correo || '—' }}</span></td>
+              <td><span>{{ u.correoPersonal || '—' }}</span></td>
+              <td><span>{{ u.telefono || '—' }}</span></td>
+              <td><span class="badge" [class.activo]="u.estado === 1" [class.inactivo]="u.estado === 0">{{ u.estado === 1 ? 'Activo' : 'Inactivo' }}</span></td>
+              <td>
+                <div class="action-group">
+                  <button class="action-btn edit" (click)="abrirModalClavePadre(u)" title="Cambiar Contraseña">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<!-- Modal Eliminar (Genérico) -->
+<div class="modal-overlay" *ngIf="confirmEliminarId !== null" (click)="confirmEliminarId = null">
+  <div class="confirm-card" (click)="$event.stopPropagation()">
+    <h3>¿Dar de baja al usuario?</h3>
+    <p>El usuario pasará a estado inactivo en el sistema.</p>
+    <div class="confirm-actions">
+      <button class="btn secondary" (click)="confirmEliminarId = null">Cancelar</button>
+      <button class="btn danger" (click)="confirmarEliminar()">Sí, dar de baja</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Confirmar Cambio de Estado -->
+<div class="modal-overlay" *ngIf="confirmEstadoId !== null" (click)="confirmEstadoId = null">
+  <div class="confirm-card" (click)="$event.stopPropagation()">
+    <h3>¿{{ confirmEstadoActual === 1 ? 'Desactivar' : 'Activar' }} cuenta de usuario?</h3>
+    <p>{{ confirmEstadoActual === 1 ? 'El usuario no podrá acceder al sistema mientras su cuenta esté inactiva.' : 'El usuario recuperará el acceso al sistema inmediatamente.' }}</p>
+    <div class="confirm-actions">
+      <button class="btn secondary" (click)="confirmEstadoId = null">Cancelar</button>
+      <button class="btn primary" (click)="ejecutarToggleEstado()">Sí, {{ confirmEstadoActual === 1 ? 'Desactivar' : 'Activar' }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODALES DOCENTES ─────────────────────────────────────────────────── -->
+<div class="modal-overlay" *ngIf="modalCrearDocente" (click)="modalCrearDocente = false">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Registrar Docente</h3>
+      <button class="modal-close" (click)="modalCrearDocente = false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorCrearDocente">{{ errorCrearDocente }}</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>DNI <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formCrearDocente.dni" placeholder="Ej. 12345678" maxlength="8">
+        </div>
+        <div class="form-group">
+          <label>Nombres <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formCrearDocente.nombres" placeholder="Nombres">
+        </div>
+        <div class="form-group">
+          <label>Apellidos <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formCrearDocente.apellidos" placeholder="Apellidos">
+        </div>
+        <div class="form-group full">
+          <label>Correo Personal / Contacto</label>
+          <input type="email" [(ngModel)]="formCrearDocente.correoPersonal" placeholder="ejemplo@correo.com">
+        </div>
+        <div class="form-group full">
+          <label>Teléfono</label>
+          <input type="text" [(ngModel)]="formCrearDocente.telefono" placeholder="Ej. 987654321">
+        </div>
+      </div>
+      <div class="credenciales-box" *ngIf="credencialesDocente">
+        <h4>¡Docente registrado con éxito!</h4>
+        <div class="cred-row"><span>Correo Institucional:</span> <strong>{{ credencialesDocente.correo }}</strong></div>
+        <div class="cred-row"><span>Contraseña Temporal:</span> <strong>{{ credencialesDocente.clave }}</strong></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="modalCrearDocente = false">Cerrar</button>
+      <button class="btn primary" *ngIf="!credencialesDocente" (click)="crearDocente()" [disabled]="guardandoCrearDocente">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="modalEditarDocente" (click)="modalEditarDocente = false">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Editar Docente</h3>
+      <button class="modal-close" (click)="modalEditarDocente = false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorEditarDocente">{{ errorEditarDocente }}</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombres <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formEditarDocente.nombres" placeholder="Nombres">
+        </div>
+        <div class="form-group">
+          <label>Apellidos <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formEditarDocente.apellidos" placeholder="Apellidos">
+        </div>
+        <div class="form-group full">
+          <label>Correo Institucional (Solo lectura)</label>
+          <input type="email" [value]="docenteEditando?.correo || 'Sin asignar'" disabled class="readonly-input">
+        </div>
+        <div class="form-group">
+          <label>Correo Personal</label>
+          <input type="email" [(ngModel)]="formEditarDocente.correoPersonal" placeholder="ejemplo@correo.com">
+        </div>
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input type="text" [(ngModel)]="formEditarDocente.telefono" placeholder="Ej. 987654321">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="modalEditarDocente = false">Cancelar</button>
+      <button class="btn primary" (click)="guardarEdicionDocente()" [disabled]="guardandoEditarDocente">
+        <span *ngIf="!guardandoEditarDocente">Guardar Cambios</span>
+        <span *ngIf="guardandoEditarDocente">Guardando...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="modalClaveDocente" (click)="modalClaveDocente = false">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Cambiar Contraseña - Docente</h3>
+      <button class="modal-close" (click)="modalClaveDocente = false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-top: 0; color: var(--text-muted); font-size: 0.875rem;">Establecer nueva contraseña para <strong>{{ docenteClaveNombre }}</strong></p>
+      <div class="error-banner" *ngIf="errorClaveDocente">{{ errorClaveDocente }}</div>
+      <div class="form-group full">
+        <label>Nueva Contraseña <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="nuevaClaveDocente" placeholder="Mínimo 4 caracteres">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="modalClaveDocente = false">Cancelar</button>
+      <button class="btn primary" (click)="guardarClaveDocente()" [disabled]="guardandoClaveDocente">Guardar Contraseña</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODALES AUXILIARES ───────────────────────────────────────────────── -->
+<div class="modal-overlay" *ngIf="modalCrearAux" (click)="modalCrearAux = false">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Registrar Auxiliar</h3>
+      <button class="modal-close" (click)="modalCrearAux = false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorCrearAux">{{ errorCrearAux }}</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>DNI <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formCrearAux.dni" placeholder="Ej. 12345678" maxlength="8">
+        </div>
+        <div class="form-group">
+          <label>Nombres <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formCrearAux.nombres" placeholder="Nombres">
+        </div>
+        <div class="form-group">
+          <label>Apellidos <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formCrearAux.apellidos" placeholder="Apellidos">
+        </div>
+        <div class="form-group full">
+          <label>Correo Personal / Contacto</label>
+          <input type="email" [(ngModel)]="formCrearAux.correoPersonal" placeholder="ejemplo@correo.com">
+        </div>
+        <div class="form-group full">
+          <label>Teléfono</label>
+          <input type="text" [(ngModel)]="formCrearAux.telefono" placeholder="Ej. 987654321">
+        </div>
+      </div>
+      <div class="credenciales-box" *ngIf="credencialesAux">
+        <h4>¡Auxiliar registrado con éxito!</h4>
+        <div class="cred-row"><span>Correo Institucional:</span> <strong>{{ credencialesAux.correo }}</strong></div>
+        <div class="cred-row"><span>Contraseña Temporal:</span> <strong>{{ credencialesAux.clave }}</strong></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="modalCrearAux = false">Cerrar</button>
+      <button class="btn primary" *ngIf="!credencialesAux" (click)="crearAuxiliar()" [disabled]="guardandoCrearAux">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="modalEditarAux" (click)="modalEditarAux = false">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Editar Auxiliar</h3>
+      <button class="modal-close" (click)="modalEditarAux = false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorEditarAux">{{ errorEditarAux }}</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombres <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formEditarAux.nombres" placeholder="Nombres">
+        </div>
+        <div class="form-group">
+          <label>Apellidos <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formEditarAux.apellidos" placeholder="Apellidos">
+        </div>
+        <div class="form-group full">
+          <label>Correo Institucional (Solo lectura)</label>
+          <input type="email" [value]="auxEditando?.correo || 'Sin asignar'" disabled class="readonly-input">
+        </div>
+        <div class="form-group">
+          <label>Correo Personal</label>
+          <input type="email" [(ngModel)]="formEditarAux.correoPersonal" placeholder="ejemplo@correo.com">
+        </div>
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input type="text" [(ngModel)]="formEditarAux.telefono" placeholder="Ej. 987654321">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="modalEditarAux = false">Cancelar</button>
+      <button class="btn primary" (click)="guardarEdicionAux()" [disabled]="guardandoEditarAux">
+        <span *ngIf="!guardandoEditarAux">Guardar Cambios</span>
+        <span *ngIf="guardandoEditarAux">Guardando...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="modalClaveAux" (click)="modalClaveAux = false">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Cambiar Contraseña - Auxiliar</h3>
+      <button class="modal-close" (click)="modalClaveAux = false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-top: 0; color: var(--text-muted); font-size: 0.875rem;">Establecer nueva contraseña para <strong>{{ auxClaveNombre }}</strong></p>
+      <div class="error-banner" *ngIf="errorClaveAux">{{ errorClaveAux }}</div>
+      <div class="form-group full">
+        <label>Nueva Contraseña <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="nuevaClaveAux" placeholder="Mínimo 4 caracteres">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="modalClaveAux = false">Cancelar</button>
+      <button class="btn primary" (click)="guardarClaveAux()" [disabled]="guardandoClaveAux">Guardar Contraseña</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODALES DIRECTIVOS ───────────────────────────────────────────────── -->
+<div class="modal-overlay" *ngIf="modalCrearAdmin" (click)="modalCrearAdmin = false">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Registrar Directivo</h3>
+      <button class="modal-close" (click)="modalCrearAdmin = false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorCrearAdmin">{{ errorCrearAdmin }}</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>DNI <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formCrearAdmin.dni" placeholder="Ej. 12345678" maxlength="8">
+        </div>
+        <div class="form-group">
+          <label>Nombres <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formCrearAdmin.nombres" placeholder="Nombres">
+        </div>
+        <div class="form-group">
+          <label>Apellidos <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formCrearAdmin.apellidos" placeholder="Apellidos">
+        </div>
+        <div class="form-group full">
+          <label>Correo Personal / Contacto</label>
+          <input type="email" [(ngModel)]="formCrearAdmin.correoPersonal" placeholder="ejemplo@correo.com">
+        </div>
+        <div class="form-group full">
+          <label>Teléfono</label>
+          <input type="text" [(ngModel)]="formCrearAdmin.telefono" placeholder="Ej. 987654321">
+        </div>
+      </div>
+      <div class="credenciales-box" *ngIf="credencialesAdmin">
+        <h4>¡Directivo registrado con éxito!</h4>
+        <div class="cred-row"><span>Correo Institucional:</span> <strong>{{ credencialesAdmin.correo }}</strong></div>
+        <div class="cred-row"><span>Contraseña Temporal:</span> <strong>{{ credencialesAdmin.clave }}</strong></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="modalCrearAdmin = false">Cerrar</button>
+      <button class="btn primary" *ngIf="!credencialesAdmin" (click)="crearAdmin()" [disabled]="guardandoCrearAdmin">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="modalEditarAdmin" (click)="modalEditarAdmin = false">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Editar Directivo</h3>
+      <button class="modal-close" (click)="modalEditarAdmin = false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorEditarAdmin">{{ errorEditarAdmin }}</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombres <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formEditarAdmin.nombres" placeholder="Nombres">
+        </div>
+        <div class="form-group">
+          <label>Apellidos <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formEditarAdmin.apellidos" placeholder="Apellidos">
+        </div>
+        <div class="form-group full">
+          <label>Correo Institucional (Solo lectura)</label>
+          <input type="email" [value]="adminEditando?.correo || 'Sin asignar'" disabled class="readonly-input">
+        </div>
+        <div class="form-group">
+          <label>Correo Personal</label>
+          <input type="email" [(ngModel)]="formEditarAdmin.correoPersonal" placeholder="ejemplo@correo.com">
+        </div>
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input type="text" [(ngModel)]="formEditarAdmin.telefono" placeholder="Ej. 987654321">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="modalEditarAdmin = false">Cancelar</button>
+      <button class="btn primary" (click)="guardarEdicionAdmin()" [disabled]="guardandoEditarAdmin">
+        <span *ngIf="!guardandoEditarAdmin">Guardar Cambios</span>
+        <span *ngIf="guardandoEditarAdmin">Guardando...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="modalClaveAdmin" (click)="modalClaveAdmin = false">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Cambiar Contraseña - Directivo</h3>
+      <button class="modal-close" (click)="modalClaveAdmin = false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-top: 0; color: var(--text-muted); font-size: 0.875rem;">Establecer nueva contraseña para <strong>{{ adminClaveNombre }}</strong></p>
+      <div class="error-banner" *ngIf="errorClaveAdmin">{{ errorClaveAdmin }}</div>
+      <div class="form-group full">
+        <label>Nueva Contraseña <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="nuevaClaveAdmin" placeholder="Mínimo 4 caracteres">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="modalClaveAdmin = false">Cancelar</button>
+      <button class="btn primary" (click)="guardarClaveAdmin()" [disabled]="guardandoClaveAdmin">Guardar Contraseña</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL CLAVE PADRES ───────────────────────────────────────────────── -->
+<div class="modal-overlay" *ngIf="modalClavePadre" (click)="modalClavePadre = false">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Cambiar Contraseña - Padre / Apoderado</h3>
+      <button class="modal-close" (click)="modalClavePadre = false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-top: 0; color: var(--text-muted); font-size: 0.875rem;">Establecer nueva contraseña para <strong>{{ padreClaveNombre }}</strong></p>
+      <div class="error-banner" *ngIf="errorClavePadre">{{ errorClavePadre }}</div>
+      <div class="form-group full">
+        <label>Nueva Contraseña <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="nuevaClavePadre" placeholder="Mínimo 4 caracteres">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="modalClavePadre = false">Cancelar</button>
+      <button class="btn primary" (click)="guardarClavePadre()" [disabled]="guardandoClavePadre">Guardar Contraseña</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL CONFIRMAR GUARDAR EDICIÓN ──────────────────────── -->
+<div class="modal-overlay" *ngIf="confirmGuardarEdicionTipo !== null" (mousedown)="cancelarGuardarEdicion()">
+  <div class="confirm-card" (mousedown)="$event.stopPropagation()">
+    <h3>¿Confirmar actualización de datos?</h3>
+    <p>Se modificarán los datos personales y de contacto del usuario en el sistema.</p>
+    <div class="confirm-actions">
+      <button class="btn secondary" (mousedown)="cancelarGuardarEdicion()">Cancelar</button>
+      <button class="btn primary" (mousedown)="ejecutarGuardarEdicion()">Sí, Guardar Cambios</button>
+    </div>
+  </div>
+</div>

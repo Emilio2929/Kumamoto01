@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
@@ -18,7 +19,7 @@ export interface LoginResponse {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly apiBase = 'http://localhost:5121/api';
+  private readonly apiBase = `${environment.apiUrl}/api`;
 
   iniciarSesion(correo: string, password: string): Observable<LoginResponse> {
     return this.http
@@ -86,5 +87,17 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  getProfile(): Observable<any> {
+    return this.http.get<any>(`${this.apiBase}/auth/me`);
+  }
+
+  updateProfile(data: { correoPersonal: string; telefono: string }): Observable<any> {
+    return this.http.put<any>(`${this.apiBase}/auth/me`, data);
+  }
+
+  changePassword(data: { contrasenaActual: string; nuevaContrasena: string }): Observable<any> {
+    return this.http.put<any>(`${this.apiBase}/auth/me/password`, data);
   }
 }

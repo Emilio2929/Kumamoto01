@@ -29,27 +29,77 @@
           </a>
         </li>
         <li>
-          <a routerLink="estructura" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <!-- SVG: Estructura/Edificio -->
+          <a routerLink="grados-secciones" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <!-- SVG: Grados/Lista ordenada -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <line x1="10" y1="6" x2="21" y2="6"></line>
+              <line x1="10" y1="12" x2="21" y2="12"></line>
+              <line x1="10" y1="18" x2="21" y2="18"></line>
+              <polyline points="3 6 4 7 6 5"></polyline>
+              <polyline points="3 12 4 13 6 11"></polyline>
+              <polyline points="3 18 4 19 6 17"></polyline>
+            </svg>
+            <span>Grados y Secciones</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="aulas" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <!-- SVG: Aulas/Edificio -->
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
               stroke-linejoin="round">
               <path
                 d="M3 21v-8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8M3 21h18M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4M12 7V3M10 5h4" />
             </svg>
-            <span>Estructura</span>
+            <span>Aulas</span>
           </a>
         </li>
         <li>
-          <a routerLink="padres" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <!-- SVG: Padres/Usuarios -->
+          <a routerLink="cursos" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <!-- SVG: Cursos/Libro -->
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
               stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
             </svg>
-            <span>Padres</span>
+            <span>Cursos</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="carga-academica" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <!-- SVG: Carga Académica/Calendario -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Asignación Docente</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="tutoria" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <!-- SVG: Tutoría/Persona con estrella -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <span>Tutoría</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="auxiliares" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <!-- SVG: Auxiliares/Usuarios con plus -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="8.5" cy="7" r="4" />
+              <line x1="20" y1="8" x2="20" y2="14"></line>
+              <line x1="23" y1="11" x2="17" y2="11"></line>
+            </svg>
+            <span>Asig. Auxiliares</span>
           </a>
         </li>
         <li>
@@ -67,15 +117,16 @@
           </a>
         </li>
         <li>
-          <a routerLink="personal" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-            <!-- SVG: Personal -->
+          <a routerLink="usuarios" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <!-- SVG: Usuarios -->
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
               stroke-linejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-              <rect x="11" y="14" width="2" height="7" rx="1" />
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
-            <span>Personal</span>
+            <span>Usuarios</span>
           </a>
         </li>
         <li>
@@ -90,7 +141,16 @@
             <span>Comunicados</span>
           </a>
         </li>
-
+        <li>
+          <a routerLink="desbloqueo-notas" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <!-- SVG: Lock Open/Unlock -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+            </svg>
+            <span>Desbloqueo Notas</span>
+          </a>
+        </li>
       </ul>
     </nav>
 

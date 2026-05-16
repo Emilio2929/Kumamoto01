@@ -47,6 +47,64 @@ public static class AuthEndpoints
         .WithName("Login")
         .WithSummary("Autenticación de usuarios — devuelve JWT")
         .WithOpenApi();
+        // GET /api/auth/me
+        group.MapGet("/me", async (System.Security.Claims.ClaimsPrincipal user, KumamotoDbContext db) =>
+        {
+            var userIdStr = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return Results.Unauthorized();
+
+            var u = await db.Usuarios.FindAsync(userId);
+            if (u == null) return Results.NotFound();
+
+            return Results.Ok(new
+            {
+                correo = u.Correo,
+                correoPersonal = u.CorreoPersonal,
+                telefono = u.Telefono
+            });
+        }).RequireAuthorization();
+
+        // PUT /api/auth/me
+        group.MapPut("/me", async (UpdateProfileDto dto, System.Security.Claims.ClaimsPrincipal user, KumamotoDbContext db) =>
+        {
+            var userIdStr = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return Results.Unauthorized();
+
+            var u = await db.Usuarios.FindAsync(userId);
+            if (u == null) return Results.NotFound();
+
+            u.CorreoPersonal = dto.CorreoPersonal;
+            u.Telefono = dto.Telefono;
+            
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { mensaje = "Datos actualizados correctamente." });
+        }).RequireAuthorization();
+
+        // PUT /api/auth/me/password
+        group.MapPut("/me/password", async (ChangePasswordDto dto, System.Security.Claims.ClaimsPrincipal user, KumamotoDbContext db) =>
+        {
+            var userIdStr = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return Results.Unauthorized();
+
+            var u = await db.Usuarios.FindAsync(userId);
+            if (u == null) return Results.NotFound();
+
+            // Verificar contraseña actual
+            var hashedCurrent = HashPassword(dto.ContrasenaActual);
+            if (u.ClaveHash != dto.ContrasenaActual && u.ClaveHash != hashedCurrent)
+            {
+                return Results.BadRequest(new { mensaje = "La contraseña actual es incorrecta." });
+            }
+
+            u.ClaveHash = HashPassword(dto.NuevaContrasena);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { mensaje = "Contraseña actualizada correctamente." });
+        }).RequireAuthorization();
     }
 
     private static string HashPassword(string password)
@@ -54,4 +112,16 @@ public static class AuthEndpoints
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
         return Convert.ToHexString(bytes).ToLower();
     }
+}
+
+public class UpdateProfileDto
+{
+    public string? CorreoPersonal { get; set; }
+    public string? Telefono { get; set; }
+}
+
+public class ChangePasswordDto
+{
+    public string ContrasenaActual { get; set; } = string.Empty;
+    public string NuevaContrasena { get; set; } = string.Empty;
 }

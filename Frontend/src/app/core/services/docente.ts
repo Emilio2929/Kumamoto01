@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -19,7 +20,7 @@ export interface EstudianteSimple {
 @Injectable({ providedIn: 'root' })
 export class DocenteService {
   private http = inject(HttpClient);
-  private api = 'http://localhost:5121/api/docente-portal';
+  private api = `${environment.apiUrl}/api/docente-portal`;
 
   getClasesHoy(): Observable<ClaseHoy[]> {
     return this.http.get<ClaseHoy[]>(`${this.api}/clases-hoy`);

@@ -9,6 +9,7 @@ export interface AdministrativoDetalleDto {
   nombres: string;
   apellidos: string;
   correo: string | null;
+  correoPersonal: string | null;
   telefono: string | null;
   estado: number;
 }
@@ -17,14 +18,14 @@ export interface CreateAdministrativoDto {
   dni: string;
   nombres: string;
   apellidos: string;
-  correo: string;
+  correoPersonal: string | null;
   telefono: string | null;
 }
 
 export interface UpdateAdministrativoDto {
   nombres: string;
   apellidos: string;
-  correo: string | null;
+  correoPersonal: string | null;
   telefono: string | null;
 }
 

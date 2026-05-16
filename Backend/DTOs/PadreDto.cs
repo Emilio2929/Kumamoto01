@@ -6,6 +6,7 @@ public record PadreDetalleDto(
     string Nombres,
     string Apellidos,
     string? Correo,
+    string? CorreoPersonal,
     string? Telefono,
     short Estado
 );

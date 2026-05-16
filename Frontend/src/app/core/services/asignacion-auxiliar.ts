@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -26,7 +27,7 @@ export interface BulkAsignarAuxiliarDto {
 @Injectable({ providedIn: 'root' })
 export class AsignacionAuxiliarService {
   private readonly http = inject(HttpClient);
-  private readonly apiBase = 'http://localhost:5121/api/asignacion-auxiliar';
+  private readonly apiBase = `${environment.apiUrl}/api/asignacion-auxiliar`;
 
   getGrouped(): Observable<AuxiliarAsignacionesGroupDto[]> {
     return this.http.get<AuxiliarAsignacionesGroupDto[]>(`${this.apiBase}/grouped`);

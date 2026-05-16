@@ -2,7 +2,7 @@
 
 // ── Header ────────────────────────────────────────────────────────────────────
 .cam-header {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: flex-end;
   flex-wrap: wrap; gap: 1rem;
 }
 .cam-title {

@@ -28,7 +28,7 @@ public class KumamotoDbContext : DbContext
     public DbSet<CalificacionBimestral> CalificacionesBimestrales { get; set; } = null!;
     public DbSet<AlumnoRiesgo> AlumnosRiesgo { get; set; } = null!;
     public DbSet<Comunicado> Comunicados { get; set; } = null!;
-
+    public DbSet<DesbloqueoCalificacion> DesbloqueosCalificacion { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -56,6 +56,7 @@ public class KumamotoDbContext : DbContext
         modelBuilder.Entity<CalificacionBimestral>().ToTable("calificacion_bimestral");
         modelBuilder.Entity<AlumnoRiesgo>().ToTable("alumno_riesgo");
         modelBuilder.Entity<Comunicado>().ToTable("comunicado");
+        modelBuilder.Entity<DesbloqueoCalificacion>().ToTable("desbloqueo_calificacion");
 
 
         // Relaciones de Calificacion (5NF)
@@ -88,6 +89,28 @@ public class KumamotoDbContext : DbContext
             .HasIndex(c => new { c.EstudianteId, c.CompetenciaId, c.SemanaId })
             .IsUnique()
             .HasDatabaseName("uc_calificacion_semana");
+
+        // Relaciones de DesbloqueoCalificacion
+        modelBuilder.Entity<DesbloqueoCalificacion>()
+            .HasOne(d => d.Carga)
+            .WithMany()
+            .HasForeignKey(d => d.CargaId);
+            
+        modelBuilder.Entity<DesbloqueoCalificacion>()
+            .HasOne(d => d.Semana)
+            .WithMany()
+            .HasForeignKey(d => d.SemanaId);
+            
+        modelBuilder.Entity<DesbloqueoCalificacion>()
+            .HasOne(d => d.Estudiante)
+            .WithMany()
+            .HasForeignKey(d => d.EstudianteId);
+
+        modelBuilder.Entity<DesbloqueoCalificacion>()
+            .HasOne(d => d.HabilitadoPor)
+            .WithMany()
+            .HasForeignKey(d => d.HabilitadoPorId);
+
 
         // SemanaAcademica → PeriodoAcademico
         modelBuilder.Entity<SemanaAcademica>()

@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -49,8 +50,8 @@ export interface GuardarAsistenciaAulaRequest {
 @Injectable({ providedIn: 'root' })
 export class AuxiliarService {
   private readonly http = inject(HttpClient);
-  private readonly apiBase = 'http://localhost:5121/api/auxiliar';
-  private readonly apiPortal = 'http://localhost:5121/api/auxiliar-portal';
+  private readonly apiBase = `${environment.apiUrl}/api/auxiliar`;
+  private readonly apiPortal = `${environment.apiUrl}/api/auxiliar-portal`;
 
   getMisAulas(): Observable<AulaAsignadaAuxiliarDto[]> {
     return this.http.get<AulaAsignadaAuxiliarDto[]>(`${this.apiBase}/me/aulas`);

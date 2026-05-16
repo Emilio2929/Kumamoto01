@@ -20,7 +20,7 @@ public static class PadresEndpoints
                 .Where(u => u.RolId == ROL_PADRE)
                 .OrderBy(u => u.Apellidos).ThenBy(u => u.Nombres)
                 .Select(u => new PadreDetalleDto(
-                    u.Id, u.Dni, u.Nombres, u.Apellidos, u.Correo, u.Telefono, u.Estado
+                    u.Id, u.Dni, u.Nombres, u.Apellidos, u.Correo, u.CorreoPersonal, u.Telefono, u.Estado
                 ))
                 .ToListAsync();
             return Results.Ok(padres);
@@ -35,7 +35,7 @@ public static class PadresEndpoints
             var padre = await db.Usuarios
                 .Where(u => u.RolId == ROL_PADRE && u.Dni.Contains(dni.Trim()))
                 .Select(u => new PadreDetalleDto(
-                    u.Id, u.Dni, u.Nombres, u.Apellidos, u.Correo, u.Telefono, u.Estado
+                    u.Id, u.Dni, u.Nombres, u.Apellidos, u.Correo, u.CorreoPersonal, u.Telefono, u.Estado
                 ))
                 .FirstOrDefaultAsync();
 
@@ -47,18 +47,23 @@ public static class PadresEndpoints
         // ── POST /api/padres  → crear padre con credenciales auto-generadas
         group.MapPost("/", async (CreatePadreDto dto, KumamotoDbContext db) =>
         {
-            // El correo es opcional para padres. Si no se provee, se genera uno institucional p[DNI]
-            var correoFinal = string.IsNullOrWhiteSpace(dto.Correo) 
-                ? $"p{dto.Dni}@kumamoto.edu.pe" 
-                : dto.Correo.Trim().ToLower();
+            var correoInstitucional = $"p{dto.Dni}@kumamoto.edu.pe";
+            var correoPersonal = string.IsNullOrWhiteSpace(dto.Correo) ? null : dto.Correo.Trim().ToLower();
 
             var existeDni = await db.Usuarios.AnyAsync(u => u.Dni == dto.Dni);
             if (existeDni)
                 return Results.Conflict(new { mensaje = "Ya existe un usuario con ese DNI." });
 
-            var existeCorreo = await db.Usuarios.AnyAsync(u => u.Correo == correoFinal);
-            if (existeCorreo)
-                return Results.Conflict(new { mensaje = "Ese correo ya está registrado." });
+            var existeCorreoInst = await db.Usuarios.AnyAsync(u => u.Correo == correoInstitucional);
+            if (existeCorreoInst)
+                return Results.Conflict(new { mensaje = "El correo institucional para este DNI ya está registrado." });
+
+            if (!string.IsNullOrWhiteSpace(correoPersonal))
+            {
+                var existeCorreoPers = await db.Usuarios.AnyAsync(u => u.CorreoPersonal == correoPersonal);
+                if (existeCorreoPers)
+                    return Results.Conflict(new { mensaje = "Ese correo personal ya está registrado." });
+            }
 
             var clave = $"Kuma{dto.Dni}";
 
@@ -67,7 +72,8 @@ public static class PadresEndpoints
                 Dni = dto.Dni.Trim(),
                 Nombres = dto.Nombres.Trim(),
                 Apellidos = dto.Apellidos.Trim(),
-                Correo = correoFinal,
+                Correo = correoInstitucional,
+                CorreoPersonal = correoPersonal,
                 Telefono = dto.Telefono?.Trim(),
                 ClaveHash = clave,
                 RolId = ROL_PADRE,
@@ -76,9 +82,9 @@ public static class PadresEndpoints
             db.Usuarios.Add(padre);
             await db.SaveChangesAsync();
 
-            var msg = string.IsNullOrWhiteSpace(dto.Correo)
-                ? $"Padre registrado con correo institucional: {correoFinal}. Clave: {clave}"
-                : $"Padre registrado. Credenciales enviadas a {correoFinal}. Clave: {clave}";
+            var msg = string.IsNullOrWhiteSpace(correoPersonal)
+                ? $"Padre registrado con correo institucional: {correoInstitucional}. Clave: {clave}"
+                : $"Padre registrado. Credenciales enviadas a {correoPersonal}. Clave: {clave}";
 
             return Results.Created($"/api/padres/{padre.Id}", new
             {
@@ -87,8 +93,6 @@ public static class PadresEndpoints
                 claveGenerada = clave,
                 mensaje = msg
             });
-
-
         }).WithName("CreatePadre");
 
         // ── PUT /api/padres/{id}  → editar datos del padre
@@ -100,17 +104,17 @@ public static class PadresEndpoints
             if (string.IsNullOrWhiteSpace(dto.Nombres))
                 return Results.BadRequest(new { mensaje = "El nombre es requerido." });
 
-            // Verificar correo único si se cambia
             if (!string.IsNullOrWhiteSpace(dto.Correo))
             {
-                var duplicado = await db.Usuarios.AnyAsync(u => u.Correo == dto.Correo && u.Id != id);
+                var correoPers = dto.Correo.Trim().ToLower();
+                var duplicado = await db.Usuarios.AnyAsync(u => u.CorreoPersonal == correoPers && u.Id != id);
                 if (duplicado)
-                    return Results.Conflict(new { mensaje = "Ese correo ya está en uso." });
+                    return Results.Conflict(new { mensaje = "Ese correo personal ya está en uso." });
             }
 
             padre.Nombres = dto.Nombres.Trim();
             padre.Apellidos = dto.Apellidos?.Trim() ?? padre.Apellidos;
-            padre.Correo = string.IsNullOrWhiteSpace(dto.Correo) ? padre.Correo : dto.Correo.Trim();
+            padre.CorreoPersonal = string.IsNullOrWhiteSpace(dto.Correo) ? null : dto.Correo.Trim().ToLower();
             padre.Telefono = dto.Telefono?.Trim();
             await db.SaveChangesAsync();
 

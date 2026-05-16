@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -57,7 +58,7 @@ export interface PadreComboDto {
 @Injectable({ providedIn: 'root' })
 export class MatriculaService {
   private http = inject(HttpClient);
-  private api = 'http://localhost:5121/api/matricula';
+  private api = `${environment.apiUrl}/api/matricula`;
 
   getAll(): Observable<EstudianteDetalleDto[]> {
     return this.http.get<EstudianteDetalleDto[]>(this.api);
@@ -69,7 +70,7 @@ export class MatriculaService {
 
   buscarPadrePorDni(dni: string): Observable<PadreDetalleDto> {
     return this.http.get<PadreDetalleDto>(
-      `http://localhost:5121/api/padres/buscar?dni=${dni.trim()}`
+      `${environment.apiUrl}/api/padres/buscar?dni=${dni.trim()}`
     );
   }
 

@@ -1,45 +1,55 @@
 <div class="card chart-card">
   <div class="card-header">
-    <h2>Asistencia Global</h2>
-    <select class="filter-select">
+    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+      <h2>Asistencia Global</h2>
+      <div class="chart-legend" style="display: flex; gap: 1rem; font-size: 0.75rem; color: var(--text-muted);">
+        <div style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 10px; height: 10px; border-radius: 2px; background: var(--primary);"></span> Puntual</div>
+        <div style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 10px; height: 10px; border-radius: 2px; background: var(--warning);"></span> Tarde</div>
+        <div style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 10px; height: 10px; border-radius: 2px; background: var(--danger);"></span> Falta</div>
+      </div>
+    </div>
+    <select class="filter-select" [(ngModel)]="filtro" (ngModelChange)="onFiltroChange()">
       <option value="today">Hoy</option>
       <option value="week">Esta Semana</option>
       <option value="month">Este Mes</option>
     </select>
   </div>
-  <div class="card-body">
-    <!-- Simulación de un gráfico de barras -->
-    <div class="chart-container">
-      
+  <div class="card-body" style="overflow-x: auto;">
+    <!-- Estado de carga -->
+    <div *ngIf="loading" class="state-block">
+      <div class="spinner"></div>
+      <p>Calculando asistencia...</p>
+    </div>
+
+    <!-- Estado de error -->
+    <div *ngIf="error" class="state-block error">
+      <p>{{ error }}</p>
+      <button class="btn secondary sm" (click)="cargarDatos()">Reintentar</button>
+    </div>
+
+    <!-- Gráfico de barras dinámico -->
+    <div class="chart-container" *ngIf="!loading && !error" style="min-width: 500px;">
       <!-- Eje Y Indicadores -->
       <div class="chart-y-axis">
-        <span>100</span>
-        <span>80</span>
-        <span>60</span>
-        <span>40</span>
-        <span>20</span>
-        <span>0</span>
+        <span>100%</span>
+        <span>80%</span>
+        <span>60%</span>
+        <span>40%</span>
+        <span>20%</span>
+        <span>0%</span>
       </div>
 
-      <div class="chart-bar-group">
-        <div class="chart-bar primary" style="height: 95%;"></div>
-        <div class="chart-label">1ro</div>
-      </div>
-      <div class="chart-bar-group">
-        <div class="chart-bar primary" style="height: 88%;"></div>
-        <div class="chart-label">2do</div>
-      </div>
-      <div class="chart-bar-group">
-        <div class="chart-bar primary" style="height: 92%;"></div>
-        <div class="chart-label">3ro</div>
-      </div>
-      <div class="chart-bar-group">
-        <div class="chart-bar primary" style="height: 98%;"></div>
-        <div class="chart-label">4to</div>
-      </div>
-      <div class="chart-bar-group">
-        <div class="chart-bar primary" style="height: 85%;"></div>
-        <div class="chart-label">5to</div>
+      <div class="chart-bar-group" *ngFor="let item of datos">
+        <div class="bars-wrapper" style="display: flex; align-items: flex-end; justify-content: center; gap: 2px; height: 100%; width: 100%;">
+          <!-- Barra Puntual -->
+          <div class="chart-bar primary" [style.height.%]="item.porcentajePresente" [title]="item.grado + ' - Puntual: ' + item.porcentajePresente + '%'"></div>
+          <!-- Barra Tarde -->
+          <div class="chart-bar warning" [style.height.%]="item.porcentajeTarde" [title]="item.grado + ' - Tarde: ' + item.porcentajeTarde + '%'"></div>
+          <!-- Barra Faltas -->
+          <div class="chart-bar danger" [style.height.%]="item.porcentajeFalta" [title]="item.grado + ' - Faltas: ' + item.porcentajeFalta + '%'"></div>
+        </div>
+        
+        <div class="chart-label" [title]="'Total registros: ' + item.totalRegistros">{{ item.label }}</div>
       </div>
     </div>
   </div>

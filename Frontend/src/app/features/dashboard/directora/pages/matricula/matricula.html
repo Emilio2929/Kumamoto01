@@ -1,17 +1,25 @@
 <div class="matricula-layout">
+  <!-- ══ TABS ═════════════════════════════════════════════════════════════ -->
+  <div class="tabs-container">
+    <button class="tab-btn" [class.active]="activeTab === 'estudiantes'" (click)="setTab('estudiantes')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Estudiantes Matriculados
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'padres'" (click)="setTab('padres')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Padres / Apoderados
+    </button>
+    <button class="tab-btn highlight" [class.active]="activeTab === 'registro'" (click)="setTab('registro')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nueva Matrícula
+    </button>
+  </div>
 
-  <!-- ══ HEADER ════════════════════════════════════════════════════════ -->
-  <div class="page-header">
-    <div class="header-left">
-      <div class="page-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
-      </div>
-      <div>
-        <h1>Matrícula de Estudiantes</h1>
-        <p class="sub">{{ estudiantes.length }} estudiantes registrados</p>
-      </div>
-    </div>
-    <div class="header-actions">
+  <!-- ══════════════════════════════════════════════════════════════════════
+       TAB 1: ESTUDIANTES
+  ══════════════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'estudiantes'">
+    <div class="filters-row">
       <div class="search-box">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" placeholder="Buscar por nombre o DNI..." [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
@@ -22,238 +30,506 @@
           {{ a.gradoNombre }} - Sec. {{ a.seccionLetra }}
         </option>
       </select>
-      <button class="btn primary" (click)="abrirModalCrear()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Matricular Estudiante
-      </button>
     </div>
-  </div>
 
-  <!-- ══ RESUMEN ═══════════════════════════════════════════════════════ -->
-  <div class="stats-row" *ngIf="!loading && !errorLoad">
-    <div class="stat-chip">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-      <span>{{ estudiantes.length }} Total</span>
+    <div *ngIf="loading" class="state-block">
+      <div class="spinner"></div>
+      <p>Cargando estudiantes...</p>
     </div>
-    <div class="stat-chip activos">
-      <div class="dot"></div>
-      <span>{{ totalActivos }} Activos</span>
+    
+    <div class="card table-card" *ngIf="!loading && !errorLoad">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Estudiante</th>
+              <th>DNI</th>
+              <th>Aula (Grado · Sección)</th>
+              <th>Padre / Apoderado</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="estudiantesFiltrados.length === 0"><td colspan="6" class="empty-row">No hay estudiantes.</td></tr>
+            <tr *ngFor="let e of estudiantesFiltrados" [class.row-inactivo]="e.estado === 0">
+              <td>
+                <div class="usuario-cell">
+                  <div class="avatar">{{ e.nombres.charAt(0) }}{{ e.apellidos.charAt(0) }}</div>
+                  <div><span class="nombre">{{ nombreCompleto(e) }}</span></div>
+                </div>
+              </td>
+              <td class="mono">{{ e.dni }}</td>
+              <td>
+                <div class="aula-cell" *ngIf="e.aulaId">
+                  <span class="aula-badge">{{ e.gradoNombre }} · Sec. {{ e.seccionLetra }}</span>
+                </div>
+                <span class="sin-aula-badge" *ngIf="!e.aulaId">Sin asignar</span>
+              </td>
+              <td>
+                <div class="padre-cell" *ngIf="e.padreId">
+                  <span class="padre-nombre">{{ e.padreNombre }}</span>
+                </div>
+                <span class="no-data" *ngIf="!e.padreId">—</span>
+              </td>
+              <td>
+                <span class="badge" [class.activo]="e.estado === 1" [class.inactivo]="e.estado === 0">
+                  {{ e.estado === 1 ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <div class="action-group">
+                  <button class="action-btn edit" title="Editar" (click)="abrirModalEditar(e)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button class="action-btn toggle" [class.on]="e.estado === 1" (click)="toggleEstado(e)">
+                    <svg *ngIf="e.estado === 1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64A9 9 0 1 1 5.64 19.36"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                    <svg *ngIf="e.estado === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  </button>
+                  <button class="action-btn delete" (click)="pedirEliminar(e.id)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div class="stat-chip sin-aula">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <span>{{ totalSinAula }} Sin aula asignada</span>
+  </ng-container>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       TAB 2: PADRES
+  ══════════════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'padres'">
+    <div class="filters-row">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar padre por nombre o DNI..." [(ngModel)]="busquedaPadres" (ngModelChange)="onBusquedaPadres()">
+      </div>
     </div>
-  </div>
 
-  <!-- ══ ESTADOS ═══════════════════════════════════════════════════════ -->
-  <div *ngIf="loading" class="state-block">
-    <div class="spinner"></div>
-    <p>Cargando estudiantes...</p>
-  </div>
-  <div *ngIf="errorLoad" class="state-block error">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    <p>{{ errorLoad }}</p>
-    <button class="btn secondary sm" (click)="cargar()">Reintentar</button>
-  </div>
+    <div *ngIf="loadingPadres" class="state-block">
+      <div class="spinner"></div>
+      <p>Cargando padres...</p>
+    </div>
 
-  <!-- ══ TABLA ══════════════════════════════════════════════════════════ -->
-  <div class="card table-card" *ngIf="!loading && !errorLoad">
-    <div class="table-responsive">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Estudiante</th>
-            <th>DNI</th>
-            <th>Aula (Grado · Sección)</th>
-            <th>Padre / Apoderado</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngIf="estudiantesFiltrados.length === 0">
-            <td colspan="6" class="empty-row">No hay estudiantes matriculados.</td>
-          </tr>
-          <tr *ngFor="let e of estudiantesFiltrados" [class.row-inactivo]="e.estado === 0">
+    <div class="card table-card" *ngIf="!loadingPadres && !errorLoadPadres">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Padre / Apoderado</th>
+              <th>DNI</th>
+              <th>Correo Institucional (Acceso)</th>
+              <th>Correo Personal</th>
+              <th>Teléfono</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="padresFiltrados.length === 0"><td colspan="7" class="empty-row">No hay padres.</td></tr>
+            <tr *ngFor="let p of padresFiltrados" [class.row-inactivo]="p.estado === 0">
+              <td>
+                <div class="usuario-cell">
+                  <div class="avatar padre">{{ p.nombres.charAt(0) }}{{ p.apellidos.charAt(0) }}</div>
+                  <div><span class="nombre">{{ p.nombres }} {{ p.apellidos }}</span></div>
+                </div>
+              </td>
+              <td class="mono">{{ p.dni }}</td>
+              <td>
+                <span class="correo-institucional" *ngIf="p.correo">{{ p.correo }}</span>
+                <span class="no-data" *ngIf="!p.correo">—</span>
+              </td>
+              <td>
+                <span *ngIf="p.correoPersonal">{{ p.correoPersonal }}</span>
+                <span class="no-data" *ngIf="!p.correoPersonal">—</span>
+              </td>
+              <td>
+                <span *ngIf="p.telefono">{{ p.telefono }}</span>
+                <span class="no-data" *ngIf="!p.telefono">—</span>
+              </td>
+              <td>
+                <span class="badge" [class.activo]="p.estado === 1" [class.inactivo]="p.estado === 0">
+                  {{ p.estado === 1 ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <div class="action-group">
+                  <button class="action-btn edit" title="Editar" (click)="abrirModalEditarPadre(p)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button class="action-btn toggle" [class.on]="p.estado === 1" (click)="toggleEstadoPadre(p)">
+                    <svg *ngIf="p.estado === 1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64A9 9 0 1 1 5.64 19.36"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                    <svg *ngIf="p.estado === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  </button>
+                  <button class="action-btn delete" (click)="pedirEliminarPadre(p.id)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
 
-            <!-- Nombre -->
-            <td>
-              <div class="usuario-cell">
-                <div class="avatar">{{ e.nombres.charAt(0) }}{{ e.apellidos.charAt(0) }}</div>
+  <!-- ══════════════════════════════════════════════════════════════════════
+       TAB 3: NUEVO REGISTRO (WIZARD)
+  ══════════════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'registro'">
+    <div class="wizard-container">
+      
+      <!-- Stepper -->
+      <div class="stepper">
+        <div class="step" [class.active]="wizardStep === 1" [class.completed]="wizardStep > 1">
+          <div class="step-circle">1</div>
+          <div class="step-label">Datos del Padre</div>
+        </div>
+        <div class="step-line" [class.active]="wizardStep > 1"></div>
+        <div class="step" [class.active]="wizardStep === 2" [class.completed]="wizardStep > 2">
+          <div class="step-circle">2</div>
+          <div class="step-label">Datos del Estudiante</div>
+        </div>
+        <div class="step-line" [class.active]="wizardStep > 2"></div>
+        <div class="step" [class.active]="wizardStep === 3">
+          <div class="step-circle">3</div>
+          <div class="step-label">Credenciales</div>
+        </div>
+      </div>
+
+      <div class="wizard-card">
+        <!-- PASO 1: PADRE -->
+        <div *ngIf="wizardStep === 1" class="step-content">
+
+          <!-- SELECTOR DE MODO -->
+          <div *ngIf="wizardMode === 'select'" class="mode-selector">
+            <h3>¿Cómo desea vincular al padre?</h3>
+            <p class="text-muted">Elija si el padre/apoderado ya está registrado en el sistema o si es nuevo.</p>
+            <div class="mode-cards">
+              <button class="mode-card" (click)="seleccionarModo('existente')">
+                <div class="mode-icon buscar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                <h4>Padre ya registrado</h4>
+                <p>Buscar por DNI y pasar directo al registro del estudiante.</p>
+              </button>
+              <button class="mode-card" (click)="seleccionarModo('nuevo')">
+                <div class="mode-icon nuevo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </div>
+                <h4>Registrar nuevo padre</h4>
+                <p>Crear cuenta nueva con credenciales de acceso al portal.</p>
+              </button>
+            </div>
+          </div>
+
+          <!-- MODO: PADRE EXISTENTE -->
+          <div *ngIf="wizardMode === 'existente'">
+            <h3>Buscar Padre Registrado</h3>
+            <p class="text-muted">Ingrese el DNI del padre para vincularlo al estudiante.</p>
+            <div class="error-banner" *ngIf="errorBusquedaWizard">{{ errorBusquedaWizard }}</div>
+
+            <div class="dni-busqueda-wizard">
+              <div class="dni-input-group">
+                <input type="text" maxlength="8" placeholder="DNI del padre (8 dígitos)..." [(ngModel)]="dniPadreWizard" (keyup.enter)="buscarPadreWizard()">
+                <button class="btn-buscar" (click)="buscarPadreWizard()" [disabled]="buscandoPadreWizard">
+                  {{ buscandoPadreWizard ? 'Buscando...' : 'Buscar' }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Padre encontrado -->
+            <div class="padre-encontrado-wizard" *ngIf="padreExistenteEncontrado">
+              <div class="padre-info">
+                <div class="avatar padre">{{ padreExistenteEncontrado.nombres.charAt(0) }}{{ padreExistenteEncontrado.apellidos.charAt(0) }}</div>
                 <div>
-                  <span class="nombre">{{ nombreCompleto(e) }}</span>
-                  <span class="sub-info" *ngIf="e.correo">{{ e.correo }}</span>
+                  <span class="nombre">{{ padreExistenteEncontrado.nombres }} {{ padreExistenteEncontrado.apellidos }}</span>
+                  <span class="sub-info">DNI: {{ padreExistenteEncontrado.dni }} · {{ padreExistenteEncontrado.correo || 'Sin correo' }}</span>
                 </div>
               </div>
-            </td>
+            </div>
 
-            <!-- DNI -->
-            <td class="mono">{{ e.dni }}</td>
+            <div class="wizard-actions">
+              <button class="btn secondary" (click)="wizardMode = 'select'">Volver</button>
+              <button class="btn primary" (click)="usarPadreExistente()" [disabled]="!padreExistenteEncontrado">
+                Siguiente: Registrar Estudiante
+              </button>
+            </div>
+          </div>
 
-            <!-- Aula -->
-            <td>
-              <div class="aula-cell" *ngIf="e.aulaId">
-                <span class="aula-badge">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                  {{ e.gradoNombre }} · Sec. {{ e.seccionLetra }}
-                </span>
-                <span class="aula-desc" *ngIf="e.aulaDescripcion">{{ e.aulaDescripcion }}</span>
+          <!-- MODO: NUEVO PADRE -->
+          <div *ngIf="wizardMode === 'nuevo'">
+            <h3>Registrar Nuevo Padre</h3>
+            <p class="text-muted">Complete los datos y se generarán credenciales de acceso al portal.</p>
+            <div class="error-banner" *ngIf="errorPadre">{{ errorPadre }}</div>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label>DNI <span class="required">*</span></label>
+                <input type="text" maxlength="8" [(ngModel)]="formPadre.dni">
               </div>
-              <span class="sin-aula-badge" *ngIf="!e.aulaId">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                Sin asignar
-              </span>
-            </td>
-
-            <!-- Padre -->
-            <td>
-              <div class="padre-cell" *ngIf="e.padreId">
-                <span class="padre-nombre">{{ e.padreNombre }}</span>
-                <span class="padre-correo" *ngIf="e.padreCorreo">{{ e.padreCorreo }}</span>
+              <div class="form-group">
+                <label>Teléfono</label>
+                <input type="text" [(ngModel)]="formPadre.telefono">
               </div>
-              <span class="no-data" *ngIf="!e.padreId">—</span>
-            </td>
-
-            <!-- Estado -->
-            <td>
-              <span class="badge" [class.activo]="e.estado === 1" [class.inactivo]="e.estado === 0">
-                {{ e.estado === 1 ? 'Activo' : 'Inactivo' }}
-              </span>
-            </td>
-
-            <!-- Acciones -->
-            <td>
-              <div class="action-group">
-                <button class="action-btn edit" title="Editar / Cambiar aula" (click)="abrirModalEditar(e)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </button>
-                <button class="action-btn toggle" [class.on]="e.estado === 1" [title]="e.estado === 1 ? 'Desactivar' : 'Activar'" (click)="toggleEstado(e)">
-                  <svg *ngIf="e.estado === 1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64A9 9 0 1 1 5.64 19.36"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
-                  <svg *ngIf="e.estado === 0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                </button>
-                <button class="action-btn delete" title="Dar de baja" (click)="pedirEliminar(e.id)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4h6v2"/></svg>
-                </button>
+              <div class="form-group">
+                <label>Nombres <span class="required">*</span></label>
+                <input type="text" [(ngModel)]="formPadre.nombres">
               </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <div class="form-group">
+                <label>Apellidos <span class="required">*</span></label>
+                <input type="text" [(ngModel)]="formPadre.apellidos">
+              </div>
+              <div class="form-group full">
+                <label>Correo Electrónico <span class="required">*</span> (Para acceso al portal)</label>
+                <input type="email" [(ngModel)]="formPadre.correo">
+              </div>
+            </div>
+            <div class="wizard-actions">
+              <button class="btn secondary" (click)="wizardMode = 'select'">Volver</button>
+              <button class="btn primary" (click)="registrarPadre()" [disabled]="guardandoPadre">
+                {{ guardandoPadre ? 'Registrando...' : 'Siguiente: Estudiante' }}
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- PASO 2: ESTUDIANTE -->
+        <div *ngIf="wizardStep === 2" class="step-content">
+          <h3>Registrar Estudiante</h3>
+          <p class="text-muted">El estudiante se vinculará automáticamente al padre registrado en el paso anterior.</p>
+          <div class="error-banner" *ngIf="errorEstudiante">{{ errorEstudiante }}</div>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label>DNI <span class="required">*</span></label>
+              <input type="text" maxlength="8" [(ngModel)]="formEstudiante.dni">
+            </div>
+            <div class="form-group">
+              <label>Teléfono</label>
+              <input type="text" [(ngModel)]="formEstudiante.telefono">
+            </div>
+            <div class="form-group">
+              <label>Nombres <span class="required">*</span></label>
+              <input type="text" [(ngModel)]="formEstudiante.nombres">
+            </div>
+            <div class="form-group">
+              <label>Apellidos <span class="required">*</span></label>
+              <input type="text" [(ngModel)]="formEstudiante.apellidos">
+            </div>
+            <div class="form-group">
+              <label>Aula (Opcional)</label>
+              <select [(ngModel)]="formEstudiante.aulaId">
+                <option [ngValue]="null">-- Sin asignar --</option>
+                <option *ngFor="let a of aulas" [ngValue]="a.id">{{ aulaLabel(a) }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="wizard-actions">
+            <button class="btn primary" (click)="registrarEstudiante()" [disabled]="guardandoEstudiante">
+              {{ guardandoEstudiante ? 'Matriculando...' : 'Finalizar Matrícula' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO 3: CREDENCIALES -->
+        <div *ngIf="wizardStep === 3" class="step-content text-center">
+          <div class="success-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h3>¡Matrícula Completada Exitosamente!</h3>
+          <p>El estudiante ha sido registrado y vinculado correctamente.</p>
+          
+          <div class="credentials-box" *ngIf="credencialesPadre">
+            <h4>Credenciales de acceso para el Padre:</h4>
+            <div class="cred-row"><span>Usuario/Correo:</span> <strong>{{ credencialesPadre.correo }}</strong></div>
+            <div class="cred-row"><span>Contraseña:</span> <strong>{{ credencialesPadre.clave }}</strong></div>
+            <p class="text-sm text-muted mt-2">Por favor, entregue estas credenciales al apoderado. Podrá cambiar su clave al ingresar.</p>
+          </div>
+
+          <div class="credentials-box existing" *ngIf="!credencialesPadre && padreExistenteEncontrado">
+            <h4>Padre vinculado (ya registrado):</h4>
+            <div class="cred-row"><span>Nombre:</span> <strong>{{ padreExistenteEncontrado.nombres }} {{ padreExistenteEncontrado.apellidos }}</strong></div>
+            <div class="cred-row"><span>DNI:</span> <strong>{{ padreExistenteEncontrado.dni }}</strong></div>
+            <p class="text-sm text-muted mt-2">El padre ya tenía cuenta en el sistema. No se generaron credenciales nuevas.</p>
+          </div>
+
+          <div class="wizard-actions center">
+            <button class="btn primary" (click)="finalizarRegistro()">Volver al listado</button>
+            <button class="btn secondary" (click)="resetWizard()">Realizar otra matrícula</button>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
+  </ng-container>
 </div>
 
-<!-- ══ MODAL REGISTRAR / EDITAR ════════════════════════════════════════════ -->
+<!-- ══ MODALES (EDITAR ESTUDIANTE, PADRE, CLAVE) ═════════════════════════ -->
+
+<!-- Editar Estudiante -->
 <div class="modal-overlay" *ngIf="modalForm" (click)="cerrarModal()">
   <div class="modal-card wide" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <div>
-        <h3>{{ modoEdicion ? 'Editar Matrícula' : 'Matricular Estudiante' }}</h3>
-        <p class="modal-sub">{{ modoEdicion ? 'Modifica los datos o cambia el aula asignada.' : 'Registra al estudiante y asígnalo a su aula.' }}</p>
-      </div>
-      <button class="modal-close" (click)="cerrarModal()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+      <h3>Editar Matrícula</h3>
+      <button class="modal-close" (click)="cerrarModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       <div class="error-banner" *ngIf="errorForm">{{ errorForm }}</div>
-
-      <div class="section-label">Datos del Estudiante</div>
       <div class="form-grid">
-        <div class="form-group" [class.disabled]="modoEdicion">
-          <label>DNI <span class="required">*</span></label>
-          <input type="text" maxlength="8" placeholder="12345678" [(ngModel)]="form.dni" [disabled]="modoEdicion">
-          <span class="field-hint" *ngIf="!modoEdicion">8 dígitos — único en todo el sistema</span>
+        <div class="form-group disabled">
+          <label>DNI</label><input type="text" [(ngModel)]="form.dni" disabled>
         </div>
         <div class="form-group">
-          <label>Teléfono</label>
-          <input type="text" placeholder="999 999 999" [(ngModel)]="form.telefono">
+          <label>Teléfono</label><input type="text" [(ngModel)]="form.telefono">
         </div>
         <div class="form-group">
-          <label>Nombres <span class="required">*</span></label>
-          <input type="text" placeholder="Ej. María" [(ngModel)]="form.nombres">
+          <label>Nombres</label><input type="text" [(ngModel)]="form.nombres">
         </div>
         <div class="form-group">
-          <label>Apellidos <span class="required">*</span></label>
-          <input type="text" placeholder="Ej. García López" [(ngModel)]="form.apellidos">
+          <label>Apellidos</label><input type="text" [(ngModel)]="form.apellidos">
         </div>
         <div class="form-group full">
-          <label>Correo Electrónico</label>
-          <input type="email" placeholder="correo@ejemplo.com" [(ngModel)]="form.correo">
-        </div>
-      </div>
-
-      <div class="section-label">Matrícula</div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Aula (Grado + Sección)</label>
+          <label>Aula</label>
           <select [(ngModel)]="form.aulaId">
             <option [ngValue]="null">-- Sin asignar --</option>
-            <option *ngFor="let a of aulas" [ngValue]="a.id">
-              {{ aulaLabel(a) }}{{ a.descripcion ? ' (' + a.descripcion + ')' : '' }}
-            </option>
+            <option *ngFor="let a of aulas" [ngValue]="a.id">{{ aulaLabel(a) }}</option>
           </select>
         </div>
-
         <div class="form-group full">
           <label>Padre / Apoderado</label>
 
-          <!-- Padre ya encontrado / seleccionado -->
-          <div class="padre-encontrado" *ngIf="padreEncontrado">
+          <!-- Padre vinculado -->
+          <div class="padre-encontrado-wizard" *ngIf="padreEncontrado" style="margin: 0;">
             <div class="padre-info">
-              <div class="padre-avatar">{{ padreEncontrado.nombres.charAt(0) }}{{ padreEncontrado.apellidos.charAt(0) }}</div>
+              <div class="avatar padre">{{ padreEncontrado.nombres.charAt(0) }}{{ padreEncontrado.apellidos.charAt(0) }}</div>
               <div>
-                <span class="padre-fullname">{{ padreEncontrado.nombres }} {{ padreEncontrado.apellidos }}</span>
-                <span class="padre-dni">DNI: {{ padreEncontrado.dni || '—' }}</span>
-                <span class="padre-correo" *ngIf="padreEncontrado.correo">{{ padreEncontrado.correo }}</span>
+                <span class="nombre">{{ padreEncontrado.nombres }} {{ padreEncontrado.apellidos }}</span>
+                <span class="sub-info">DNI: {{ padreEncontrado.dni || '—' }}{{ padreEncontrado.correo ? ' · ' + padreEncontrado.correo : '' }}</span>
               </div>
             </div>
-            <button class="btn-quitar-padre" type="button" (click)="limpiarPadre()" title="Quitar vinculación">
+            <button type="button" class="btn-quitar-padre" (click)="limpiarPadre()" title="Desvincular padre">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
 
-          <!-- Buscador por DNI -->
-          <div class="dni-busqueda" *ngIf="!padreEncontrado">
+          <!-- Buscador de padre -->
+          <div class="dni-busqueda-wizard" *ngIf="!padreEncontrado" style="margin: 0;">
             <div class="dni-input-group">
-              <input
-                type="text" maxlength="8"
-                placeholder="Buscar por DNI del padre (8 dígitos)..."
-                [(ngModel)]="dniPadreBusqueda"
-                (keyup.enter)="buscarPadre()">
-              <button class="btn-buscar" type="button" (click)="buscarPadre()" [disabled]="buscandoPadre">
-                <div class="micro-spinner" *ngIf="buscandoPadre"></div>
-                <svg *ngIf="!buscandoPadre" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                {{ buscandoPadre ? '' : 'Buscar' }}
+              <input type="text" maxlength="8" placeholder="Buscar padre por DNI (8 dígitos)..." [(ngModel)]="dniPadreBusqueda" (keyup.enter)="buscarPadre()">
+              <button class="btn-buscar" (click)="buscarPadre()" [disabled]="buscandoPadre">
+                {{ buscandoPadre ? 'Buscando...' : 'Buscar' }}
               </button>
             </div>
-            <span class="error-busqueda" *ngIf="errorBusquedaPadre">{{ errorBusquedaPadre }}</span>
-            <span class="field-hint" *ngIf="!errorBusquedaPadre">Ingrese el DNI del padre registrado en el sistema.</span>
+            <span class="error-busqueda" *ngIf="errorBusquedaPadre" style="font-size: 0.75rem; color: var(--risk-high); margin-top: 0.35rem; display: block;">{{ errorBusquedaPadre }}</span>
+            <span class="field-hint" *ngIf="!errorBusquedaPadre" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">Ingrese el DNI del padre registrado en el sistema.</span>
           </div>
         </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn secondary" (click)="cerrarModal()">Cancelar</button>
-      <button class="btn primary" (click)="guardar()" [disabled]="guardando">
-        <div class="btn-spinner" *ngIf="guardando"></div>
-        {{ guardando ? 'Guardando...' : (modoEdicion ? 'Guardar Cambios' : 'Matricular') }}
+      <button class="btn primary" (click)="pedirConfirmarGuardado('estudiante')" [disabled]="guardando">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmar Eliminar -->
+<div class="modal-overlay" *ngIf="confirmEliminarId !== null" (click)="cancelarEliminar()">
+  <div class="confirm-card" (click)="$event.stopPropagation()">
+    <h3>¿Dar de baja?</h3>
+    <p>El registro quedará inactivo. Podrás reactivarlo después.</p>
+    <div class="confirm-actions">
+      <button class="btn secondary" (click)="cancelarEliminar()">Cancelar</button>
+      <button class="btn danger" (click)="confirmarEliminar()">Dar de baja</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL EDITAR PADRE ══════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="modalEditarPadre" (click)="cerrarModalEditarPadre()">
+  <div class="modal-card wide" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Editar Padre / Apoderado</h3>
+      <button class="modal-close" (click)="cerrarModalEditarPadre()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorEditarPadre">{{ errorEditarPadre }}</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombres <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formEditarPadre.nombres">
+        </div>
+        <div class="form-group">
+          <label>Apellidos <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formEditarPadre.apellidos">
+        </div>
+        <div class="form-group">
+          <label>Correo Personal</label>
+          <input type="email" [(ngModel)]="formEditarPadre.correo">
+        </div>
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input type="text" [(ngModel)]="formEditarPadre.telefono">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="cerrarModalEditarPadre()">Cancelar</button>
+      <button class="btn primary" (click)="pedirConfirmarGuardado('padre')" [disabled]="guardandoEditarPadre">
+        {{ guardandoEditarPadre ? 'Guardando...' : 'Guardar Cambios' }}
       </button>
     </div>
   </div>
 </div>
 
-<!-- ══ CONFIRMAR ELIMINAR ══════════════════════════════════════════════════ -->
-<div class="modal-overlay" *ngIf="confirmEliminarId !== null" (click)="cancelarEliminar()">
-  <div class="confirm-card" (click)="$event.stopPropagation()">
-    <div class="confirm-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4h6v2"/></svg>
+<!-- ══ MODAL CAMBIAR CLAVE PADRE ══════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="modalClavePadre" (click)="cerrarModalClavePadre()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Cambiar Contraseña</h3>
+      <button class="modal-close" (click)="cerrarModalClavePadre()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <h3>¿Dar de baja al estudiante?</h3>
-    <p>El estudiante quedará inactivo y no aparecerá en los registros activos. Podrás reactivarlo si es necesario.</p>
+    <div class="modal-body">
+      <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0 0 1rem;">
+        Nueva contraseña para <strong>{{ padreClaveNombre }}</strong>
+      </p>
+      <div class="error-banner" *ngIf="errorClavePadre">{{ errorClavePadre }}</div>
+      <div class="form-group">
+        <label>Nueva Contraseña <span class="required">*</span></label>
+        <input [type]="mostrarClavePadre ? 'text' : 'password'" [(ngModel)]="nuevaClavePadre" placeholder="Mínimo 4 caracteres">
+      </div>
+      <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; margin-top: 0.5rem;">
+        <input type="checkbox" [(ngModel)]="mostrarClavePadre"> Mostrar contraseña
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="cerrarModalClavePadre()">Cancelar</button>
+      <button class="btn primary" (click)="guardarClavePadre()" [disabled]="guardandoClavePadre">
+        {{ guardandoClavePadre ? 'Guardando...' : 'Cambiar Contraseña' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL CONFIRMAR GUARDADO ═══════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="confirmGuardarTipo" (click)="confirmGuardarTipo = null">
+  <div class="confirm-card" (click)="$event.stopPropagation()">
+    <div class="confirm-icon-save">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    </div>
+    <h3>¿Confirmar cambios?</h3>
+    <p>Los datos modificados se guardarán permanentemente en el sistema.</p>
     <div class="confirm-actions">
-      <button class="btn secondary" (click)="cancelarEliminar()">Cancelar</button>
-      <button class="btn danger" (click)="confirmarEliminar()">Sí, dar de baja</button>
+      <button class="btn secondary" (click)="confirmGuardarTipo = null">Cancelar</button>
+      <button class="btn primary" (click)="ejecutarGuardado()">Sí, guardar</button>
     </div>
   </div>
 </div>

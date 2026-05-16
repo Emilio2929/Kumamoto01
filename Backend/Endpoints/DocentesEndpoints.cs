@@ -20,7 +20,7 @@ public static class DocentesEndpoints
                 .Where(u => u.RolId == ROL_DOCENTE)
                 .OrderBy(u => u.Apellidos).ThenBy(u => u.Nombres)
                 .Select(u => new DocenteDetalleDto(
-                    u.Id, u.Dni, u.Nombres, u.Apellidos, u.Correo, u.Telefono, u.Estado
+                    u.Id, u.Dni, u.Nombres, u.Apellidos, u.Correo, u.CorreoPersonal, u.Telefono, u.Estado
                 ))
                 .ToListAsync();
             return Results.Ok(docentes);
@@ -51,6 +51,13 @@ public static class DocentesEndpoints
             if (existeDni)
                 return Results.Conflict(new { mensaje = "Ya existe un usuario con ese DNI." });
 
+            if (!string.IsNullOrWhiteSpace(dto.CorreoPersonal))
+            {
+                var existeCorreo = await db.Usuarios.AnyAsync(u => u.CorreoPersonal == dto.CorreoPersonal);
+                if (existeCorreo)
+                    return Results.Conflict(new { mensaje = "Ese correo personal ya está registrado." });
+            }
+
             var existeEstudiante = await db.Estudiantes.AnyAsync(e => e.Dni == dto.Dni);
             if (existeEstudiante)
                 return Results.Conflict(new { mensaje = "El DNI ya está registrado como estudiante." });
@@ -65,6 +72,7 @@ public static class DocentesEndpoints
                 Nombres   = dto.Nombres.Trim(),
                 Apellidos = dto.Apellidos.Trim(),
                 Correo    = correo,
+                CorreoPersonal = dto.CorreoPersonal?.Trim(),
                 Telefono  = dto.Telefono?.Trim(),
                 ClaveHash = clave,
                 RolId     = ROL_DOCENTE,
@@ -92,15 +100,15 @@ public static class DocentesEndpoints
             var docente = await db.Usuarios.FindAsync(id);
             if (docente is null || docente.RolId != ROL_DOCENTE) return Results.NotFound();
 
-            if (!string.IsNullOrWhiteSpace(dto.Correo))
+            if (!string.IsNullOrWhiteSpace(dto.CorreoPersonal))
             {
-                var dup = await db.Usuarios.AnyAsync(u => u.Correo == dto.Correo && u.Id != id);
-                if (dup) return Results.Conflict(new { mensaje = "Ese correo ya está en uso." });
+                var dup = await db.Usuarios.AnyAsync(u => u.CorreoPersonal == dto.CorreoPersonal && u.Id != id);
+                if (dup) return Results.Conflict(new { mensaje = "Ese correo personal ya está en uso." });
             }
 
             docente.Nombres = dto.Nombres.Trim();
             docente.Apellidos = dto.Apellidos?.Trim() ?? docente.Apellidos;
-            docente.Correo = string.IsNullOrWhiteSpace(dto.Correo) ? docente.Correo : dto.Correo.Trim();
+            docente.CorreoPersonal = string.IsNullOrWhiteSpace(dto.CorreoPersonal) ? docente.CorreoPersonal : dto.CorreoPersonal.Trim();
             docente.Telefono = dto.Telefono?.Trim();
             await db.SaveChangesAsync();
             return Results.NoContent();
@@ -142,7 +150,6 @@ public static class DocentesEndpoints
 
     }
 
-    // ── Helper: genera correo único [letraNombre][apellido]@kumamoto.edu.pe ──
     private static async Task<string> GenerarCorreoUnicoAsync(
         string nombres, string apellidos, KumamotoDbContext db)
     {
@@ -155,18 +162,15 @@ public static class DocentesEndpoints
         if (!await db.Usuarios.AnyAsync(u => u.Correo == candidato))
             return candidato;
 
-        // Sufijo numérico para duplicados: cmendoza2, cmendoza3...
         for (int i = 2; i <= 999; i++)
         {
             candidato = $"{baseLocal}{i}{dominio}";
             if (!await db.Usuarios.AnyAsync(u => u.Correo == candidato))
                 return candidato;
         }
-        // Fallback muy improbable
         return $"{baseLocal}{Guid.NewGuid().ToString()[..4]}{dominio}";
     }
 
-    // ── Helper: quita tildes y caracteres especiales, pasa a minúsculas ──
     private static string NormalizarTexto(string texto)
     {
         var normalizado = texto

@@ -139,10 +139,17 @@ public static class CalificacionesEndpoints
                 .Distinct()
                 .ToListAsync();
 
+            var ahora = DateTime.UtcNow;
+
+            var desbloqueos = await db.DesbloqueosCalificacion
+                .Where(d => d.CargaId == cargaId && d.SemanaId == semanaId && d.Estado == 1 && d.FechaExpiracion > ahora)
+                .Select(d => d.EstudianteId)
+                .Distinct()
+                .ToListAsync();
+
             var compDtos = comps.Select(c => new CompetenciaDto(c.Id, c.Codigo, c.Nombre)).ToList();
             var alumnos = new List<AlumnoPlanillaDto>();
 
-            var ahora = DateTime.Now;
 
             foreach (var est in estudiantes)
             {
@@ -154,6 +161,10 @@ public static class CalificacionesEndpoints
                     if (cal != null)
                     {
                         bloqueado = (ahora - cal.FechaRegistro).TotalHours > 24;
+                        if (bloqueado && desbloqueos.Contains(est.Id))
+                        {
+                            bloqueado = false;
+                        }
                     }
                     dictNotas[c.Id.ToString()] = new NotaCeldaDto(cal?.Escala?.Letra, bloqueado);
                 }
@@ -193,6 +204,13 @@ public static class CalificacionesEndpoints
             var escalas = await db.EscalaCalificaciones.Where(e => e.Estado == 1).ToListAsync();
             var escalaDict = escalas.ToDictionary(e => e.Letra.ToUpper(), e => e.Id);
 
+            var desbloqueosActivos = await db.DesbloqueosCalificacion
+                .Where(d => d.CargaId == request.CargaId && 
+                            d.SemanaId == request.SemanaId && 
+                            d.Estado == 1 &&
+                            d.FechaExpiracion > ahora)
+                .ToListAsync();
+
             foreach (var item in request.Notas)
             {
                 var letra = item.Nota?.ToUpper() ?? "";
@@ -209,7 +227,15 @@ public static class CalificacionesEndpoints
                     // Regla de las 24 horas
                     if ((ahora - existente.FechaRegistro).TotalHours > 24)
                     {
-                        continue;
+                        // Verificar desbloqueo
+                        var desbloqueo = desbloqueosActivos.FirstOrDefault(d => d.EstudianteId == item.EstudianteId);
+                        if (desbloqueo == null)
+                        {
+                            continue;
+                        }
+                        
+                        // Hacer que sea de un solo uso
+                        desbloqueo.Estado = 0;
                     }
                     existente.EscalaId = escalaId;
                 }

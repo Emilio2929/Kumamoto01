@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -8,6 +9,7 @@ export interface DocenteDetalleDto {
   nombres: string;
   apellidos: string;
   correo: string | null;
+  correoPersonal: string | null;
   telefono: string | null;
   estado: number;
 }
@@ -16,13 +18,14 @@ export interface CreateDocenteDto {
   dni: string;
   nombres: string;
   apellidos: string;
+  correoPersonal: string | null;
   telefono: string | null;
 }
 
 export interface UpdateDocenteDto {
   nombres: string;
   apellidos: string;
-  correo: string | null;
+  correoPersonal: string | null;
   telefono: string | null;
 }
 
@@ -36,7 +39,7 @@ export interface CreateDocenteResponse {
 @Injectable({ providedIn: 'root' })
 export class DocentesService {
   private http = inject(HttpClient);
-  private api = 'http://localhost:5121/api/docentes';
+  private api = `${environment.apiUrl}/api/docentes`;
 
   getAll(): Observable<DocenteDetalleDto[]> {
     return this.http.get<DocenteDetalleDto[]>(this.api);

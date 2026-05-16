@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -8,6 +9,7 @@ export interface PadreDetalleDto {
   nombres: string;
   apellidos: string;
   correo: string | null;
+  correoPersonal: string | null;
   telefono: string | null;
   estado: number;
 }
@@ -37,7 +39,7 @@ export interface CreatePadreResponse {
 @Injectable({ providedIn: 'root' })
 export class PadresService {
   private http = inject(HttpClient);
-  private api = 'http://localhost:5121/api/padres';
+  private api = `${environment.apiUrl}/api/padres`;
 
   getAll(): Observable<PadreDetalleDto[]> {
     return this.http.get<PadreDetalleDto[]>(this.api);
@@ -78,6 +80,6 @@ export class PadresService {
   }
 
   getDashboardCompleto(dni: string): Observable<any> {
-    return this.http.get<any>(`http://localhost:5121/api/parent/dashboard/${dni}`);
+    return this.http.get<any>(`${environment.apiUrl}/api/parent/dashboard/${dni}`);
   }
 }

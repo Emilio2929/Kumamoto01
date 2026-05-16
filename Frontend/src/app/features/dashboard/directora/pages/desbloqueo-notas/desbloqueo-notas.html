@@ -1,0 +1,86 @@
+<div class="desbloqueo-container">
+  <header class="page-header">
+    <h1>Desbloqueo de Notas</h1>
+    <p>Autorizar a docentes para modificar notas pasadas las 24 horas reglamentarias.</p>
+  </header>
+
+  <div class="content-grid">
+    <div class="form-section">
+      <h3>Nueva Autorización</h3>
+      <form [formGroup]="form" (ngSubmit)="autorizar()" class="desbloqueo-form">
+        <div class="form-group">
+          <label>Curso / Carga Académica</label>
+          <select formControlName="cargaId" (change)="onCargaChange()">
+            <option value="">Seleccione un curso...</option>
+            <option *ngFor="let c of cargas" [value]="c.id">
+              {{ c.cursoNombre }} - {{ c.gradoNombre }} {{ c.seccionLetra }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Estudiante</label>
+          <select formControlName="estudianteId">
+            <option value="">Seleccione un estudiante...</option>
+            <option *ngFor="let e of estudiantes" [value]="e.id">
+              {{ e.apellidos }}, {{ e.nombres }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Bimestre</label>
+          <select formControlName="periodoId" (change)="onPeriodoChange()">
+            <option value="">Seleccione el bimestre...</option>
+            <option *ngFor="let p of periodos" [value]="p.id">
+              {{ p.nombre }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Semana</label>
+          <select formControlName="semanaId">
+            <option value="">Seleccione la semana...</option>
+            <option *ngFor="let s of semanas" [value]="s.id">
+              Semana {{ s.numeroSemana }}
+            </option>
+          </select>
+        </div>
+
+        <button type="submit" [disabled]="form.invalid" class="btn-primary">Conceder Permiso</button>
+      </form>
+    </div>
+
+    <div class="list-section">
+      <h3>Permisos Activos</h3>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Curso / Aula</th>
+              <th>Estudiante</th>
+              <th>Semana</th>
+              <th>Expira en</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of activos">
+              <td>{{ a.curso }} - {{ a.aula }}</td>
+              <td>{{ a.estudiante }}</td>
+              <td>Semana {{ a.semana }}</td>
+              <td>{{ a.fechaExpiracion | date:'medium' }}</td>
+              <td>
+                <button (click)="revocar(a.id)" class="btn-danger btn-sm">Revocar</button>
+              </td>
+            </tr>
+            <tr *ngIf="activos.length === 0">
+              <td colspan="5" class="text-center">No hay permisos activos</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

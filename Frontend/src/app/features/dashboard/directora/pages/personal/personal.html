@@ -64,6 +64,7 @@
               <th>Docente</th>
               <th>DNI</th>
               <th>Correo Institucional</th>
+              <th>Correo Personal</th>
               <th>Teléfono</th>
               <th>Estado</th>
               <th>Acciones</th>
@@ -71,7 +72,7 @@
           </thead>
           <tbody>
             <tr *ngIf="docentesFiltrados.length === 0">
-              <td colspan="6" class="empty-row">No hay docentes registrados.</td>
+              <td colspan="7" class="empty-row">No hay docentes registrados.</td>
             </tr>
             <tr *ngFor="let d of docentesFiltrados" [class.row-inactivo]="d.estado === 0">
               <td>
@@ -85,6 +86,7 @@
                 <span class="correo-badge" *ngIf="d.correo">{{ d.correo }}</span>
                 <span class="no-data" *ngIf="!d.correo">—</span>
               </td>
+              <td><span>{{ d.correoPersonal || '—' }}</span></td>
               <td class="mono">{{ d.telefono ?? '—' }}</td>
               <td>
                 <span class="badge" [class.activo]="d.estado === 1" [class.inactivo]="d.estado === 0">
@@ -161,6 +163,7 @@
               <th>Auxiliar</th>
               <th>DNI</th>
               <th>Correo Institucional</th>
+              <th>Correo Personal</th>
               <th>Teléfono</th>
               <th>Estado</th>
               <th>Acciones</th>
@@ -168,7 +171,7 @@
           </thead>
           <tbody>
             <tr *ngIf="auxiliaresFiltrados.length === 0">
-              <td colspan="6" class="empty-row">No hay auxiliares registrados.</td>
+              <td colspan="7" class="empty-row">No hay auxiliares registrados.</td>
             </tr>
             <tr *ngFor="let a of auxiliaresFiltrados" [class.row-inactivo]="a.estado === 0">
               <td>
@@ -182,7 +185,7 @@
                 <span class="correo-badge" *ngIf="a.correo">{{ a.correo }}</span>
                 <span class="no-data" *ngIf="!a.correo">—</span>
               </td>
-
+              <td><span>{{ a.correoPersonal || '—' }}</span></td>
               <td class="mono">{{ a.telefono ?? '—' }}</td>
               <td>
                 <span class="badge" [class.activo]="a.estado === 1" [class.inactivo]="a.estado === 0">
@@ -259,6 +262,7 @@
               <th>Personal</th>
               <th>DNI</th>
               <th>Correo Institucional</th>
+              <th>Correo Personal</th>
               <th>Teléfono</th>
               <th>Estado</th>
               <th>Acciones</th>
@@ -266,7 +270,7 @@
           </thead>
           <tbody>
             <tr *ngIf="administrativosFiltrados.length === 0">
-              <td colspan="6" class="empty-row">No hay administrativos registrados.</td>
+              <td colspan="7" class="empty-row">No hay administrativos registrados.</td>
             </tr>
             <tr *ngFor="let a of administrativosFiltrados" [class.row-inactivo]="a.estado === 0">
               <td>
@@ -280,7 +284,7 @@
                 <span class="correo-badge" *ngIf="a.correo">{{ a.correo }}</span>
                 <span class="no-data" *ngIf="!a.correo">—</span>
               </td>
-
+              <td><span>{{ a.correoPersonal || '—' }}</span></td>
               <td class="mono">{{ a.telefono ?? '—' }}</td>
               <td>
                 <span class="badge" [class.activo]="a.estado === 1" [class.inactivo]="a.estado === 0">
@@ -364,6 +368,10 @@
           <label>Apellidos <span class="required">*</span></label>
           <input type="text" placeholder="Ej. Quispe Torres" [(ngModel)]="formCrear.apellidos">
         </div>
+        <div class="form-group full">
+          <label>Correo Personal</label>
+          <input type="email" placeholder="ejemplo@correo.com" [(ngModel)]="formCrear.correoPersonal">
+        </div>
         <div class="info-note full">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           Correo generado: <strong>[inicial nombre][apellido]&#64;kumamoto.edu.pe</strong>&nbsp;— ej: <em>cmendoza&#64;kumamoto.edu.pe</em>
@@ -401,8 +409,12 @@
           <input type="text" [(ngModel)]="formEditar.apellidos">
         </div>
         <div class="form-group full">
-          <label>Correo</label>
-          <input type="email" [(ngModel)]="formEditar.correo">
+          <label>Correo Institucional (Solo lectura)</label>
+          <input type="email" [value]="docenteEditando?.correo || 'Sin asignar'" disabled class="readonly-input">
+        </div>
+        <div class="form-group full">
+          <label>Correo Personal</label>
+          <input type="email" [(ngModel)]="formEditar.correoPersonal">
         </div>
         <div class="form-group full">
           <label>Teléfono</label>
@@ -476,7 +488,7 @@
     <div class="modal-header">
       <div>
         <h3>Registrar Auxiliar</h3>
-        <p class="modal-sub">Se enviarán las credenciales al correo electrónico registrado.</p>
+        <p class="modal-sub">Se generará correo y contraseña institucional automáticamente.</p>
 
       </div>
       <button class="modal-close" (click)="cerrarModalCrearAux()">
@@ -522,8 +534,8 @@
           <input type="text" placeholder="Ej. Salas Ramos" [(ngModel)]="formCrearAux.apellidos">
         </div>
         <div class="form-group full">
-          <label>Correo Electrónico (para credenciales) <span class="required">*</span></label>
-          <input type="email" placeholder="ejemplo@correo.com" [(ngModel)]="formCrearAux.correo">
+          <label>Correo Personal</label>
+          <input type="email" placeholder="ejemplo@correo.com" [(ngModel)]="formCrearAux.correoPersonal">
         </div>
 
       </div>
@@ -560,8 +572,12 @@
           <input type="text" [(ngModel)]="formEditarAux.apellidos">
         </div>
         <div class="form-group full">
-          <label>Correo</label>
-          <input type="email" [(ngModel)]="formEditarAux.correo">
+          <label>Correo Institucional (Solo lectura)</label>
+          <input type="email" [value]="auxEditando?.correo || 'Sin asignar'" disabled class="readonly-input">
+        </div>
+        <div class="form-group full">
+          <label>Correo Personal</label>
+          <input type="email" [(ngModel)]="formEditarAux.correoPersonal">
         </div>
         <div class="form-group full">
           <label>Teléfono</label>
@@ -622,7 +638,7 @@
     <div class="modal-header">
       <div>
         <h3>Registrar Personal Administrativo</h3>
-        <p class="modal-sub">Se enviarán las credenciales al correo electrónico registrado.</p>
+        <p class="modal-sub">Se generará correo y contraseña institucional automáticamente.</p>
 
       </div>
       <button class="modal-close" (click)="cerrarModalCrearAdmin()">
@@ -668,8 +684,8 @@
           <input type="text" placeholder="Ej. Gómez Farfán" [(ngModel)]="formCrearAdmin.apellidos">
         </div>
         <div class="form-group full">
-          <label>Correo Electrónico (para credenciales) <span class="required">*</span></label>
-          <input type="email" placeholder="ejemplo@correo.com" [(ngModel)]="formCrearAdmin.correo">
+          <label>Correo Personal</label>
+          <input type="email" placeholder="ejemplo@correo.com" [(ngModel)]="formCrearAdmin.correoPersonal">
         </div>
 
       </div>
@@ -706,8 +722,12 @@
           <input type="text" [(ngModel)]="formEditarAdmin.apellidos">
         </div>
         <div class="form-group full">
-          <label>Correo</label>
-          <input type="email" [(ngModel)]="formEditarAdmin.correo">
+          <label>Correo Institucional (Solo lectura)</label>
+          <input type="email" [value]="adminEditando?.correo || 'Sin asignar'" disabled class="readonly-input">
+        </div>
+        <div class="form-group full">
+          <label>Correo Personal</label>
+          <input type="email" [(ngModel)]="formEditarAdmin.correoPersonal">
         </div>
         <div class="form-group full">
           <label>Teléfono</label>
@@ -761,4 +781,3 @@
 
   </div>
 </div>
-

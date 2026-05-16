@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -8,6 +9,7 @@ export interface AuxiliarDetalleDto {
   nombres: string;
   apellidos: string;
   correo: string | null;
+  correoPersonal: string | null;
   telefono: string | null;
   estado: number;
 }
@@ -16,21 +18,21 @@ export interface CreateAuxiliarDto {
   dni: string;
   nombres: string;
   apellidos: string;
-  correo: string;
+  correoPersonal: string | null;
   telefono: string | null;
 }
 
 export interface UpdateAuxiliarDto {
   nombres: string;
   apellidos: string;
-  correo: string | null;
+  correoPersonal: string | null;
   telefono: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuxiliaresAdminService {
   private readonly http = inject(HttpClient);
-  private readonly apiBase = 'http://localhost:5121/api/auxiliares-admin';
+  private readonly apiBase = `${environment.apiUrl}/api/auxiliares-admin`;
 
   getAll(): Observable<AuxiliarDetalleDto[]> {
     return this.http.get<AuxiliarDetalleDto[]>(this.apiBase);

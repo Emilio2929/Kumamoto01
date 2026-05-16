@@ -11,13 +11,13 @@
     <div class="card-body">
       <form class="manager-form" (submit)="saveProfile(); $event.preventDefault()">
         <div class="form-group full-width">
-          <label>Usuario del Sistema</label>
-          <input type="text" [(ngModel)]="userData.username" name="username" disabled title="El usuario no se puede cambiar">
-          <small class="hint">Su nombre de usuario es único y no puede modificarse.</small>
+          <label>Correo Institucional (Usuario del Sistema)</label>
+          <input type="text" [(ngModel)]="userData.username" name="username" disabled title="El correo institucional no se puede cambiar">
+          <small class="hint">Su correo institucional es su usuario de acceso y no puede modificarse aquí.</small>
         </div>
         <div class="form-group">
-          <label>Correo de Recuperación</label>
-          <input type="email" [(ngModel)]="userData.email" name="email">
+          <label>Correo Personal</label>
+          <input type="email" [(ngModel)]="userData.email" name="email" placeholder="ejemplo@gmail.com">
         </div>
         <div class="form-group">
           <label>Teléfono (WhatsApp)</label>
@@ -58,5 +58,26 @@
       </form>
     </div>
   </div>
+</div>
 
+<!-- Custom Confirmation/Info Modal -->
+<div class="modal-overlay" *ngIf="modal.show" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()" style="max-width: 400px; width: 90%;">
+    <div class="modal-header" [ngClass]="modal.type" style="padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-radius: 12px 12px 0 0; color: white;" 
+         [style.background]="modal.type === 'error' ? 'var(--danger)' : (modal.type === 'success' ? 'var(--success)' : 'var(--primary)')">
+      <h3 style="margin: 0; font-size: 1.15rem;">{{ modal.title }}</h3>
+      <button class="close-btn" (click)="closeModal()" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; line-height: 1;">×</button>
+    </div>
+    <div class="modal-body" style="padding: 1.5rem; text-align: center; color: var(--text-main); font-size: 1rem; background: var(--bg-surface);">
+      <p style="margin: 0; line-height: 1.5;">{{ modal.message }}</p>
+    </div>
+    <div class="modal-footer" style="padding: 1rem; text-align: center; background: var(--bg-surface); border-top: 1px solid var(--border-color); border-radius: 0 0 12px 12px; display: flex; justify-content: center; gap: 1rem;">
+      <button *ngIf="modal.type === 'confirm'" class="btn secondary" (click)="closeModal()" style="min-width: 120px;">
+        Cancelar
+      </button>
+      <button class="btn" [ngClass]="modal.type === 'error' ? 'danger' : 'primary'" (click)="modal.type === 'confirm' ? confirmModal() : closeModal()" style="min-width: 120px;">
+        {{ modal.type === 'confirm' ? 'Aceptar' : 'Entendido' }}
+      </button>
+    </div>
+  </div>
 </div>

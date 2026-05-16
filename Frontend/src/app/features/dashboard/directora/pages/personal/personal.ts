@@ -55,7 +55,7 @@ export class Personal implements OnInit {
 
   // ── Modal Crear ────────────────────────────────────────────
   modalCrear = false;
-  formCrear: CreateDocenteDto = { dni: '', nombres: '', apellidos: '', telefono: null };
+  formCrear: CreateDocenteDto = { dni: '', nombres: '', apellidos: '', correoPersonal: null, telefono: null };
   errorCrear: string | null = null;
   guardandoCrear = false;
   credencialesGeneradas: { correo: string; clave: string } | null = null;
@@ -63,7 +63,8 @@ export class Personal implements OnInit {
   // ── Modal Editar ───────────────────────────────────────────
   modalEditar = false;
   docenteEditandoId: number | null = null;
-  formEditar: UpdateDocenteDto = { nombres: '', apellidos: '', correo: null, telefono: null };
+  docenteEditando: DocenteDetalleDto | null = null;
+  formEditar: UpdateDocenteDto = { nombres: '', apellidos: '', correoPersonal: null, telefono: null };
   errorEditar: string | null = null;
   guardandoEditar = false;
 
@@ -89,7 +90,7 @@ export class Personal implements OnInit {
   busquedaAux = '';
 
   modalCrearAux = false;
-  formCrearAux: CreateAuxiliarDto = { dni: '', nombres: '', apellidos: '', correo: '', telefono: null };
+  formCrearAux: CreateAuxiliarDto = { dni: '', nombres: '', apellidos: '', correoPersonal: null, telefono: null };
 
   errorCrearAux: string | null = null;
   guardandoCrearAux = false;
@@ -97,7 +98,8 @@ export class Personal implements OnInit {
 
   modalEditarAux = false;
   auxEditandoId: number | null = null;
-  formEditarAux: UpdateAuxiliarDto = { nombres: '', apellidos: '', correo: null, telefono: null };
+  auxEditando: AuxiliarDetalleDto | null = null;
+  formEditarAux: UpdateAuxiliarDto = { nombres: '', apellidos: '', correoPersonal: null, telefono: null };
   errorEditarAux: string | null = null;
   guardandoEditarAux = false;
 
@@ -146,7 +148,7 @@ export class Personal implements OnInit {
 
   // ── Modal Crear ──────────────────────────────────────────
   abrirModalCrear(): void {
-    this.formCrear = { dni: '', nombres: '', apellidos: '', telefono: null };
+    this.formCrear = { dni: '', nombres: '', apellidos: '', correoPersonal: null, telefono: null };
     this.errorCrear = null;
     this.credencialesGeneradas = null;
     this.modalCrear = true;
@@ -189,7 +191,8 @@ export class Personal implements OnInit {
   // ── Modal Editar ──────────────────────────────────────────
   abrirModalEditar(d: DocenteDetalleDto): void {
     this.docenteEditandoId = d.id;
-    this.formEditar = { nombres: d.nombres, apellidos: d.apellidos, correo: d.correo, telefono: d.telefono };
+    this.docenteEditando = d;
+    this.formEditar = { nombres: d.nombres, apellidos: d.apellidos, correoPersonal: d.correoPersonal, telefono: d.telefono };
     this.errorEditar = null;
     this.modalEditar = true;
     this.cdr.markForCheck();
@@ -215,7 +218,7 @@ export class Personal implements OnInit {
             ...this.docentes[idx],
             nombres: this.formEditar.nombres.trim(),
             apellidos: this.formEditar.apellidos.trim(),
-            correo: this.formEditar.correo?.trim() || this.docentes[idx].correo,
+            correoPersonal: this.formEditar.correoPersonal?.trim() || this.docentes[idx].correoPersonal,
             telefono: this.formEditar.telefono?.trim() || null,
           };
           this.filtrar();
@@ -348,7 +351,7 @@ export class Personal implements OnInit {
   onBusquedaAux(): void { this.filtrarAux(); }
 
   abrirModalCrearAux(): void {
-    this.formCrearAux = { dni: '', nombres: '', apellidos: '', correo: '', telefono: null };
+    this.formCrearAux = { dni: '', nombres: '', apellidos: '', correoPersonal: null, telefono: null };
 
     this.errorCrearAux = null;
     this.credencialesAux = null;
@@ -363,9 +366,8 @@ export class Personal implements OnInit {
   }
 
   crearAuxiliar(): void {
-    if (!this.formCrearAux.dni.trim() || !this.formCrearAux.nombres.trim() || !this.formCrearAux.apellidos.trim() || !this.formCrearAux.correo.trim()) {
-
-      this.errorCrearAux = 'DNI, nombres, apellidos y correo son requeridos.';
+    if (!this.formCrearAux.dni.trim() || !this.formCrearAux.nombres.trim() || !this.formCrearAux.apellidos.trim()) {
+      this.errorCrearAux = 'DNI, nombres y apellidos son requeridos.';
       return;
     }
 
@@ -389,7 +391,8 @@ export class Personal implements OnInit {
 
   abrirModalEditarAux(a: AuxiliarDetalleDto): void {
     this.auxEditandoId = a.id;
-    this.formEditarAux = { nombres: a.nombres, apellidos: a.apellidos, correo: a.correo, telefono: a.telefono };
+    this.auxEditando = a;
+    this.formEditarAux = { nombres: a.nombres, apellidos: a.apellidos, correoPersonal: a.correoPersonal, telefono: a.telefono };
     this.errorEditarAux = null;
     this.modalEditarAux = true;
     this.cdr.markForCheck();
@@ -465,7 +468,7 @@ export class Personal implements OnInit {
   busquedaAdmin = '';
 
   modalCrearAdmin = false;
-  formCrearAdmin: CreateAdministrativoDto = { dni: '', nombres: '', apellidos: '', correo: '', telefono: null };
+  formCrearAdmin: CreateAdministrativoDto = { dni: '', nombres: '', apellidos: '', correoPersonal: null, telefono: null };
 
   errorCrearAdmin: string | null = null;
   guardandoCrearAdmin = false;
@@ -473,7 +476,8 @@ export class Personal implements OnInit {
 
   modalEditarAdmin = false;
   adminEditandoId: number | null = null;
-  formEditarAdmin: UpdateAdministrativoDto = { nombres: '', apellidos: '', correo: null, telefono: null };
+  adminEditando: AdministrativoDetalleDto | null = null;
+  formEditarAdmin: UpdateAdministrativoDto = { nombres: '', apellidos: '', correoPersonal: null, telefono: null };
   errorEditarAdmin: string | null = null;
   guardandoEditarAdmin = false;
 
@@ -517,7 +521,7 @@ export class Personal implements OnInit {
   onBusquedaAdmin(): void { this.filtrarAdmin(); }
 
   abrirModalCrearAdmin(): void {
-    this.formCrearAdmin = { dni: '', nombres: '', apellidos: '', correo: '', telefono: null };
+    this.formCrearAdmin = { dni: '', nombres: '', apellidos: '', correoPersonal: null, telefono: null };
 
     this.errorCrearAdmin = null;
     this.credencialesAdmin = null;
@@ -532,9 +536,8 @@ export class Personal implements OnInit {
   }
 
   crearAdministrativo(): void {
-    if (!this.formCrearAdmin.dni.trim() || !this.formCrearAdmin.nombres.trim() || !this.formCrearAdmin.apellidos.trim() || !this.formCrearAdmin.correo.trim()) {
-
-      this.errorCrearAdmin = 'DNI, nombres, apellidos y correo son requeridos.';
+    if (!this.formCrearAdmin.dni.trim() || !this.formCrearAdmin.nombres.trim() || !this.formCrearAdmin.apellidos.trim()) {
+      this.errorCrearAdmin = 'DNI, nombres y apellidos son requeridos.';
       return;
     }
 
@@ -558,7 +561,8 @@ export class Personal implements OnInit {
 
   abrirModalEditarAdmin(a: AdministrativoDetalleDto): void {
     this.adminEditandoId = a.id;
-    this.formEditarAdmin = { nombres: a.nombres, apellidos: a.apellidos, correo: a.correo, telefono: a.telefono };
+    this.adminEditando = a;
+    this.formEditarAdmin = { nombres: a.nombres, apellidos: a.apellidos, correoPersonal: a.correoPersonal, telefono: a.telefono };
     this.errorEditarAdmin = null;
     this.modalEditarAdmin = true;
     this.cdr.markForCheck();
@@ -626,4 +630,3 @@ export class Personal implements OnInit {
     });
   }
 }
-

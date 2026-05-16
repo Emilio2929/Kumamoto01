@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -37,14 +38,14 @@ export interface DocenteComboItem {
 @Injectable({ providedIn: 'root' })
 export class CargaAcademicaService {
   private http = inject(HttpClient);
-  private api = 'http://localhost:5121/api/carga-academica';
+  private api = `${environment.apiUrl}/api/carga-academica`;
 
   getAll(): Observable<CargaAcademicaDetalleDto[]> {
     return this.http.get<CargaAcademicaDetalleDto[]>(this.api);
   }
 
   getDocentesCombo(): Observable<DocenteComboItem[]> {
-    return this.http.get<DocenteComboItem[]>('http://localhost:5121/api/docentes/combo');
+    return this.http.get<DocenteComboItem[]>(`${environment.apiUrl}/api/docentes/combo`);
   }
 
   asignarDocente(id: number, dto: AsignarDocenteDto): Observable<void> {

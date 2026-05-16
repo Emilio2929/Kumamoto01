@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -97,7 +98,7 @@ export interface CursoComboDto {
 @Injectable({ providedIn: 'root' })
 export class EstructuraService {
   private readonly http = inject(HttpClient);
-  private readonly apiBase = 'http://localhost:5121/api';
+  private readonly apiBase = `${environment.apiUrl}/api`;
 
   // ─ Lista completa de aulas (activas + inactivas)
   getAulasDetalle(): Observable<AulaDetalleDto[]> {

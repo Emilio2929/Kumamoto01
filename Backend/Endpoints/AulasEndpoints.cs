@@ -51,11 +51,6 @@ public static class AulasEndpoints
                 var docente = await db.Usuarios.FirstOrDefaultAsync(u => u.Id == dto.TutorId.Value && u.RolId == 2 && u.Estado == 1);
                 if (docente is null)
                     return Results.BadRequest(new { mensaje = "Docente no encontrado o inactivo." });
-
-                // Verificar que el docente no sea tutor de otra aula
-                var tutoraOtraAula = await db.Aulas.AnyAsync(a => a.TutorId == dto.TutorId.Value && a.Id != id);
-                if (tutoraOtraAula)
-                    return Results.Conflict(new { mensaje = "Este docente ya es tutor de otra aula." });
             }
 
             aula.TutorId = dto.TutorId; // null = quitar tutor

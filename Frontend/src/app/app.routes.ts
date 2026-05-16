@@ -29,20 +29,36 @@ export const routes: Routes = [
 				loadComponent: () => import('./features/dashboard/directora/pages/resumen/resumen').then(m => m.Resumen)
 			},
 			{
-				path: 'estructura',
+				path: 'grados-secciones',
+				loadComponent: () => import('./features/dashboard/directora/pages/grados-secciones/grados-secciones').then(m => m.GradosSeccionesPage)
+			},
+			{
+				path: 'aulas',
+				loadComponent: () => import('./features/dashboard/directora/pages/aulas/aulas').then(m => m.AulasPage)
+			},
+			{
+				path: 'cursos',
+				loadComponent: () => import('./features/dashboard/directora/pages/cursos/cursos').then(m => m.CursosPage)
+			},
+			{
+				path: 'carga-academica',
 				loadComponent: () => import('./features/dashboard/directora/pages/estructura/estructura').then(m => m.Estructura)
 			},
 			{
-				path: 'padres',
-				loadComponent: () => import('./features/dashboard/directora/pages/padres/padres').then(m => m.Padres)
+				path: 'tutoria',
+				loadComponent: () => import('./features/dashboard/directora/pages/tutoria/tutoria').then(m => m.TutoriaPage)
+			},
+			{
+				path: 'auxiliares',
+				loadComponent: () => import('./features/dashboard/directora/pages/auxiliares/auxiliares').then(m => m.AuxiliaresPage)
 			},
 			{
 				path: 'matricula',
 				loadComponent: () => import('./features/dashboard/directora/pages/matricula/matricula').then(m => m.Matricula)
 			},
 			{
-				path: 'personal',
-				loadComponent: () => import('./features/dashboard/directora/pages/personal/personal').then(m => m.Personal)
+				path: 'usuarios',
+				loadComponent: () => import('./features/dashboard/directora/pages/usuarios/usuarios').then(m => m.Usuarios)
 			},
 			{
 				path: 'comunicados',
@@ -51,7 +67,12 @@ export const routes: Routes = [
 			{
 				path: 'perfil',
 				loadComponent: () => import('./features/dashboard/directora/pages/perfil/perfil').then(m => m.Perfil)
+			},
+			{
+				path: 'desbloqueo-notas',
+				loadComponent: () => import('./features/dashboard/directora/pages/desbloqueo-notas/desbloqueo-notas').then(m => m.DesbloqueoNotas)
 			}
+
 
 		]
 	},

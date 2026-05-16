@@ -7,6 +7,7 @@ public class Usuario
     public string Nombres { get; set; } = string.Empty;
     public string Apellidos { get; set; } = string.Empty;
     public string? Correo { get; set; }
+    public string? CorreoPersonal { get; set; }
     public string? Telefono { get; set; }
     public string ClaveHash { get; set; } = string.Empty;
     public int RolId { get; set; }

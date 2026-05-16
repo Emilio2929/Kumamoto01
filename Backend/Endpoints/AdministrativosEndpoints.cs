@@ -20,7 +20,7 @@ public static class AdministrativosEndpoints
                 .Where(u => u.RolId == ROL_ADMINISTRATIVO)
                 .OrderBy(u => u.Apellidos).ThenBy(u => u.Nombres)
                 .Select(u => new AdministrativoDetalleDto(
-                    u.Id, u.Dni, u.Nombres, u.Apellidos, u.Correo, u.Telefono, u.Estado
+                    u.Id, u.Dni, u.Nombres, u.Apellidos, u.Correo, u.CorreoPersonal, u.Telefono, u.Estado
                 ))
                 .ToListAsync();
             return Results.Ok(adminis);
@@ -36,21 +36,22 @@ public static class AdministrativosEndpoints
             if (string.IsNullOrWhiteSpace(dto.Apellidos))
                 return Results.BadRequest(new { mensaje = "Los apellidos son requeridos." });
 
-            if (string.IsNullOrWhiteSpace(dto.Correo))
-                return Results.BadRequest(new { mensaje = "El correo electrónico es requerido." });
-
             var existeDni = await db.Usuarios.AnyAsync(u => u.Dni == dto.Dni);
             if (existeDni)
                 return Results.Conflict(new { mensaje = "Ya existe un usuario con ese DNI." });
 
-            var existeCorreo = await db.Usuarios.AnyAsync(u => u.Correo == dto.Correo);
-            if (existeCorreo)
-                return Results.Conflict(new { mensaje = "Ese correo ya está registrado." });
+            if (!string.IsNullOrWhiteSpace(dto.CorreoPersonal))
+            {
+                var existeCorreo = await db.Usuarios.AnyAsync(u => u.CorreoPersonal == dto.CorreoPersonal);
+                if (existeCorreo)
+                    return Results.Conflict(new { mensaje = "Ese correo personal ya está registrado." });
+            }
 
             var existeEstudiante = await db.Estudiantes.AnyAsync(e => e.Dni == dto.Dni);
             if (existeEstudiante)
                 return Results.Conflict(new { mensaje = "El DNI ya está registrado como estudiante." });
 
+            var correo = await GenerarCorreoUnicoAsync(dto.Nombres.Trim(), dto.Apellidos.Trim(), db);
             var clave = $"Kuma{dto.Dni}";
 
             var admin = new Usuario
@@ -58,7 +59,8 @@ public static class AdministrativosEndpoints
                 Dni       = dto.Dni.Trim(),
                 Nombres   = dto.Nombres.Trim(),
                 Apellidos = dto.Apellidos.Trim(),
-                Correo    = dto.Correo.Trim().ToLower(),
+                Correo    = correo,
+                CorreoPersonal = dto.CorreoPersonal?.Trim(),
                 Telefono  = dto.Telefono?.Trim(),
                 ClaveHash = clave,
                 RolId     = ROL_ADMINISTRATIVO,
@@ -70,9 +72,9 @@ public static class AdministrativosEndpoints
             return Results.Created($"/api/administrativos/{admin.Id}", new
             {
                 admin.Id,
-                correo = admin.Correo,
+                correo,
                 claveGenerada = clave,
-                mensaje = $"Credenciales enviadas a {admin.Correo}. Clave temporal: {clave}"
+                mensaje = $"Credenciales enviadas a {correo}. Clave temporal: {clave}"
             });
 
         }).WithName("CreateAdministrativo");
@@ -86,15 +88,15 @@ public static class AdministrativosEndpoints
             var admin = await db.Usuarios.FindAsync(id);
             if (admin is null || admin.RolId != ROL_ADMINISTRATIVO) return Results.NotFound();
 
-            if (!string.IsNullOrWhiteSpace(dto.Correo))
+            if (!string.IsNullOrWhiteSpace(dto.CorreoPersonal))
             {
-                var dup = await db.Usuarios.AnyAsync(u => u.Correo == dto.Correo && u.Id != id);
-                if (dup) return Results.Conflict(new { mensaje = "Ese correo ya está en uso." });
+                var dup = await db.Usuarios.AnyAsync(u => u.CorreoPersonal == dto.CorreoPersonal && u.Id != id);
+                if (dup) return Results.Conflict(new { mensaje = "Ese correo personal ya está en uso." });
             }
 
             admin.Nombres = dto.Nombres.Trim();
             admin.Apellidos = dto.Apellidos?.Trim() ?? admin.Apellidos;
-            admin.Correo = string.IsNullOrWhiteSpace(dto.Correo) ? admin.Correo : dto.Correo.Trim();
+            admin.CorreoPersonal = string.IsNullOrWhiteSpace(dto.CorreoPersonal) ? admin.CorreoPersonal : dto.CorreoPersonal.Trim();
             admin.Telefono = dto.Telefono?.Trim();
             await db.SaveChangesAsync();
             return Results.NoContent();

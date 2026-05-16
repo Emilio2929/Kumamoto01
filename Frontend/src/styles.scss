@@ -1,15 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Brand Colors */
-  --primary: #4F46E5;
-  --primary-dark: #4338CA;
-  --primary-light: #818CF8;
+  /* Brand Colors (Colores Oficiales Kumamoto) */
+  --primary: #1a237e;         /* Azul Marino Base (Uniforme) */
+  --primary-dark: #0d1240;    /* Azul Marino Oscuro */
+  --primary-light: #283593;   /* Azul Marino Claro */
+  --insignia-red: #d32f2f;
+  --insignia-blue: #1e88e5;
+  --celeste: #64b5f6;
+  --celeste-deep: #1565c0;
+  --gold: #fbc02d;
 
   /* Alert / Semáforo Colors */
   --risk-high: #EF4444;    /* Rojo */
   --risk-medium: #F59E0B;  /* Amarillo */
   --risk-low: #10B981;     /* Verde */
+  
+  /* Semantic UI Colors */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
 
   /* Neutral Colors */
   --bg-main: #F3F4F6;

@@ -241,6 +241,7 @@ CREATE TABLE public.aula (
     capacidad integer NOT NULL,
     grado_id integer,
     seccion_id integer,
+    tutor_id integer,
     estado smallint DEFAULT 1,
     CONSTRAINT aula_estado_check CHECK ((estado = ANY (ARRAY[0, 1])))
 );
@@ -2057,6 +2058,10 @@ ALTER TABLE ONLY public.semana_academica
 
 ALTER TABLE ONLY public.usuario
     ADD CONSTRAINT usuario_rol_id_fkey FOREIGN KEY (rol_id) REFERENCES public.rol(id);
+
+-- Relación de tutoría en aulas
+ALTER TABLE ONLY public.aula
+    ADD CONSTRAINT aula_tutor_id_fkey FOREIGN KEY (tutor_id) REFERENCES public.usuario(id) ON DELETE SET NULL;
 
 
 -- Completed on 2026-05-11 21:32:30

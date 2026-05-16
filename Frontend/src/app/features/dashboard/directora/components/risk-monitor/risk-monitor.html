@@ -1,26 +1,177 @@
 <div class="card risk-card">
   <div class="card-header">
-    <h2>Monitor de Riesgo Académico</h2>
+    <h2>Monitor de Riesgo Académico (IA)</h2>
   </div>
   <div class="card-body">
-    <div class="risk-gauge">
-      <div class="gauge-value">17</div>
-      <div class="gauge-label">Alumnos con Alerta</div>
+    
+    <!-- Estado de carga -->
+    <div *ngIf="loading" class="state-block">
+      <div class="spinner"></div>
+      <p>Calculando proyecciones IA...</p>
+    </div>
+
+    <!-- Estado de error -->
+    <div *ngIf="error" class="state-block error">
+      <p>{{ error }}</p>
+      <button class="btn secondary sm" (click)="cargarDatos()">Reintentar</button>
+    </div>
+
+    <!-- Contenido Dinámico -->
+    <ng-container *ngIf="!loading && !error && data">
+      <div class="risk-gauges-container">
+        <div class="risk-gauge high">
+          <div class="gauge-value">{{ data.riesgoAlto }}</div>
+          <div class="gauge-label">Riesgo Alto</div>
+        </div>
+        <div class="risk-gauge medium">
+          <div class="gauge-value">{{ data.riesgoMedio }}</div>
+          <div class="gauge-label">Riesgo Medio</div>
+        </div>
+      </div>
+      
+      <div class="risk-legend">
+        <div class="legend-item">
+          <span class="dot red"></span>
+          <span class="label">Riesgo Alto (Inasistencias Críticas + Notas Bajas)</span>
+          <span class="count">{{ data.riesgoAlto }}</span>
+        </div>
+        <div class="legend-item">
+          <span class="dot yellow"></span>
+          <span class="label">Riesgo Medio (Ausentismo o Rendimiento Moderado)</span>
+          <span class="count">{{ data.riesgoMedio }}</span>
+        </div>
+      </div>
+      
+      <button class="action-btn" (click)="abrirDetalle()" [disabled]="data.totalAlertas === 0">Ver Detalle Analítico</button>
+    </ng-container>
+
+  </div>
+</div>
+
+<!-- MODAL DETALLE ANALITICO -->
+<div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
+  <div class="modal-card" style="max-width: 900px;" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Detalle Analítico de Estudiantes en Riesgo (IA)</h3>
+      <button class="modal-close" (click)="cerrarModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
     
-    <div class="risk-legend">
-      <div class="legend-item">
-        <span class="dot red"></span>
-        <span class="label">Riesgo Alto (Inasistencias + Notas)</span>
-        <span class="count">5</span>
+    <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+      <div *ngIf="loadingDetails" class="state-block">
+        <div class="spinner"></div>
+        <p>Cargando información analítica...</p>
       </div>
-      <div class="legend-item">
-        <span class="dot yellow"></span>
-        <span class="label">Riesgo Medio (Solo Inasistencias)</span>
-        <span class="count">12</span>
+
+      <div class="table-responsive" *ngIf="!loadingDetails">
+        <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+          <thead>
+            <tr style="text-align: left; border-bottom: 1px solid var(--border-color);">
+              <th style="padding: 10px;">Estudiante</th>
+              <th style="padding: 10px;">Grado/Sección</th>
+              <th style="padding: 10px;">Tutor</th>
+              <th style="padding: 10px;">Nivel</th>
+              <th style="padding: 10px;">Motivo Analítico</th>
+              <th style="padding: 10px;">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let est of detalles" style="border-bottom: 1px solid var(--border-color);">
+              <td style="padding: 10px; font-weight: 500;">
+                <div>{{ est.estudiante }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">DNI: {{ est.dni }}</div>
+              </td>
+              <td style="padding: 10px;">{{ est.grado }} - "{{ est.seccion }}"</td>
+              <td style="padding: 10px;">{{ est.tutor }}</td>
+              <td style="padding: 10px;">
+                <span class="badge" [ngClass]="est.nivelRiesgo === 'Alto' ? 'danger' : 'warning'" style="padding: 4px 8px; border-radius: 4px; font-weight: bold;" [style.color]="est.nivelRiesgo === 'Alto' ? 'white' : 'black'" [style.background]="est.nivelRiesgo === 'Alto' ? 'var(--risk-high)' : 'var(--risk-medium)'">
+                  {{ est.nivelRiesgo }}
+                </span>
+              </td>
+              <td style="padding: 10px; font-size: 0.8rem; white-space: pre-wrap;">{{ est.motivo }}</td>
+              <td style="padding: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn primary sm" style="font-size: 0.75rem; padding: 6px 12px; border-radius: 6px; background: var(--primary); color: white; border: none; cursor: pointer;" (click)="notificarPadre(est)" [disabled]="notificando[est.id]">
+                  {{ notificando[est.id] ? 'Enviando...' : 'Notificar Padre' }}
+                </button>
+                <button class="btn secondary sm" style="font-size: 0.75rem; padding: 6px 12px; border-radius: 6px; background: var(--bg-main); color: var(--text-main); border: 1px solid var(--border-color); cursor: pointer;" (click)="verLibreta(est.id)">
+                  Ver Notas
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="detalles.length === 0">
+              <td colspan="6" style="padding: 20px; text-align: center; color: var(--text-muted);">No se encontraron estudiantes en riesgo.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- MODAL VER NOTAS / LIBRETA -->
+<div class="modal-overlay" *ngIf="showLibretaModal" (click)="cerrarLibreta()" style="z-index: 1100;">
+  <div class="modal-card" style="max-width: 900px;" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h3 style="margin-bottom: 4px;">Libreta de Calificaciones (Directora)</h3>
+        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);" *ngIf="libretaData">{{ libretaData.estudiante }} | {{ libretaData.grado }}</p>
+      </div>
+      <button class="modal-close" (click)="cerrarLibreta()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
     
-    <button class="action-btn">Ver Detalle de Alumnos</button>
+    <div class="modal-body" style="max-height: 65vh; overflow-y: auto;">
+      <div *ngIf="loadingLibreta" class="state-block">
+        <div class="spinner"></div>
+        <p>Cargando libreta...</p>
+      </div>
+
+      <div *ngIf="!loadingLibreta && libretaData?.historial?.length === 0" class="state-block" style="text-align: center; padding: 2rem;">
+        <p style="color: var(--text-muted);">El estudiante no tiene calificaciones registradas aún.</p>
+      </div>
+
+      <div *ngIf="!loadingLibreta && libretaData?.historial?.length > 0">
+        <div *ngFor="let bim of libretaData.historial" style="margin-bottom: 1.5rem; background: var(--bg-main); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
+          <div style="background: var(--bg-surface); padding: 12px 16px; border-bottom: 1px solid var(--border-color); font-weight: bold;">
+            {{ bim.bimestre }}
+          </div>
+          <div style="padding: 1rem;">
+            <div *ngFor="let c of bim.cursos" style="margin-bottom: 1.25rem; background: var(--bg-surface); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 8px;">
+                <div style="font-weight: 600; font-size: 0.95rem; color: var(--primary);">{{ c.curso }}</div>
+                <div style="font-size: 0.8rem; display: flex; align-items: center; gap: 8px; background: var(--bg-main); padding: 4px 8px; border-radius: 6px;">
+                  <span style="font-weight: 600;" [style.color]="c.asistencia.porcentaje < 80 ? 'var(--danger)' : 'var(--success)'">
+                    Asistencia: {{ c.asistencia.porcentaje }}%
+                  </span>
+                  <span style="color: var(--text-muted);">({{ c.asistencia.presentes }}P / {{ c.asistencia.faltas }}F)</span>
+                </div>
+              </div>
+              <div *ngIf="c.semanas.length === 0" style="padding: 8px 12px; text-align: center; color: var(--text-muted); font-style: italic; font-size: 0.85rem; background: var(--bg-main); border-radius: 6px;">
+                Sin calificaciones registradas en este periodo.
+              </div>
+
+              <div *ngFor="let sem of c.semanas" style="margin-bottom: 0.75rem; background: var(--bg-main); border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color);">
+                <div style="background: var(--bg-surface); padding: 6px 12px; font-size: 0.8rem; font-weight: 600; border-bottom: 1px solid var(--border-color); color: var(--text-main);">
+                  {{ sem.semana }}
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                  <tbody>
+                    <tr *ngFor="let ev of sem.evaluaciones" style="border-bottom: 1px solid var(--border-color);">
+                      <td style="padding: 6px 12px; color: var(--text-main);">{{ ev.competencia }}</td>
+                      <td style="padding: 6px 12px; width: 60px; text-align: center; font-weight: bold;"
+                          [style.color]="ev.nota === 'C' || ev.nota === 'B' ? 'var(--danger)' : 'var(--success)'">
+                        {{ ev.nota }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

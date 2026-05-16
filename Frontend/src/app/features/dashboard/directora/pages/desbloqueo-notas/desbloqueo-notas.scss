@@ -1,0 +1,133 @@
+.desbloqueo-container {
+  padding: 0 24px 24px 24px; /* Eliminamos el padding superior redundante con el layout */
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .page-header {
+    margin-bottom: 16px;
+    h1 {
+      font-size: 1.5rem;
+      color: #333;
+      margin-bottom: 4px;
+    }
+    p {
+      color: #666;
+      margin: 0;
+      font-size: 0.95rem;
+    }
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+
+    @media (min-width: 768px) {
+      grid-template-columns: 1fr 2fr;
+    }
+  }
+
+  .form-section, .list-section {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+
+    h3 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: 1.15rem;
+      color: #1e293b;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 10px;
+      font-weight: 700;
+    }
+  }
+
+  .form-group {
+    margin-bottom: 14px;
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #555;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+      
+      &:focus {
+        border-color: #0066cc;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+      }
+    }
+  }
+
+  .btn-primary {
+    background: #0066cc;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    width: 100%;
+    transition: background 0.2s;
+
+    &:hover:not(:disabled) {
+      background: #0052a3;
+    }
+
+    &:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+
+    &:hover {
+      background: #c82333;
+    }
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      font-weight: 600;
+      color: #555;
+      background: #f9f9f9;
+    }
+
+    .text-center {
+      text-align: center;
+      color: #888;
+      padding: 24px;
+    }
+  }
+}

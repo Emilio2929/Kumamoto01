@@ -22,14 +22,16 @@ builder.Services.AddSwaggerGen();
 // ── CORS ───────────────────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
     options.AddPolicy("FrontendPolicy", p =>
-        p.SetIsOriginAllowed(origin => origin.StartsWith("http://localhost"))
+        p.SetIsOriginAllowed(origin => 
+            origin.StartsWith("http://localhost") || 
+            origin.EndsWith(".trycloudflare.com"))
          .AllowAnyHeader()
          .AllowAnyMethod()
          .AllowCredentials()));
 
 // ── PostgreSQL + EF Core ───────────────────────────────────────────────────
 builder.Services.AddDbContext<KumamotoDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+    options.UseNpgsql(builder.Configuration.GetConnectionString("SupabaseConnection"))
            .UseSnakeCaseNamingConvention());   // grado_id, clave_hash, etc.
 
 // ── JWT ────────────────────────────────────────────────────────────────────
@@ -58,6 +60,30 @@ builder.Services.AddScoped<AlertaTempranaService>();
 
 // ──────────────────────────────────────────────────────────────────────────
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<KumamotoDbContext>();
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync("ALTER TABLE usuario ADD COLUMN IF NOT EXISTS correo_personal VARCHAR(255);");
+        await db.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS desbloqueo_calificacion (
+                id SERIAL PRIMARY KEY,
+                carga_id INT NOT NULL,
+                semana_id INT NOT NULL,
+                estudiante_id INT NOT NULL,
+                habilitado_por_id INT NOT NULL,
+                fecha_autorizacion TIMESTAMP NOT NULL,
+                fecha_expiracion TIMESTAMP NOT NULL,
+                estado INT NOT NULL DEFAULT 1
+            );
+        ");    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error ejecutando migración automática: {ex.Message}");
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {
@@ -89,6 +115,7 @@ app.MapDocentePortalEndpoints();
 app.MapAuxiliarPortalEndpoints();
 app.MapAdministrativosEndpoints();
 app.MapComunicadoEndpoints();
+app.MapDesbloqueoNotasEndpoints();
 
 
 

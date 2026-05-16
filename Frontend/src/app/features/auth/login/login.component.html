@@ -18,10 +18,10 @@
 
       <div class="nav-actions">
         <button class="btn-portal admin" (click)="abrirLogin('portal')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; margin-right: 8px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px;">
             <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3" />
           </svg>
-          Ingresar al Portal
+          <span class="btn-text">Ingresar al Portal</span>
         </button>
         <a href="https://wa.me/51987654321" target="_blank" class="phone-link">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -40,78 +40,57 @@
     <!-- MENÚ MÓVIL DESPLEGABLE -->
     <div class="mobile-menu" [class.active]="showMobileMenu">
       <ul class="mobile-nav-links">
+        <li><a (click)="scrollToSection('inicio')">Inicio</a></li>
+        <li><a (click)="scrollToSection('nosotros')">Identidad</a></li>
+        <li><a (click)="scrollToSection('contacto')">Contacto</a></li>
+        <li class="separator"></li>
         <li><button class="mobile-btn-portal" (click)="abrirLogin('portal'); toggleMobileMenu()">Ingresar al Portal</button></li>
       </ul>
     </div>
   </nav>
 
-  <!-- HERO SECTION: FULL WIDTH CARRUSEL -->
+  <!-- HERO + NOVEDADES (Integrado al fondo de la página) -->
   <header id="inicio" class="hero-section">
-    <div class="hero-grid full-width">
+    <div class="hero-content-wrapper">
 
-      <!-- Noticias (Carrusel Multitarjeta) - Solo se muestra si hay datos -->
-      <div class="hero-news" *ngIf="comunicados.length > 0">
-        <div class="carousel-container">
+      <!-- Título principal -->
+      <div class="news-section-title">
+        <h2>Novedades Institucionales</h2>
+        <p>Mantente informado con los últimos comunicados de nuestra institución</p>
+      </div>
 
-          <!-- Botones de navegación (Flechas) -->
-          <ng-container *ngIf="comunicados.length > getVisibleCards()">
-            <button class="nav-arrow prev" (click)="anteriorGrupo()" [disabled]="currentIndex === 0" style="z-index: 100; left: 10px;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4">
-                <path d="M15 18l-6-6 6-6" />
+      <!-- Grid de Noticias (scroll vertical natural) -->
+      <div class="news-grid" *ngIf="comunicados.length > 0">
+        <div class="news-card" *ngFor="let c of displayedComunicados" (click)="verDetalle(c)">
+          <div class="card-img">
+            <div class="important-tag" *ngIf="c.esImportante">DESTACADO</div>
+            <img *ngIf="c.urlImagen" [src]="c.urlImagen" [alt]="c.titulo">
+            <div class="image-placeholder" *ngIf="!c.urlImagen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
               </svg>
-            </button>
-            <button class="nav-arrow next" (click)="siguienteGrupo()"
-              [disabled]="currentIndex >= comunicados.length - getVisibleCards()" style="z-index: 100; right: 10px;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </button>
-          </ng-container>
-
-          <div class="carousel-top-nav" *ngIf="comunicados.length > getVisibleCards()">
-            <div class="carousel-label">Novedades Institucionales</div>
-          </div>
-
-          <!-- Título simple si hay pocos -->
-          <div class="carousel-simple-header" *ngIf="comunicados.length <= getVisibleCards() && comunicados.length > 0">
-            Novedades Institucionales
-          </div>
-
-          <div class="news-slider-wrapper">
-            <div class="news-slider"
-              [style.transform]="getTransform()"
-              [class.justify-center]="comunicados.length <= getVisibleCards()">
-
-              <div class="news-card" *ngFor="let c of comunicados">
-                <div class="card-img">
-                  <div class="important-tag" *ngIf="c.esImportante">DESTACADO</div>
-                  <img *ngIf="c.urlImagen" [src]="c.urlImagen" [alt]="c.titulo">
-                  <!-- Placeholder institucional si no hay imagen -->
-                  <div class="image-placeholder" *ngIf="!c.urlImagen">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                    </svg>
-                    <span>Comunicado Institucional</span>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <h3>{{ c.titulo }}</h3>
-                  <p>{{ c.contenido | slice:0:150 }}{{ c.contenido.length > 150 ? '...' : '' }}</p>
-                  <button class="btn-card" (click)="verDetalle(c)">Ver Detalle</button>
-                </div>
-              </div>
-
+              <span>Comunicado Institucional</span>
             </div>
           </div>
-
-          <div class="carousel-pagination" *ngIf="comunicados.length > getVisibleCards()">
-            <span *ngFor="let dot of paginas; let i = index" [class.active]="i === currentPagina"
-              (click)="setPagina(i)"></span>
+          <div class="card-body">
+            <h3>{{ c.titulo }}</h3>
+            <p>{{ c.contenido | slice:0:120 }}{{ c.contenido.length > 120 ? '...' : '' }}</p>
+            <button class="btn-card">Ver Detalle</button>
           </div>
         </div>
       </div>
 
-      <!-- Mensaje de bienvenida alternativo cuando no hay noticias -->
+      <!-- Botón "Ver más" si hay muchos comunicados -->
+      <div class="news-load-more" *ngIf="comunicados.length > 6 && !showAllComunicados">
+        <button class="btn-load-more" (click)="showAllComunicados = true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Ver todos los comunicados ({{ comunicados.length }})
+        </button>
+      </div>
+
+      <!-- Bienvenida alternativa si no hay noticias -->
       <div class="hero-welcome-static" *ngIf="comunicados.length === 0 && !loadingComunicados">
         <div class="welcome-content">
           <h1>I.E. 3092 - Kumamoto I</h1>
@@ -255,30 +234,32 @@
     <div class="footer-grid">
       <div class="footer-info">
         <img src="/assets/img/insignia_colegio.png" alt="Logo" class="footer-logo">
-        <p>I.E. 3092 - Kumamoto I<br>Educación de calidad para un mundo global.</p>
+        <div class="info-text">
+          <p class="school-name">I.E. 3092 - Kumamoto I</p>
+          <p class="school-motto">Educación de calidad para un mundo global.</p>
+        </div>
       </div>
+
+      <div class="footer-divider"></div>
+
       <div class="footer-contact">
         <h4>Central Telefónica</h4>
-        <p>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="f-icon">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-            <polyline points="22,6 12,13 2,6" />
-          </svg>
-          contacto@kumamoto.edu.pe
-        </p>
-        <p>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="f-icon">
-            <path
-              d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.18-1.42a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-          </svg>
-          (01) 789-4560 / +51 987 654 321
-        </p>
-      </div>
-      <div class="footer-links">
-        <h4>Nuestra Red</h4>
-        <a href="#">Intranet Alumno</a>
-        <a href="#">Portal del Padre</a>
-        <a href="#">Admisiones 2026</a>
+        <div class="contact-items">
+          <p>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="f-icon">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+            contacto@kumamoto.edu.pe
+          </p>
+          <p>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="f-icon">
+              <path
+                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.18-1.42a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            (01) 789-4560 / +51 987 654 321
+          </p>
+        </div>
       </div>
     </div>
     <div class="footer-bottom">

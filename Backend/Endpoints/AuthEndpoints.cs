@@ -55,7 +55,8 @@ public static class AuthEndpoints
             if (string.IsNullOrWhiteSpace(request.Correo))
                 return Results.BadRequest(new { mensaje = "El correo electrónico es requerido." });
 
-            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Correo == request.Correo && u.Estado == 1);
+            var correoLimpio = request.Correo.Trim();
+            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Correo == correoLimpio && u.Estado == 1);
             if (usuario == null)
             {
                 // Por seguridad, no revelamos si el correo existe o no, pero devolvemos éxito simulado
@@ -92,14 +93,16 @@ public static class AuthEndpoints
             if (string.IsNullOrWhiteSpace(request.Correo) || string.IsNullOrWhiteSpace(request.Codigo) || string.IsNullOrWhiteSpace(request.NuevaPassword))
                 return Results.BadRequest(new { mensaje = "Todos los campos son requeridos." });
 
-            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Correo == request.Correo && u.CodigoRecuperacion == request.Codigo && u.Estado == 1);
+            var correoLimpio = request.Correo.Trim();
+            var codigoLimpio = request.Codigo.Trim();
+            var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Correo == correoLimpio && u.CodigoRecuperacion == codigoLimpio && u.Estado == 1);
             if (usuario == null)
                 return Results.BadRequest(new { mensaje = "El código de verificación es incorrecto o ha expirado." });
 
             if (usuario.FechaExpiracionCodigo.HasValue && usuario.FechaExpiracionCodigo.Value < DateTime.UtcNow)
                 return Results.BadRequest(new { mensaje = "El código de verificación ha expirado. Por favor, solicita uno nuevo." });
 
-            usuario.ClaveHash = HashPassword(request.NuevaPassword);
+            usuario.ClaveHash = HashPassword(request.NuevaPassword.Trim());
             usuario.CodigoRecuperacion = null;
             usuario.FechaExpiracionCodigo = null;
             await db.SaveChangesAsync();

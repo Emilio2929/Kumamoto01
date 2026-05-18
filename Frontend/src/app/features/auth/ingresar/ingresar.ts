@@ -89,7 +89,7 @@ export class IngresarComponent {
   }
 
   solicitarCodigo() {
-    if (!this.correoRecuperacion || !this.correoRecuperacion.includes('@')) {
+    if (!this.correoRecuperacion || !this.correoRecuperacion.trim().includes('@')) {
       this.errorRecuperacion = 'Ingrese un correo electrónico institucional válido.';
       return;
     }
@@ -99,7 +99,7 @@ export class IngresarComponent {
     this.mensajeRecuperacion = '';
     this.cdr.markForCheck();
 
-    this.authService.forgotPassword(this.correoRecuperacion).subscribe({
+    this.authService.forgotPassword(this.correoRecuperacion.trim()).subscribe({
       next: (res: any) => {
         this.cargandoRecuperacion = false;
         this.pasoRecuperacion = 2;
@@ -116,7 +116,7 @@ export class IngresarComponent {
   }
 
   restablecerPassword() {
-    if (!this.codigoRecuperacion || !this.nuevaPassword || this.nuevaPassword.length < 4) {
+    if (!this.codigoRecuperacion || !this.nuevaPassword || this.nuevaPassword.trim().length < 4) {
       this.errorRecuperacion = 'Ingrese el código de verificación y una nueva contraseña (mínimo 4 caracteres).';
       return;
     }
@@ -126,7 +126,11 @@ export class IngresarComponent {
     this.mensajeRecuperacion = '';
     this.cdr.markForCheck();
 
-    this.authService.resetPassword(this.correoRecuperacion, this.codigoRecuperacion, this.nuevaPassword).subscribe({
+    this.authService.resetPassword(
+      this.correoRecuperacion.trim(),
+      this.codigoRecuperacion.trim(),
+      this.nuevaPassword.trim()
+    ).subscribe({
       next: (res: any) => {
         this.cargandoRecuperacion = false;
         this.showForgotModal = false;

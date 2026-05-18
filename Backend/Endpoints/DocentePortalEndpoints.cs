@@ -120,6 +120,160 @@ public static class DocentePortalEndpoints
 
             return Results.Ok(new { mensaje = "Asistencia registrada exitosamente." });
         }).WithName("RegistrarAsistenciaDocente");
+
+        // ── GET /api/docente-portal/mis-tutorias
+        group.MapGet("/mis-tutorias", async (ClaimsPrincipal user, KumamotoDbContext db) =>
+        {
+            var userId = GetUserId(user);
+            if (userId is null) return Results.Unauthorized();
+
+            var tutorias = await db.Aulas
+                .Include(a => a.Grado)
+                .Include(a => a.Seccion)
+                .Where(a => a.TutorId == userId && a.Estado == 1)
+                .Select(a => new
+                {
+                    a.Id,
+                    a.Descripcion,
+                    Grado = a.Grado!.Nombre,
+                    Seccion = a.Seccion!.Letra,
+                    NombreAula = $"{a.Grado.Nombre} {a.Seccion.Letra}"
+                })
+                .ToListAsync();
+
+            return Results.Ok(tutorias);
+        }).WithName("GetMisTutoriasDocente");
+
+        // ── GET /api/docente-portal/tutoria/{aulaId}/detalles
+        group.MapGet("/tutoria/{aulaId}/detalles", async (int aulaId, ClaimsPrincipal user, KumamotoDbContext db) =>
+        {
+            var userId = GetUserId(user);
+            if (userId is null) return Results.Unauthorized();
+
+            // Verificar que el docente sea realmente el tutor de esta aula
+            var aula = await db.Aulas
+                .Include(a => a.Grado)
+                .Include(a => a.Seccion)
+                .FirstOrDefaultAsync(a => a.Id == aulaId && a.TutorId == userId && a.Estado == 1);
+
+            if (aula == null) return Results.NotFound(new { mensaje = "No se encontró el aula o no tiene permisos de tutoría." });
+
+            var estudiantes = await db.Estudiantes
+                .Where(e => e.AulaId == aulaId && e.Estado == 1)
+                .OrderBy(e => e.Apellidos).ThenBy(e => e.Nombres)
+                .Select(e => new
+                {
+                    e.Id,
+                    Codigo = e.Dni,
+                    NombreCompleto = $"{e.Apellidos}, {e.Nombres}"
+                })
+                .ToListAsync();
+
+            var estudianteIds = estudiantes.Select(e => e.Id).ToList();
+
+            var incidencias = await db.Incidencias
+                .Include(i => i.Estudiante)
+                .Include(i => i.RegistradoPor)
+                .Where(i => estudianteIds.Contains(i.EstudianteId) && i.Estado == 1)
+                .OrderByDescending(i => i.FechaRegistro)
+                .Select(i => new
+                {
+                    i.Id,
+                    Estudiante = $"{i.Estudiante!.Apellidos}, {i.Estudiante.Nombres}",
+                    RegistradoPor = $"{i.RegistradoPor!.Nombres} {i.RegistradoPor.Apellidos}",
+                    i.TipoIncidencia,
+                    i.Descripcion,
+                    Fecha = i.FechaRegistro.ToString("yyyy-MM-dd HH:mm")
+                })
+                .ToListAsync();
+
+            // Obtener todos los cursos asignados a esta aula
+            var cursosAula = await db.CargasAcademicas
+                .Where(c => c.AulaId == aulaId && c.Estado == 1)
+                .Include(c => c.Curso)
+                .Where(c => c.Curso != null)
+                .Select(c => c.Curso!.Nombre)
+                .Distinct()
+                .ToListAsync();
+
+            // Obtener todas las competencias de los cursos de esta aula
+            var competenciasAula = await db.Competencias
+                .Include(c => c.Curso)
+                .Include(c => c.Carga).ThenInclude(ca => ca!.Curso)
+                .Where(c => c.Estado == 1)
+                .ToListAsync();
+
+            var competenciasFiltradas = competenciasAula.Where(c => 
+                (c.Curso != null && cursosAula.Contains(c.Curso.Nombre)) ||
+                (c.Carga?.Curso != null && cursosAula.Contains(c.Carga.Curso.Nombre))
+            ).Select(c => new {
+                Id = c.Id,
+                Nombre = c.Nombre,
+                Curso = c.Curso != null ? c.Curso.Nombre : c.Carga!.Curso!.Nombre
+            }).ToList();
+
+            // Notas bimestrales (CalificacionBimestral) de todos los cursos y bimestres para los estudiantes del aula
+            var notasBimestrales = await db.CalificacionesBimestrales
+                .Include(c => c.Competencia!).ThenInclude(comp => comp.Curso)
+                .Include(c => c.Competencia!).ThenInclude(comp => comp.Carga!).ThenInclude(ca => ca.Curso)
+                .Include(c => c.Periodo)
+                .Include(c => c.Escala)
+                .Where(c => estudianteIds.Contains(c.EstudianteId) && c.Estado == 1)
+                .Select(c => new
+                {
+                    c.EstudianteId,
+                    CompetenciaId = c.CompetenciaId,
+                    Competencia = c.Competencia!.Nombre,
+                    Curso = c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : 
+                            (c.Competencia.Carga!.Curso != null ? c.Competencia.Carga.Curso.Nombre : "Curso General"),
+                    Bimestre = c.Periodo!.Nombre,
+                    Letra = c.Escala!.Letra,
+                    c.Escala.Significado
+                })
+                .ToListAsync();
+
+            // Construir rendimiento por cursos asegurando que todos los cursos del aula aparezcan
+            var notasAgrupadas = notasBimestrales.GroupBy(n => n.Curso).ToDictionary(g => g.Key, g => g.ToList());
+            var rendimientoCursos = cursosAula.Select(curso => new
+            {
+                Curso = curso,
+                Promedio = notasAgrupadas.ContainsKey(curso) && notasAgrupadas[curso].Any() ? 
+                           Math.Round(notasAgrupadas[curso].Average(x => x.Letra == "AD" ? 20.0 : (x.Letra == "A" ? 17.0 : (x.Letra == "B" ? 13.0 : 10.0))), 1) : 0.0
+            }).ToList();
+
+            // Notas semanales (Calificacion) de todos los cursos y semanas para los estudiantes del aula
+            var notasSemanales = await db.Calificaciones
+                .Include(c => c.Competencia!).ThenInclude(comp => comp.Curso)
+                .Include(c => c.Competencia!).ThenInclude(comp => comp.Carga!).ThenInclude(ca => ca.Curso)
+                .Include(c => c.Semana!).ThenInclude(s => s.Periodo)
+                .Include(c => c.Escala)
+                .Where(c => c.EstudianteId.HasValue && estudianteIds.Contains(c.EstudianteId.Value) && c.Estado == 1)
+                .Select(c => new
+                {
+                    EstudianteId = c.EstudianteId!.Value,
+                    CompetenciaId = c.CompetenciaId,
+                    Competencia = c.Competencia!.Nombre,
+                    Curso = c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : 
+                            (c.Competencia.Carga!.Curso != null ? c.Competencia.Carga.Curso.Nombre : "Curso General"),
+                    Bimestre = c.Semana!.Periodo != null ? c.Semana.Periodo.Nombre : "Bimestre I",
+                    Semana = c.Semana.NumeroSemana,
+                    Letra = c.Escala!.Letra,
+                    c.Escala.Significado
+                })
+                .ToListAsync();
+
+            return Results.Ok(new
+            {
+                Aula = $"{aula.Grado!.Nombre} {aula.Seccion!.Letra}",
+                Cursos = cursosAula,
+                Competencias = competenciasFiltradas,
+                Estudiantes = estudiantes,
+                Incidencias = incidencias,
+                RendimientoCursos = rendimientoCursos,
+                NotasBimestrales = notasBimestrales,
+                NotasSemanales = notasSemanales
+            });
+        }).WithName("GetTutoriaDetallesDocente");
     }
 
     private static int? GetUserId(ClaimsPrincipal user)

@@ -1,0 +1,267 @@
+<div class="tutoria-wrapper">
+  <!-- Cabecera y Selector de Tutoría -->
+  <header class="content-header">
+    <div class="header-left">
+      <h1>Panel de Tutoría Asignada</h1>
+      <p>Supervisión conductual, rendimiento académico y notas bimestrales</p>
+    </div>
+
+    <div class="header-selectors" *ngIf="tutorias.length > 0">
+      <div class="select-box">
+        <label>Seleccionar Aula de Tutoría</label>
+        <select class="custom-select" [(ngModel)]="aulaSeleccionada" (change)="seleccionarAula(aulaSeleccionada)">
+          <option *ngFor="let aula of tutorias" [ngValue]="aula">{{ aula.nombreAula }}</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- Estado de Carga y Errores -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Cargando analíticas y registros del aula...</p>
+  </div>
+
+  <div class="error-banner" *ngIf="errorMsg">
+    <div class="error-content">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>{{ errorMsg }}</span>
+    </div>
+  </div>
+
+  <!-- Contenido Principal del Aula -->
+  <main class="main-content" *ngIf="!loading && detallesAula">
+    <!-- Pestañas de Navegación -->
+    <nav class="tabs-nav">
+      <button class="tab-btn" [class.active]="activeTab === 'general'" (click)="activeTab = 'general'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span>Vista General</span>
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'incidencias'" (click)="activeTab = 'incidencias'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <span>Incidencias y Conducta</span>
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'rendimiento'" (click)="activeTab = 'rendimiento'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <span>Rendimiento por Cursos</span>
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'notas'" (click)="activeTab = 'notas'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <span>Notas Bimestrales</span>
+      </button>
+    </nav>
+
+    <!-- PESTAÑA 1: VISTA GENERAL -->
+    <div class="tab-pane general-tab" *ngIf="activeTab === 'general'">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-info">
+            <h3>Estudiantes en Aula</h3>
+            <p class="kpi-val">{{ detallesAula.estudiantes?.length || 0 }}</p>
+            <span class="kpi-sub">Alumnos matriculados</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-info">
+            <h3>Incidencias Registradas</h3>
+            <p class="kpi-val">{{ detallesAula.incidencias?.length || 0 }}</p>
+            <span class="kpi-sub">Reportes conductuales</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-info">
+            <h3>Cursos Evaluados</h3>
+            <p class="kpi-val">{{ detallesAula.rendimientoCursos?.length || 0 }}</p>
+            <span class="kpi-sub">Materias activas</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="quick-summary-section">
+        <div class="summary-box">
+          <h3>Estudiantes del Aula</h3>
+          <div class="students-grid">
+            <div class="student-item" *ngFor="let est of detallesAula.estudiantes">
+              <div class="avatar">{{ est.nombreCompleto.slice(0, 1) }}</div>
+              <div class="info">
+                <span class="name">{{ est.nombreCompleto }}</span>
+                <span class="code">Cód: {{ est.codigo || est.id }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 2: INCIDENCIAS Y CONDUCTA -->
+    <div class="tab-pane incidencias-tab" *ngIf="activeTab === 'incidencias'">
+      <div class="section-title">
+        <h2>Historial Conductual del Aula</h2>
+        <p>Registro de incidencias disciplinarias y observaciones académicas</p>
+      </div>
+
+      <div class="empty-state" *ngIf="!detallesAula.incidencias?.length">
+        <p>No se han registrado incidencias conductuales para los estudiantes de esta aula.</p>
+      </div>
+
+      <div class="incidents-list" *ngIf="detallesAula.incidencias?.length">
+        <div class="incident-card" *ngFor="let inc of detallesAula.incidencias">
+          <div class="incident-header">
+            <span class="student-name">{{ inc.estudiante }}</span>
+            <span class="date">{{ inc.fecha }}</span>
+          </div>
+          <div class="incident-body">
+            <span class="badge type">{{ inc.tipoIncidencia }}</span>
+            <p class="desc">{{ inc.descripcion }}</p>
+          </div>
+          <div class="incident-footer">
+            <span class="author">Registrado por: {{ inc.registradoPor }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 3: RENDIMIENTO POR CURSOS -->
+    <div class="tab-pane rendimiento-tab" *ngIf="activeTab === 'rendimiento'">
+      <div class="section-title">
+        <h2>Rendimiento Promedio por Cursos</h2>
+        <p>Estimación basada en las calificaciones registradas en el periodo actual</p>
+      </div>
+
+      <div class="empty-state" *ngIf="!detallesAula.rendimientoCursos?.length">
+        <p>No hay cursos asignados a esta aula en el periodo actual.</p>
+      </div>
+
+      <div class="performance-grid" *ngIf="detallesAula.rendimientoCursos?.length">
+        <div class="course-perf-card" *ngFor="let perf of detallesAula.rendimientoCursos">
+          <div class="perf-header">
+            <h3>{{ perf.curso }}</h3>
+            <span class="score">{{ perf.promedio }} / 20</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="(perf.promedio / 20) * 100"></div>
+          </div>
+          <div class="perf-status">
+            <span class="status-label" [class.good]="perf.promedio >= 14" [class.avg]="perf.promedio >= 11 && perf.promedio < 14" [class.danger]="perf.promedio < 11">
+              {{ perf.promedio >= 14 ? 'Nivel Satisfactorio' : (perf.promedio >= 11 ? 'En Proceso' : 'Requiere Apoyo') }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 4: NOTAS BIMESTRALES Y SEMANALES -->
+    <div class="tab-pane notas-tab" *ngIf="activeTab === 'notas'">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>Filtrar por Curso:</label>
+          <select class="custom-select" [(ngModel)]="cursoFiltroNotas" (ngModelChange)="onFiltroChange()">
+            <option value="TODOS">Todos los Cursos</option>
+            <option *ngFor="let cur of cursosDisponibles" [value]="cur">{{ cur }}</option>
+          </select>
+        </div>
+
+        <div class="view-toggle-group">
+          <button class="toggle-btn" [class.active]="modoVistaNotas === 'bimestral'" (click)="onModoVistaChange('bimestral')">
+            Promedios Bimestrales
+          </button>
+          <button class="toggle-btn" [class.active]="modoVistaNotas === 'semanal'" (click)="onModoVistaChange('semanal')">
+            Detalle Semanal
+          </button>
+        </div>
+
+        <div class="filter-group" *ngIf="modoVistaNotas === 'semanal'">
+          <label>Bimestre:</label>
+          <select class="custom-select" [(ngModel)]="bimestreFiltroSemanal" (ngModelChange)="onFiltroChange()">
+            <option value="Bimestre I">Bimestre I</option>
+            <option value="Bimestre II">Bimestre II</option>
+            <option value="Bimestre III">Bimestre III</option>
+            <option value="Bimestre IV">Bimestre IV</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="!detallesAula.estudiantes?.length">
+        <p>No hay estudiantes matriculados en esta aula.</p>
+      </div>
+
+      <div class="table-container" *ngIf="detallesAula.estudiantes?.length">
+        <!-- Tabla Bimestral -->
+        <table class="notas-table" *ngIf="modoVistaNotas === 'bimestral'">
+          <thead>
+            <tr>
+              <th>Estudiante</th>
+              <th>Competencia Evaluada</th>
+              <th class="center">Bimestre I</th>
+              <th class="center">Bimestre II</th>
+              <th class="center">Bimestre III</th>
+              <th class="center">Bimestre IV</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let est of detallesAula.estudiantes">
+              <!-- Fila principal del estudiante -->
+              <tr class="student-header-row">
+                <td colspan="6">
+                  <div class="student-title-box">
+                    <strong>{{ est.nombreCompleto }}</strong>
+                    <span class="student-code">Cód: {{ est.codigo || est.id }}</span>
+                  </div>
+                </td>
+              </tr>
+              <!-- Filas de competencias -->
+              <tr *ngFor="let comp of competenciasCurso">
+                <td class="empty-indent"></td>
+                <td class="comp-col">{{ comp.nombre }}</td>
+                <td class="center"><span class="grade-badge" [ngClass]="getNotaBimestre(est.id, comp.curso, comp.nombre, 'I')">{{ getNotaBimestre(est.id, comp.curso, comp.nombre, 'I') }}</span></td>
+                <td class="center"><span class="grade-badge" [ngClass]="getNotaBimestre(est.id, comp.curso, comp.nombre, 'II')">{{ getNotaBimestre(est.id, comp.curso, comp.nombre, 'II') }}</span></td>
+                <td class="center"><span class="grade-badge" [ngClass]="getNotaBimestre(est.id, comp.curso, comp.nombre, 'III')">{{ getNotaBimestre(est.id, comp.curso, comp.nombre, 'III') }}</span></td>
+                <td class="center"><span class="grade-badge" [ngClass]="getNotaBimestre(est.id, comp.curso, comp.nombre, 'IV')">{{ getNotaBimestre(est.id, comp.curso, comp.nombre, 'IV') }}</span></td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+
+        <!-- Tabla Semanal -->
+        <table class="notas-table" *ngIf="modoVistaNotas === 'semanal'">
+          <thead>
+            <tr>
+              <th>Estudiante</th>
+              <th>Competencia Evaluada</th>
+              <th class="center compact-th" *ngFor="let sem of semanasDisponibles">S{{ sem }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let est of detallesAula.estudiantes">
+              <!-- Fila principal del estudiante -->
+              <tr class="student-header-row">
+                <td [attr.colspan]="semanasDisponibles.length + 2">
+                  <div class="student-title-box">
+                    <strong>{{ est.nombreCompleto }}</strong>
+                    <span class="student-code">Cód: {{ est.codigo || est.id }}</span>
+                  </div>
+                </td>
+              </tr>
+              <!-- Filas de competencias -->
+              <tr *ngFor="let comp of competenciasCurso">
+                <td class="empty-indent"></td>
+                <td class="comp-col">{{ comp.nombre }}</td>
+                <td class="center" *ngFor="let sem of semanasDisponibles">
+                  <span class="grade-badge" [ngClass]="getNotaSemanal(est.id, comp.curso, comp.nombre, bimestreFiltroSemanal, sem)">
+                    {{ getNotaSemanal(est.id, comp.curso, comp.nombre, bimestreFiltroSemanal, sem) }}
+                  </span>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>

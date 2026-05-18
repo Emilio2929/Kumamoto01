@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { Router, RouterModule, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
+import { DocenteService } from '../../../core/services/docente';
 
 @Component({
   selector: 'app-docente',
@@ -10,18 +11,31 @@ import { AuthService } from '../../../core/services/auth';
   templateUrl: './docente.html',
   styleUrls: ['./docente.scss'],
 })
-export class Docente {
+export class Docente implements OnInit {
   isSidebarOpen = false;
   isSidebarCollapsed = false;
   isMobile = false;
+  tutorias: any[] = [];
 
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
+  private readonly docenteService = inject(DocenteService);
 
   user = this.auth.obtenerUsuario();
 
   constructor() {
     this.checkScreenSize();
+  }
+
+  ngOnInit() {
+    this.docenteService.getMisTutorias().subscribe({
+      next: (res) => {
+        this.tutorias = res || [];
+      },
+      error: () => {
+        this.tutorias = [];
+      }
+    });
   }
 
   @HostListener('window:resize')

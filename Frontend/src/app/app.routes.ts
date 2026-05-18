@@ -151,6 +151,14 @@ export const routes: Routes = [
 				data: { title: 'Reportes y Métricas', description: 'Monitoreo de competencias y detección de estudiantes para refuerzo.' },
 			},
 			{
+				path: 'tutoria',
+				loadComponent: () =>
+					import('./features/dashboard/docente/pages/tutoria-docente/tutoria-docente').then(
+						(m) => m.TutoriaDocenteComponent
+					),
+				data: { title: 'Tutoría Asignada', description: 'Monitoreo conductual, incidencias, rendimiento por cursos y notas bimestrales del aula.' },
+			},
+			{
 				path: 'avisos',
 				loadComponent: () =>
 					import('./features/dashboard/docente/pages/placeholder/placeholder').then(

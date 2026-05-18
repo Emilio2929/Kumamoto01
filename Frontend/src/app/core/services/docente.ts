@@ -37,4 +37,12 @@ export class DocenteService {
   registrarIncidencia(data: { estudianteId: number; tipoIncidencia: string; descripcion?: string }): Observable<any> {
     return this.http.post(`${environment.apiUrl}/api/incidencias`, data);
   }
+
+  getMisTutorias(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.api}/mis-tutorias`);
+  }
+
+  getTutoriaDetalles(aulaId: number): Observable<any> {
+    return this.http.get<any>(`${this.api}/tutoria/${aulaId}/detalles`);
+  }
 }

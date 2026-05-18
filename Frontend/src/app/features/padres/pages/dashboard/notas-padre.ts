@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { PadresService } from '../../../../core/services/padres';
+import { PadreStateService } from '../../../../core/services/padre-state.service';
 
 @Component({
   selector: 'app-notas-padre',
@@ -11,17 +12,25 @@ import { PadresService } from '../../../../core/services/padres';
 })
 export class NotasPadresComponent implements OnInit {
   private padresService = inject(PadresService);
+  public stateService = inject(PadreStateService);
   private cdr = inject(ChangeDetectorRef);
   loading = true;
   libreta: any = null;
 
+  bimestreSeleccionado: string = '';
+  semanasNumeros: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
   ngOnInit() {
-    this.padresService.getResumenHijo().subscribe({
-      next: (resumen) => {
-        if(resumen && resumen.id) {
-           this.padresService.getLibretaHijo(resumen.id).subscribe({
+    this.stateService.hijoSeleccionado$.subscribe({
+      next: (hijo: any) => {
+        if(hijo && hijo.id) {
+           this.loading = true;
+           this.padresService.getLibretaHijo(hijo.id).subscribe({
               next: (data) => {
                  this.libreta = data;
+                 if (this.libreta && this.libreta.historial && this.libreta.historial.length > 0) {
+                   this.bimestreSeleccionado = this.libreta.historial[0].bimestre;
+                 }
                  this.loading = false;
                  this.cdr.detectChanges();
               },
@@ -31,8 +40,34 @@ export class NotasPadresComponent implements OnInit {
               }
            });
         } else {
-           this.loading = false;
-           this.cdr.detectChanges();
+           // Fallback por si entran directo sin pasar por el dashboard
+           this.padresService.getResumenHijo().subscribe({
+             next: (resumen) => {
+               if(resumen && resumen.id) {
+                  this.padresService.getLibretaHijo(resumen.id).subscribe({
+                     next: (data) => {
+                        this.libreta = data;
+                        if (this.libreta && this.libreta.historial && this.libreta.historial.length > 0) {
+                          this.bimestreSeleccionado = this.libreta.historial[0].bimestre;
+                        }
+                        this.loading = false;
+                        this.cdr.detectChanges();
+                     },
+                     error: () => {
+                        this.loading = false;
+                        this.cdr.detectChanges();
+                     }
+                  });
+               } else {
+                  this.loading = false;
+                  this.cdr.detectChanges();
+               }
+             },
+             error: () => {
+               this.loading = false;
+               this.cdr.detectChanges();
+             }
+           });
         }
       },
       error: () => {
@@ -47,25 +82,31 @@ export class NotasPadresComponent implements OnInit {
     return this.libreta.historial.map((h: any) => h.bimestre);
   }
 
-  getCursos(): string[] {
-    if (!this.libreta || !this.libreta.historial) return [];
-    const cursosSet = new Set<string>();
-    this.libreta.historial.forEach((h: any) => {
-      h.cursos.forEach((c: any) => cursosSet.add(c.curso));
-    });
-    return Array.from(cursosSet);
+  seleccionarBimestre(bim: string) {
+    this.bimestreSeleccionado = bim;
   }
 
-  getNotaBimestre(curso: string, bimestre: string): string {
-    if (!this.libreta || !this.libreta.historial) return '';
-    const bim = this.libreta.historial.find((h: any) => h.bimestre === bimestre);
-    if (!bim) return '';
-    const c = bim.cursos.find((c: any) => c.curso === curso);
-    return c ? c.nota : '';
+  getCursosBimestre(): any[] {
+    if (!this.libreta || !this.libreta.historial) return [];
+    const bim = this.libreta.historial.find((h: any) => h.bimestre === this.bimestreSeleccionado);
+    return bim ? bim.cursos : [];
+  }
+
+  getNotaSemana(competencia: any, numSemana: number): string {
+    if (!competencia || !competencia.semanas) return '-';
+    const s = competencia.semanas.find((x: any) => x.semana === `Semana ${numSemana}`);
+    return s ? s.nota : '-';
+  }
+
+  getBadgeClass(nota: string): string {
+    const n = (nota || '').toUpperCase().trim();
+    if (n === 'C') return 'nota-c';
+    if (n === 'B') return 'nota-b';
+    if (n === 'A' || n === 'AD') return 'nota-a';
+    return '';
   }
 
   descargarLibreta() {
-    // Generación simple de PDF usando la función nativa del navegador
     window.print();
   }
 }

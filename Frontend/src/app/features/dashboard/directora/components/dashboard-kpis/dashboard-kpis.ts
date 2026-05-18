@@ -19,6 +19,14 @@ export class DashboardKpis implements OnInit {
   errorMsg: string | null = null;
 
   ngOnInit(): void {
+    this.cargarKpis();
+  }
+
+  cargarKpis(): void {
+    this.loading = true;
+    this.errorMsg = null;
+    this.cdr.markForCheck();
+
     this.dashboardService.getKpis().subscribe({
       next: (data) => {
         this.kpis = data;

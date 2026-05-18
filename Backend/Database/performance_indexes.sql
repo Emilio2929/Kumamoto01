@@ -104,3 +104,51 @@ CREATE INDEX IF NOT EXISTS idx_semana_periodo_estado
 -- Portal padre: buscar hijo por padre_id (muy frecuente)
 CREATE INDEX IF NOT EXISTS idx_estudiante_padre_estado
     ON public.estudiante (padre_id, estado);
+
+-- ── incidencia ────────────────────────────────────────────────────────────────
+-- Portal padre: incidencias activas del estudiante
+CREATE INDEX IF NOT EXISTS idx_incidencia_estudiante_estado
+    ON public.incidencia (estudiante_id, estado);
+
+-- ── competencia ────────────────────────────────────────────────────────────────
+-- Libreta padre: relación de competencia con curso directo
+CREATE INDEX IF NOT EXISTS idx_competencia_curso_estado
+    ON public.competencia (curso_id, estado);
+
+-- ── carga_academica ───────────────────────────────────────────────────────────
+-- Libreta padre: cargas académicas activas de un aula
+CREATE INDEX IF NOT EXISTS idx_carga_academica_aula_estado
+    ON public.carga_academica (aula_id, estado);
+
+-- ── OPTIMIZACIONES V2 (Tiempos de Carga y Configuración) ──────────────────────
+-- 1. Optimización para Configuración del Año Lectivo
+CREATE INDEX IF NOT EXISTS idx_periodo_anio_estado
+    ON public.periodo_academico (anio_lectivo, estado);
+
+-- 2. Optimización para el Carrusel de Comunicados
+CREATE INDEX IF NOT EXISTS idx_comunicado_estado_fecha
+    ON public.comunicado (estado, fecha_publicacion DESC);
+
+-- 3. Optimización para Carga de Catálogos Generales
+CREATE INDEX IF NOT EXISTS idx_aula_estado
+    ON public.aula (estado) WHERE estado = 1;
+
+CREATE INDEX IF NOT EXISTS idx_curso_estado
+    ON public.curso (estado) WHERE estado = 1;
+
+CREATE INDEX IF NOT EXISTS idx_grado_estado
+    ON public.grado (estado) WHERE estado = 1;
+
+CREATE INDEX IF NOT EXISTS idx_seccion_estado
+    ON public.seccion (estado) WHERE estado = 1;
+
+-- 4. Optimización para Búsquedas Rápidas de Usuarios
+CREATE INDEX IF NOT EXISTS idx_usuario_estado_rol
+    ON public.usuario (estado, rol_id) WHERE estado = 1;
+
+-- 5. Optimización para Calificaciones Semanales y Bimestrales
+CREATE INDEX IF NOT EXISTS idx_calificacion_semana_estado
+    ON public.calificacion (semana_id, estado) WHERE estado = 1;
+
+CREATE INDEX IF NOT EXISTS idx_calif_bimestral_periodo_estado
+    ON public.calificacion_bimestral (periodo_id, estado) WHERE estado = 1;

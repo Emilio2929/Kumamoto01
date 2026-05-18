@@ -1,0 +1,233 @@
+<div class="incidencias-container custom-scrollbar">
+  <!-- Cabecera Compacta sin textos innecesarios -->
+  <div class="header-section">
+    <!-- Pestañas de Navegación -->
+    <div class="view-toggles">
+      <button [class.active]="vista === 'registrar'" (click)="setVista('registrar')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+        Registrar Incidencia
+      </button>
+      <button [class.active]="vista === 'historial'" (click)="setVista('historial')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        Historial de Incidencias
+      </button>
+    </div>
+
+    <!-- Botón Descargar PDF (Solo en Historial) -->
+    <div class="header-actions" *ngIf="vista === 'historial'">
+      <button class="btn-pdf" (click)="generarPdf()" [disabled]="!incidencias || incidencias.length === 0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Generar PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- VISTA 1: REGISTRAR INCIDENCIA              -->
+  <!-- ========================================== -->
+  <ng-container *ngIf="vista === 'registrar'">
+    <!-- Panel de Búsqueda y Filtros -->
+    <div class="filters-card">
+      <div class="search-box">
+        <div class="input-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" [ngModel]="searchQuery" (ngModelChange)="onSearchChange($event)" placeholder="Buscar estudiante por apellidos o nombres...">
+        </div>
+        <button class="btn-clear" *ngIf="selectedAulaId || selectedCursoId || searchQuery" (click)="limpiarFiltrosRegistro()">
+          Limpiar
+        </button>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Filtrar por Aula</label>
+          <select [(ngModel)]="selectedAulaId" (change)="onAulaChange()">
+            <option [ngValue]="null">Selecciona un aula...</option>
+            <option *ngFor="let a of aulas" [value]="a.aulaId">{{a.gradoNombre}} {{a.seccionLetra}}</option>
+          </select>
+        </div>
+
+        <div class="filter-group" [class.disabled]="!selectedAulaId">
+          <label>Filtrar por Curso</label>
+          <select [(ngModel)]="selectedCursoId" (change)="onCursoChange()" [disabled]="!selectedAulaId || loadingCursos">
+            <option [ngValue]="null">Todos los cursos del aula</option>
+            <option *ngFor="let c of cursos" [value]="c.id">{{c.nombre}}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado de Carga -->
+    <div *ngIf="loadingEstudiantes" class="loading-state">
+      <div class="spinner"></div>
+      <p>Buscando estudiantes en el sistema...</p>
+    </div>
+
+    <!-- Mensaje Inicial (Sin Filtros) -->
+    <div class="initial-prompt-state" *ngIf="!loadingEstudiantes && !selectedAulaId && !searchQuery.trim()">
+      <div class="prompt-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2"/><rect width="18" height="18" x="3" y="4" rx="2"/><circle cx="12" cy="10" r="2"/></svg>
+      </div>
+      <h3>Selecciona un aula o busca un estudiante</h3>
+      <p>Utiliza los filtros superiores para cargar la lista de estudiantes de tus aulas asignadas.</p>
+    </div>
+
+    <!-- Lista de Estudiantes -->
+    <div class="estudiantes-grid" *ngIf="!loadingEstudiantes && estudiantes.length > 0">
+      <div class="estudiante-card" *ngFor="let est of estudiantes">
+        <div class="card-left">
+          <div class="avatar">{{ est.nombre.slice(0, 1) }}</div>
+          <div class="info">
+            <h3 class="name">{{ est.nombre }}</h3>
+            <span class="aula-badge">{{ est.aulaNombre }}</span>
+          </div>
+        </div>
+        <div class="card-right">
+          <button class="btn-registrar" (click)="abrirModal(est)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            Registrar Incidencia
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado Vacío (Búsqueda sin resultados) -->
+    <div class="empty-state" *ngIf="!loadingEstudiantes && (selectedAulaId || searchQuery.trim()) && estudiantes.length === 0">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      </div>
+      <h3>No se encontraron estudiantes</h3>
+      <p>No hay coincidencias para los filtros o el texto ingresado en tus aulas asignadas.</p>
+    </div>
+  </ng-container>
+
+
+  <!-- ========================================== -->
+  <!-- VISTA 2: HISTORIAL DE INCIDENCIAS          -->
+  <!-- ========================================== -->
+  <ng-container *ngIf="vista === 'historial'">
+    <!-- Panel de Búsqueda y Filtros Historial -->
+    <div class="filters-card">
+      <div class="search-box">
+        <div class="input-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" [ngModel]="historialSearchQuery" (ngModelChange)="onHistorialSearchChange($event)" placeholder="Buscar por estudiante o tipo de incidencia...">
+        </div>
+        <button class="btn-clear" *ngIf="historialAulaId || historialSearchQuery" (click)="limpiarFiltrosHistorial()">
+          Limpiar
+        </button>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Filtrar por Aula</label>
+          <select [(ngModel)]="historialAulaId" (change)="onHistorialAulaChange()">
+            <option [ngValue]="null">Todas mis aulas asignadas</option>
+            <option *ngFor="let a of aulas" [value]="a.aulaId">{{a.gradoNombre}} {{a.seccionLetra}}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado de Carga -->
+    <div *ngIf="loadingIncidencias" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando historial de incidencias...</p>
+    </div>
+
+    <!-- Tabla Historial (Con scroll horizontal para móviles) -->
+    <div class="table-container" *ngIf="!loadingIncidencias && incidencias.length > 0">
+      <table class="modern-table">
+        <thead>
+          <tr>
+            <th style="width: 15%">Fecha</th>
+            <th style="width: 30%">Estudiante</th>
+            <th style="width: 15%" *ngIf="!historialAulaId">Aula</th>
+            <th style="width: 15%">Tipo</th>
+            <th style="width: 25%">Descripción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let inc of incidencias">
+            <td class="date-cell">{{ inc.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td class="name-cell">{{ inc.estudianteNombre }}</td>
+            <td class="aula-cell" *ngIf="!historialAulaId">{{ inc.aulaNombre }}</td>
+            <td>
+              <span class="incidencia-badge" [ngClass]="getIncidenciaBadgeClass(inc.tipoIncidencia)">
+                {{ inc.tipoIncidencia }}
+              </span>
+            </td>
+            <td class="desc-cell">{{ inc.descripcion || 'Sin descripción' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Estado Vacío Historial -->
+    <div class="empty-state" *ngIf="!loadingIncidencias && incidencias.length === 0">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <h3>No se encontraron incidencias</h3>
+      <p>No hay registros disciplinarios que coincidan con los filtros seleccionados en tus aulas.</p>
+    </div>
+  </ng-container>
+
+
+  <!-- Modal Registro Incidencia -->
+  <div class="modal-overlay" *ngIf="activeModal" (click)="cerrarModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Nueva Incidencia</h3>
+        <button class="btn-close" (click)="cerrarModal()">×</button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedEstudiante">
+        <div class="estudiante-summary">
+          <div class="summary-avatar">{{ selectedEstudiante.nombre.slice(0, 1) }}</div>
+          <div class="summary-info">
+            <span class="summary-name">{{ selectedEstudiante.nombre }}</span>
+            <span class="summary-aula">{{ selectedEstudiante.aulaNombre }}</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Tipo de Incidencia</label>
+          <select [(ngModel)]="tipoIncidencia">
+            <option value="Conducta">Conducta y Disciplina</option>
+            <option value="Tardanza">Tardanza Reiterada</option>
+            <option value="Uniforme">Incumplimiento de Uniforme</option>
+            <option value="Academico">Falta de Tareas / Materiales</option>
+            <option value="Otro">Otro Incidente</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Descripción Detallada</label>
+          <textarea [(ngModel)]="descripcion" rows="4" placeholder="Describe los detalles del incidente ocurrido..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cerrarModal()" [disabled]="savingIncidencia">Cancelar</button>
+        <button class="btn-submit" (click)="guardarIncidencia()" [disabled]="savingIncidencia">
+          <span *ngIf="!savingIncidencia">Guardar Incidencia</span>
+          <span *ngIf="savingIncidencia" class="loading-btn">Guardando...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Alerta/Éxito -->
+  <div class="modal-overlay" *ngIf="modalAlert.show" (click)="closeAlert()">
+    <div class="modal-card alert-card" (click)="$event.stopPropagation()">
+      <div class="alert-icon" [ngClass]="modalAlert.type">
+        <svg *ngIf="modalAlert.type === 'success'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <svg *ngIf="modalAlert.type === 'error'" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      </div>
+      <h3>{{ modalAlert.title }}</h3>
+      <p>{{ modalAlert.message }}</p>
+      <button class="btn-alert-confirm" (click)="closeAlert()">Aceptar</button>
+    </div>
+  </div>
+</div>

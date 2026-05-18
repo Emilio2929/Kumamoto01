@@ -24,6 +24,15 @@ public static class CalificacionesEndpoints
             if (carga == null) return Results.NotFound("Carga académica no encontrada.");
             if (carga.DocenteId != userId) return Results.Forbid();
 
+            // Validar estrictamente en la BD que no exista ya el mismo código de competencia activo para esta carga
+            var existeCodigo = await db.Competencias
+                .AnyAsync(c => c.CargaId == request.CargaId && c.Codigo.ToLower() == request.Codigo.ToLower() && c.Estado == 1);
+
+            if (existeCodigo)
+            {
+                return Results.BadRequest(new { mensaje = $"Ya existe una competencia activa registrada con el código '{request.Codigo.ToUpper()}' para este curso." });
+            }
+
             // Siguiente numero_orden (si existiera lógica) o simplemente agregar
             var maxOrden = await db.Competencias
                 .Where(c => c.CargaId == request.CargaId && c.Estado == 1)
@@ -32,7 +41,7 @@ public static class CalificacionesEndpoints
             var comp = new Competencia
             {
                 CargaId = request.CargaId,
-                Codigo = request.Codigo,
+                Codigo = request.Codigo.ToUpper(),
                 Nombre = request.Nombre,
                 NumeroOrden = maxOrden + 1,
                 Estado = 1

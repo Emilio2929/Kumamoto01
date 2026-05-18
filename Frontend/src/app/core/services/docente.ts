@@ -33,4 +33,8 @@ export class DocenteService {
   registrarAsistencia(cargaId: number, estudiantes: { estudianteId: number; valor: string }[]): Observable<any> {
     return this.http.post(`${this.api}/registrar-asistencia`, { cargaId, estudiantes });
   }
+
+  registrarIncidencia(data: { estudianteId: number; tipoIncidencia: string; descripcion?: string }): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/incidencias`, data);
+  }
 }

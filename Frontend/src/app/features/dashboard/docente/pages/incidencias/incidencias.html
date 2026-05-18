@@ -1,0 +1,69 @@
+<div class="incidencias-container">
+  <!-- Cabecera de Pantalla -->
+  <div class="header-section">
+    <div class="title-area">
+      <h1>Registro de Incidencias</h1>
+      <p>Reporte disciplinario y académico de estudiantes para el seguimiento institucional y de padres de familia</p>
+    </div>
+  </div>
+
+  <!-- Mensajes de Feedback -->
+  <div class="feedback-banner success" *ngIf="mensajeExito">
+    <span>{{ mensajeExito }}</span>
+  </div>
+
+  <div class="feedback-banner error" *ngIf="mensajeError">
+    <span>{{ mensajeError }}</span>
+  </div>
+
+  <!-- Formulario Principal -->
+  <div class="form-card" *ngIf="!loadingCursos">
+    <div class="form-grid">
+      <!-- Curso -->
+      <div class="form-group">
+        <label>Curso Asignado</label>
+        <select [(ngModel)]="selectedCargaId" (change)="onCargaChange()" [disabled]="loadingEstudiantes || guardando">
+          <option *ngFor="let c of cursos" [value]="c.cargaId">{{ c.curso }} ({{ c.grado }} {{ c.seccion }})</option>
+        </select>
+      </div>
+
+      <!-- Estudiante -->
+      <div class="form-group">
+        <label>Estudiante</label>
+        <select [(ngModel)]="selectedEstudianteId" [disabled]="loadingEstudiantes || guardando || estudiantes.length === 0">
+          <option *ngFor="let e of estudiantes" [value]="e.id">{{ e.nombreCompleto }}</option>
+        </select>
+        <span class="sub-label" *ngIf="loadingEstudiantes">Cargando estudiantes...</span>
+      </div>
+
+      <!-- Tipo de Incidencia -->
+      <div class="form-group">
+        <label>Tipo de Incidencia</label>
+        <select [(ngModel)]="tipoIncidencia" [disabled]="guardando">
+          <option value="">-- Selecciona el tipo de incidencia --</option>
+          <option *ngFor="let t of tiposDisponibles" [value]="t">{{ t }}</option>
+        </select>
+      </div>
+
+      <!-- Descripción -->
+      <div class="form-group full-width">
+        <label>Descripción / Observación (Opcional)</label>
+        <textarea [(ngModel)]="descripcion" rows="4" placeholder="Detalla los hechos o contexto de la incidencia para el reporte del estudiante..." [disabled]="guardando"></textarea>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="form-actions">
+      <button class="btn-submit" (click)="guardarIncidencia()" [disabled]="!canSave">
+        <span *ngIf="!guardando">Registrar Incidencia</span>
+        <span *ngIf="guardando">Registrando...</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Estado de Carga Inicial -->
+  <div class="state-card loading" *ngIf="loadingCursos">
+    <div class="spinner"></div>
+    <span>Cargando cursos y lista de estudiantes...</span>
+  </div>
+</div>

@@ -63,6 +63,7 @@ export class RiskMonitor implements OnInit {
         this.cdr.markForCheck();
       }
     });
+
   }
 
   cerrarModal(): void {
@@ -70,21 +71,55 @@ export class RiskMonitor implements OnInit {
     this.cdr.markForCheck();
   }
 
-  notificarPadre(estudiante: RiskMonitorDetailDto): void {
-    if (this.notificando[estudiante.id]) return;
-    
-    this.notificando[estudiante.id] = true;
+  // Estado de notificaciones exitosas
+  notificados: Record<number, boolean> = {};
+
+  // Modal Confirmación Notificación
+  showConfirmModal = false;
+  estudianteSeleccionado: RiskMonitorDetailDto | null = null;
+  mensajeExito: string | null = null;
+  mensajeError: string | null = null;
+
+  confirmarNotificacion(estudiante: RiskMonitorDetailDto): void {
+    this.estudianteSeleccionado = estudiante;
+    this.showConfirmModal = true;
+    this.mensajeExito = null;
+    this.mensajeError = null;
+    this.cdr.markForCheck();
+  }
+
+  cancelarNotificacion(): void {
+    this.showConfirmModal = false;
+    this.estudianteSeleccionado = null;
+    this.cdr.markForCheck();
+  }
+
+  enviarNotificacionConfirmada(): void {
+    if (!this.estudianteSeleccionado || this.notificando[this.estudianteSeleccionado.id]) return;
+
+    const estId = this.estudianteSeleccionado.id;
+    this.notificando[estId] = true;
+    this.mensajeError = null;
     this.cdr.markForCheck();
 
-    this.dashboardSvc.notifyRiskParent(estudiante.id, estudiante.motivo, estudiante.nivelRiesgo).subscribe({
+    this.dashboardSvc.notifyRiskParent(estId, this.estudianteSeleccionado.motivo, this.estudianteSeleccionado.nivelRiesgo).subscribe({
       next: () => {
-        this.notificando[estudiante.id] = false;
-        alert(`Padre de ${estudiante.estudiante} notificado exitosamente.`);
+        this.notificando[estId] = false;
+        this.notificados[estId] = true;
+        this.mensajeExito = `¡Notificación enviada exitosamente al padre de ${this.estudianteSeleccionado?.estudiante}!`;
         this.cdr.markForCheck();
+        
+        // Cerrar el modal automáticamente después de 2.5 segundos
+        setTimeout(() => {
+          this.showConfirmModal = false;
+          this.estudianteSeleccionado = null;
+          this.mensajeExito = null;
+          this.cdr.markForCheck();
+        }, 2500);
       },
       error: (err) => {
-        this.notificando[estudiante.id] = false;
-        alert(err.error?.mensaje || 'Error al notificar al padre.');
+        this.notificando[estId] = false;
+        this.mensajeError = err.error?.mensaje || 'Ocurrió un error al intentar notificar al padre.';
         this.cdr.markForCheck();
       }
     });

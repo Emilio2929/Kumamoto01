@@ -7,13 +7,13 @@
 .header {
   margin-bottom: 2.5rem;
   h1 { font-size: 2rem; font-weight: 900; color: #0f172a; margin: 0; letter-spacing: -0.025em; }
-  p { color: #64748b; margin-top: 0.5rem; font-weight: 600; font-size: 1.1rem; }
 }
 
 .aulas-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
+  align-items: start;
 }
 
 .aula-card {
@@ -57,22 +57,13 @@
     &.ok { background: #dcfce7; color: #15803d; }
     &.mid { background: #eff6ff; color: #1e40af; }
     &.bad { background: #fee2e2; color: #b91c1c; }
+    &.none { background: #f1f5f9; color: #64748b; }
   }
 }
 
 .courses-section {
   padding: 1.5rem;
   flex: 1;
-
-  label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 800;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 1rem;
-  }
 }
 
 .course-list {
@@ -123,14 +114,14 @@
 }
 
 .no-courses {
-  padding: 2rem;
+  padding: 1rem;
   text-align: center;
-  color: #94a3b8;
-  font-weight: 600;
-  font-style: italic;
-  background: #f8fafc;
-  border-radius: 16px;
-  border: 2px dashed #e2e8f0;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.9rem;
+  background: #f1f5f9;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
 }
 
 .loading-state, .error-state {

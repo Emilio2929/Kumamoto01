@@ -1,0 +1,448 @@
+// Colores Institucionales Premium
+$navy: #1a237e;
+$navy-dark: #0d1240;
+$navy-light: #283593;
+$insignia-red: #d32f2f;
+$insignia-blue: #1e88e5;
+$celeste: #64b5f6;
+$celeste-deep: #1565c0;
+$white: #ffffff;
+$gold: #fbc02d;
+$text-main: #f8fafc;
+$text-muted: #cbd5e1;
+
+:host {
+  display: block;
+  font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+.auth-page-wrapper {
+  min-height: 100vh;
+  width: 100%;
+  background: radial-gradient(circle at top right, $navy-light 0%, $navy 50%, $navy-dark 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  position: relative;
+  overflow-x: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+    pointer-events: none;
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
+
+  @media (max-width: 400px) {
+    padding: 0.5rem;
+    padding-top: 1rem;
+  }
+}
+
+// ── TARJETA PRINCIPAL ──────────────────────────────────────────────────────
+.auth-card {
+  width: 100%;
+  max-width: 1050px;
+  background: rgba($navy-dark, 0.6);
+  backdrop-filter: blur(25px);
+  border-radius: 2.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 40px 80px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  overflow: hidden;
+  position: relative;
+  animation: cardEntrance 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 4px;
+    background: linear-gradient(90deg, $gold, $celeste, $insignia-red);
+    z-index: 5;
+  }
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+    border-radius: 2rem;
+  }
+
+  @media (max-width: 400px) {
+    border-radius: 1.2rem;
+  }
+}
+
+// ── LADO IZQUIERDO: BRANDING ──────────────────────────────────────────────
+.auth-branding {
+  background: linear-gradient(160deg, rgba($navy-light, 0.5) 0%, rgba($navy-dark, 0.7) 100%);
+  padding: 4rem 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+
+  @media (max-width: 992px) {
+    padding: 2.5rem 2rem 2rem;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  @media (max-width: 400px) {
+    padding: 2rem 1.2rem 1.5rem;
+  }
+
+  .branding-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .glow-circle {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba($celeste, 0.2) 0%, transparent 70%);
+    filter: blur(25px);
+    z-index: -1;
+    animation: pulseGlow 5s infinite alternate;
+
+    @media (max-width: 992px) {
+      width: 180px; height: 180px;
+    }
+  }
+
+  .insignia-img {
+    width: 170px;
+    height: auto;
+    filter: drop-shadow(0 10px 25px rgba(0,0,0,0.5));
+    margin-bottom: 2rem;
+    transition: transform 0.5s ease;
+
+    &:hover {
+      transform: scale(1.06) rotate(2deg);
+    }
+
+    @media (max-width: 992px) {
+      width: 120px;
+      margin-bottom: 1.2rem;
+    }
+
+    @media (max-width: 400px) {
+      width: 95px;
+      margin-bottom: 0.8rem;
+    }
+  }
+
+  .school-name {
+    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+    font-weight: 900;
+    color: $white;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, $white 30%, $celeste 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    @media (max-width: 992px) {
+      margin-bottom: 0.7rem;
+    }
+  }
+
+  .school-motto {
+    font-size: clamp(0.85rem, 1.8vw, 1rem);
+    color: $text-muted;
+    line-height: 1.5;
+    margin-bottom: 1.8rem;
+    max-width: 300px;
+
+    @media (max-width: 992px) {
+      margin-bottom: 1.2rem;
+      max-width: 360px;
+    }
+
+    @media (max-width: 400px) {
+      margin-bottom: 1rem;
+      font-size: 0.82rem;
+    }
+  }
+
+  .school-badges {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.35rem 0.9rem;
+      border-radius: 2rem;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: $celeste;
+    }
+  }
+}
+
+// ── LADO DERECHO: FORMULARIO ──────────────────────────────────────────────
+.auth-form-container {
+  padding: 3.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  @media (max-width: 992px) {
+    padding: 2.5rem 2rem;
+  }
+
+  @media (max-width: 400px) {
+    padding: 1.8rem 1.2rem;
+  }
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+
+  @media (max-width: 400px) {
+    margin-bottom: 1.8rem;
+  }
+
+  h2 {
+    font-size: clamp(1.6rem, 4vw, 2rem);
+    color: $white;
+    font-weight: 900;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    color: $text-muted;
+    font-size: clamp(0.85rem, 2vw, 0.95rem);
+    line-height: 1.5;
+  }
+}
+
+// ── FORMULARIO INPUTS ─────────────────────────────────────────────────────
+.error-msg {
+  background: rgba($insignia-red, 0.12);
+  border: 1px solid rgba($insignia-red, 0.25);
+  color: #fca5a5;
+  padding: 1rem 1.2rem;
+  border-radius: 1rem;
+  margin-bottom: 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+
+  svg { width: 20px; height: 20px; flex-shrink: 0; color: $insignia-red; }
+}
+
+.input-group {
+  margin-bottom: 1.6rem;
+
+  label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: $celeste;
+    margin-bottom: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .input-icon {
+      position: absolute;
+      left: 1.2rem;
+      width: 20px;
+      height: 20px;
+      color: rgba($white, 0.35);
+      transition: color 0.3s;
+      pointer-events: none;
+    }
+
+    input {
+      width: 100%;
+      padding: 1.1rem 1.2rem 1.1rem 3.2rem;
+      border-radius: 1.1rem;
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: $white;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.3s;
+
+      &::placeholder { color: rgba(255, 255, 255, 0.2); }
+
+      &:focus {
+        outline: none;
+        border-color: $celeste;
+        background: rgba(255, 255, 255, 0.06);
+        box-shadow: 0 0 20px rgba($celeste, 0.12);
+      }
+
+      &:focus ~ .input-icon { color: $celeste; }
+    }
+  }
+}
+
+.btn-login {
+  width: 100%;
+  padding: 1.15rem;
+  background: linear-gradient(135deg, $celeste-deep 0%, $insignia-blue 100%);
+  color: $white;
+  border: none;
+  border-radius: 1.1rem;
+  font-size: 1.05rem;
+  font-weight: 900;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 8px 25px rgba($celeste-deep, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba($celeste-deep, 0.4);
+    filter: brightness(1.08);
+  }
+
+  &:active { transform: translateY(-1px); }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(0.5);
+  }
+
+  .loader {
+    width: 20px; height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s linear infinite;
+  }
+}
+
+// ── FOOTER INTEGRADO ──────────────────────────────────────────────────────
+.form-footer {
+  margin-top: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  @media (max-width: 400px) {
+    margin-top: 1.8rem;
+    gap: 0.6rem;
+  }
+
+  .footer-divider {
+    color: rgba(255, 255, 255, 0.15);
+    font-size: 1.2rem;
+    user-select: none;
+
+    @media (max-width: 400px) {
+      display: none;
+    }
+  }
+
+  .btn-back,
+  .btn-support {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.8rem;
+    transition: all 0.3s ease;
+
+    svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+  }
+
+  .btn-back {
+    color: $text-muted;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    svg { transition: transform 0.3s; }
+
+    &:hover {
+      color: $white;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      svg { transform: translateX(-3px); }
+    }
+  }
+
+  .btn-support {
+    color: $celeste;
+    background: rgba($celeste, 0.06);
+    border: 1px solid rgba($celeste, 0.12);
+
+    &:hover {
+      color: $white;
+      background: rgba($celeste, 0.15);
+      border-color: rgba($celeste, 0.3);
+    }
+  }
+}
+
+// ── ANIMACIONES ───────────────────────────────────────────────────────────
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+@keyframes cardEntrance {
+  from { opacity: 0; transform: scale(0.96) translateY(15px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes pulseGlow {
+  from { opacity: 0.4; transform: translate(-50%, -50%) scale(0.9); }
+  to { opacity: 0.7; transform: translate(-50%, -50%) scale(1.1); }
+}

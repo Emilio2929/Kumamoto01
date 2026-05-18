@@ -1,0 +1,75 @@
+<div class="dashboard-header" *ngIf="datos">
+  <div class="header-content">
+    <div>
+      <h1>Asistencia Diaria</h1>
+      <p>Control de ingreso diario al colegio · {{ datos?.estudiante }}</p>
+    </div>
+  </div>
+</div>
+
+<div class="loading-state" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>Cargando registros de asistencia diaria...</p>
+</div>
+
+<div class="empty-state" *ngIf="!loading && !datos">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+  <h3>No se pudo cargar la información</h3>
+  <p>Verifique su conexión o intente nuevamente más tarde.</p>
+</div>
+
+<div class="main-container" *ngIf="!loading && datos">
+  <!-- Tarjeta Principal del Día Más Reciente -->
+  <div class="card highlight-card" *ngIf="datos.historialAsistencias?.length > 0">
+    <div class="card-header">
+      <h3>Último Registro Diario</h3>
+      <span class="badge" [ngClass]="getBadgeClass(datos.historialAsistencias[0].estado)">
+        {{ datos.historialAsistencias[0].estado }}
+      </span>
+    </div>
+    <div class="latest-details">
+      <div class="detail-item">
+        <span class="label">Fecha de Control:</span>
+        <span class="value">{{ datos.historialAsistencias[0].fecha }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">Registrado en:</span>
+        <span class="value">{{ datos.historialAsistencias[0].curso }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">Supervisado por:</span>
+        <span class="value">{{ datos.historialAsistencias[0].registradoPor }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Línea de Tiempo de Asistencia Diaria (Historial Reciente) -->
+  <div class="card">
+    <div class="card-header">
+      <h3>Línea de Tiempo de Asistencia Diaria</h3>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+    </div>
+
+    <div class="timeline-container" *ngIf="datos.historialAsistencias?.length > 0">
+      <div class="timeline-item" *ngFor="let reg of datos.historialAsistencias">
+        <div class="timeline-marker" [ngClass]="getBadgeClass(reg.estado)"></div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <span class="timeline-date">{{ reg.fecha }}</span>
+            <span class="badge" [ngClass]="getBadgeClass(reg.estado)">{{ reg.estado }}</span>
+          </div>
+          <div class="timeline-body">
+            <p class="timeline-course"><strong>Control:</strong> {{ reg.curso }}</p>
+            <p class="timeline-author"><strong>Registrado por:</strong> {{ reg.registradoPor }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="datos.historialAsistencias?.length === 0" class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+      <h3>Sin Registros Diarios</h3>
+      <p>Aún no se han registrado inasistencias o tardanzas en el historial de este estudiante.</p>
+    </div>
+  </div>
+</div>

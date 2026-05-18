@@ -82,5 +82,24 @@ export class AuxiliarService {
   getCursosByAula(aulaId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiPortal}/aulas/${aulaId}/cursos`);
   }
+
+  buscarEstudiantes(aulaId?: number | null, cargaId?: number | null, query?: string): Observable<any[]> {
+    let params: string[] = [];
+    if (aulaId) params.push(`aulaId=${aulaId}`);
+    if (cargaId) params.push(`cargaId=${cargaId}`);
+    if (query) params.push(`query=${encodeURIComponent(query)}`);
+
+    const qString = params.length > 0 ? `?${params.join('&')}` : '';
+    return this.http.get<any[]>(`${this.apiPortal}/estudiantes-buscar${qString}`);
+  }
+
+  getIncidencias(aulaId?: number | null, query?: string): Observable<any[]> {
+    let params: string[] = [];
+    if (aulaId) params.push(`aulaId=${aulaId}`);
+    if (query) params.push(`query=${encodeURIComponent(query)}`);
+
+    const qString = params.length > 0 ? `?${params.join('&')}` : '';
+    return this.http.get<any[]>(`${this.apiPortal}/incidencias${qString}`);
+  }
 }
 

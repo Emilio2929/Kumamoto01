@@ -2,7 +2,21 @@
   <header class="content-header">
     <div class="header-left">
       <h1>Control de Asistencia</h1>
-      <p>Aula: {{ getAulaName() }} · Hoy {{ hoy | date:'dd/MM/yyyy' }}</p>
+      <p>Hoy {{ hoy | date:'dd/MM/yyyy' }}</p>
+    </div>
+    <div class="header-selectors">
+      <div class="select-box">
+        <label>Aula Asignada:</label>
+        <select [(ngModel)]="selectedAulaId" (change)="onAulaChange()" class="custom-select">
+          <option *ngFor="let a of aulas" [value]="a.aulaId">{{a.gradoNombre}} {{a.seccionLetra}}</option>
+        </select>
+      </div>
+      <div class="select-box" *ngIf="cursosHoyAula.length > 0">
+        <label>Curso de Hoy:</label>
+        <select [(ngModel)]="selectedCargaId" (change)="onCargaChange()" class="custom-select">
+          <option *ngFor="let c of cursosHoyAula" [value]="c.cargaId">{{c.nombre}} ({{c.horario}})</option>
+        </select>
+      </div>
     </div>
   </header>
 

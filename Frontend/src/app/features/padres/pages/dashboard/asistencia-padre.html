@@ -1,47 +1,132 @@
-<div class="dashboard-header" *ngIf="asistencias">
+<div class="dashboard-header" *ngIf="datos">
   <div class="header-content">
     <div>
-      <h1>Registro de Asistencia Anual</h1>
-      <p>Detalle de faltas, tardanzas y justificaciones en tiempo real</p>
+      <h1>Control de Asistencia e Incidencias</h1>
+      <p>{{ datos?.estudiante }} · {{ datos?.grado }}</p>
     </div>
   </div>
 </div>
 
 <div class="loading-state" *ngIf="loading">
   <div class="spinner"></div>
-  <p>Cargando registros de asistencia...</p>
+  <p>Cargando información del estudiante...</p>
 </div>
 
-<div class="empty-state" *ngIf="!loading && asistencias?.length === 0">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
-  <h3>Asistencia Perfecta</h3>
-  <p>El estudiante no tiene faltas ni tardanzas registradas hasta el momento.</p>
+<div class="empty-state" *ngIf="!loading && !datos">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+  <h3>No se pudo cargar la información</h3>
+  <p>Verifique su conexión o intente nuevamente más tarde.</p>
 </div>
 
-<div class="card" *ngIf="!loading && (asistencias?.length ?? 0) > 0">
-  <div class="card-header">
-    <h3>Detalle de Inasistencias</h3>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+<div class="main-container" *ngIf="!loading && datos">
+  <!-- Pestañas de Navegación -->
+  <div class="nav-tabs">
+    <button class="tab-btn" [ngClass]="{'active': pestanaActiva === 'resumen'}" (click)="cambiarPestana('resumen')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
+      Consolidado por Cursos
+    </button>
+    <button class="tab-btn" [ngClass]="{'active': pestanaActiva === 'historial'}" (click)="cambiarPestana('historial')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+      Historial Detallado
+    </button>
+    <button class="tab-btn" [ngClass]="{'active': pestanaActiva === 'incidencias'}" (click)="cambiarPestana('incidencias')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+      Incidencias ({{ datos.incidencias?.length ?? 0 }})
+    </button>
   </div>
-  
-  <div class="table-responsive">
-    <table class="attendance-table">
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Estado</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let registro of asistencias">
-          <td class="date-cell">{{ registro.fecha | date:'EEEE, d MMMM y' : '' : 'es-PE' }}</td>
-          <td>
-            <span class="status-badge" [ngClass]="registro.estado">
-              {{ registro.estado }}
-            </span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+
+  <!-- PESTAÑA 1: Resumen por Cursos -->
+  <div class="card" *ngIf="pestanaActiva === 'resumen'">
+    <div class="card-header">
+      <h3>Consolidado de Faltas y Tardanzas por Curso</h3>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-left">Área Curricular / Curso</th>
+            <th>Asistencias (P)</th>
+            <th>Tardanzas (T)</th>
+            <th>Faltas (F)</th>
+            <th>Justificados (J)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of datos.resumenCursos">
+            <td class="course-name">{{ item.curso }}</td>
+            <td><span class="badge badge-success">{{ item.presentes }}</span></td>
+            <td><span class="badge badge-warning">{{ item.tardanzas }}</span></td>
+            <td><span class="badge badge-danger">{{ item.faltas }}</span></td>
+            <td><span class="badge badge-info">{{ item.justificados }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PESTAÑA 2: Historial Detallado -->
+  <div class="card" *ngIf="pestanaActiva === 'historial'">
+    <div class="card-header">
+      <h3>Historial Detallado de Asistencia</h3>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+    </div>
+
+    <div class="table-responsive" *ngIf="datos.historialAsistencias?.length > 0">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-left">Curso / Asignatura</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Registrado Por</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let reg of datos.historialAsistencias">
+            <td class="course-name">{{ reg.curso }}</td>
+            <td class="date-cell">{{ reg.fecha }}</td>
+            <td>
+              <span class="badge" [ngClass]="getBadgeClass(reg.estado)">{{ reg.estado }}</span>
+            </td>
+            <td class="author-cell">{{ reg.registradoPor }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="datos.historialAsistencias?.length === 0" class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+      <h3>Sin Registros Históricos</h3>
+      <p>Aún no se han registrado inasistencias o tardanzas en el historial.</p>
+    </div>
+  </div>
+
+  <!-- PESTAÑA 3: Incidencias -->
+  <div class="card" *ngIf="pestanaActiva === 'incidencias'">
+    <div class="card-header">
+      <h3>Registro de Incidencias Conductuales y Académicas</h3>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+    </div>
+
+    <div class="incidencias-grid" *ngIf="datos.incidencias?.length > 0">
+      <div class="incidencia-card" *ngFor="let inc of datos.incidencias">
+        <div class="inc-header">
+          <span class="inc-tipo">{{ inc.tipo }}</span>
+          <span class="inc-fecha">{{ inc.fecha }}</span>
+        </div>
+        <p class="inc-desc">{{ inc.descripcion }}</p>
+        <div class="inc-footer">
+          <span>Registrado por: <strong>{{ inc.registradoPor }}</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="datos.incidencias?.length === 0" class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /><path d="m9 12 2 2 4-4" /></svg>
+      <h3>Expediente Impecable</h3>
+      <p>El estudiante no tiene ninguna incidencia conductual o académica registrada.</p>
+    </div>
   </div>
 </div>

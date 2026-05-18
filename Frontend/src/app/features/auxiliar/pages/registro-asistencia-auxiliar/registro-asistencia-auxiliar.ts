@@ -1,9 +1,9 @@
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { AuxiliarService, AsistenciaAlumnoHoyDto, AulaAsignadaAuxiliarDto } from '../../../../core/services/auxiliar';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { IncidenciasService } from '../../../../core/services/incidencias';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
-import { ActivatedRoute, RouterModule } from '@angular/router';
-import { AuxiliarService, AsistenciaAlumnoHoyDto, AulaAsignadaAuxiliarDto } from '../../../../core/services/auxiliar';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { IncidenciasService } from '../../../../core/services/incidencias';
 
 type AsistenciaValor = 'P' | 'F' | 'T';
 
@@ -15,20 +15,25 @@ type Row = {
 @Component({
   selector: 'app-registro-asistencia-auxiliar',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule],
   templateUrl: './registro-asistencia-auxiliar.html',
   styleUrl: './registro-asistencia-auxiliar.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegistroAsistenciaAuxiliarComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly svc = inject(AuxiliarService);
   private readonly incidenciasSvc = inject(IncidenciasService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly fb = inject(FormBuilder);
 
-  aulaId = Number(this.route.snapshot.paramMap.get('aulaId'));
-  cargaId = Number(this.route.snapshot.paramMap.get('cargaId'));
+  aulaId = 0;
+  cargaId = 0;
+
+  selectedAulaId = 0;
+  selectedCargaId = 0;
+  cursosHoyAula: any[] = [];
 
   loading = true;
   saving = false;
@@ -55,11 +60,62 @@ export class RegistroAsistenciaAuxiliarComponent implements OnInit {
   confirmarGuardarOpen = false;
 
   ngOnInit(): void {
-    // Cargar nombres de aulas para el header
     this.svc.getMisAulas().subscribe(data => {
       this.aulas = data;
-      this.cdr.markForCheck();
+      this.actualizarSelectores();
+      this.cdr.detectChanges();
     });
+
+    this.route.paramMap.subscribe(params => {
+      this.aulaId = Number(params.get('aulaId'));
+      this.cargaId = Number(params.get('cargaId'));
+      this.selectedAulaId = this.aulaId;
+      this.selectedCargaId = this.cargaId;
+      this.actualizarSelectores();
+      this.cargarAsistencia();
+    });
+  }
+
+  actualizarSelectores() {
+    if (this.aulas.length > 0 && this.selectedAulaId) {
+      const aula = this.aulas.find(a => a.aulaId === Number(this.selectedAulaId));
+      if (aula) {
+        this.cursosHoyAula = aula.cursosHoy || [];
+      } else {
+        this.cursosHoyAula = [];
+      }
+      this.cdr.detectChanges();
+    }
+  }
+
+  onAulaChange() {
+    const aula = this.aulas.find(a => a.aulaId === Number(this.selectedAulaId));
+    if (aula && aula.cursosHoy && aula.cursosHoy.length > 0) {
+      const primerCurso = aula.cursosHoy[0].cargaId;
+      this.router.navigate(['/dashboard/auxiliar/asistencia', aula.aulaId, primerCurso]);
+    } else if (aula) {
+      this.router.navigate(['/dashboard/auxiliar/asistencia', aula.aulaId, 0]);
+    }
+  }
+
+  onCargaChange() {
+    if (this.selectedAulaId && this.selectedCargaId) {
+      this.router.navigate(['/dashboard/auxiliar/asistencia', this.selectedAulaId, this.selectedCargaId]);
+    }
+  }
+
+  cargarAsistencia() {
+    this.loading = true;
+    this.errorMsg = null;
+    this.cdr.detectChanges();
+
+    if (!this.cargaId) {
+      this.loading = false;
+      this.errorMsg = 'No hay clases programadas para esta aula el día de hoy.';
+      this.rows = [];
+      this.cdr.detectChanges();
+      return;
+    }
 
     this.svc.getAsistenciaHoy(this.aulaId, this.cargaId).subscribe({
       next: (res) => {
@@ -73,13 +129,13 @@ export class RegistroAsistenciaAuxiliarComponent implements OnInit {
         }));
         this.loading = false;
         this.errorMsg = null;
-        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error cargando asistencia hoy', err);
         this.loading = false;
         this.errorMsg = 'No se pudo cargar la asistencia del aula.';
-        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
     });
   }

@@ -23,19 +23,16 @@
 
   <!-- Mensajes de Feedback -->
   <div class="feedback-banner success" *ngIf="mensajeExito">
-    <div class="icon">✅</div>
     <span>{{mensajeExito}}</span>
   </div>
 
   <div class="feedback-banner error" *ngIf="mensajeError">
-    <div class="icon">❌</div>
     <span>{{mensajeError}}</span>
   </div>
 
   <!-- 1. Lista de Clases del Día -->
   <div *ngIf="!loading && !claseSeleccionada" class="classes-grid">
     <div *ngIf="clasesHoy.length === 0" class="empty-state">
-      <div class="icon">📅</div>
       <h3>No tienes clases programadas para hoy</h3>
       <p>Tu horario está libre o no se han asignado cursos para este día.</p>
     </div>

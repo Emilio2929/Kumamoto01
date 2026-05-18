@@ -94,11 +94,7 @@ export class LoginComponent {
 
 
   abrirLogin(portal: 'personal' | 'padres' | 'portal'): void {
-    this.loginPortal = portal;
-    this.showLoginModal = true;
-    this.mensajeError = '';
-    this.loginForm.reset();
-    this.cdr.markForCheck();
+    this.router.navigate(['/ingresar']);
   }
 
   cerrarLogin(): void {

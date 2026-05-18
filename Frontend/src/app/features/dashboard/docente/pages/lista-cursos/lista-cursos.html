@@ -1,11 +1,67 @@
-<div class="page-header">
-  <h1>Mis Cursos</h1>
-  <p>Tu carga académica asignada.</p>
+<!-- CONTENEDOR PRINCIPAL DEL HORARIO PLANTILLA -->
+<div class="plantilla-horario-container" *ngIf="!loading && !errorMsg">
+  
+  <!-- ENCABEZADO FORMAL INSTITUCIONAL -->
+  <div class="header-institucional">
+    <div class="header-titles">
+      <h1 class="main-title">Horario Académico Docente</h1>
+      <p class="sub-title">Asignación Oficial de Carga Académica y Aulas</p>
+    </div>
+    <div class="header-badge">
+      <span>Período Lectivo Vigente</span>
+    </div>
+  </div>
+
+  <div *ngIf="cargas.length === 0" class="empty-state" style="margin: 1rem 0;">
+    <h3>No tienes cursos ni horarios asignados</h3>
+    <p>Si esto es un error, revisa tu asignación de carga académica con la Dirección.</p>
+  </div>
+
+  <!-- TABLA PRINCIPAL DEL HORARIO -->
+  <div class="tabla-wrapper" *ngIf="cargas.length > 0">
+    <table class="horario-table">
+      <thead>
+        <tr>
+          <th class="col-horas">HORAS</th>
+          <th class="col-dia" *ngFor="let dia of diasSemana">{{ dia }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let tramo of tramos">
+          <td class="cell-horas">
+            <span class="hora-text">{{ tramo.horaInicio }} - {{ tramo.horaFin }}</span>
+          </td>
+          <td class="cell-curso" *ngFor="let dia of diasSemana">
+            <div class="cursos-en-celda" *ngIf="matrizHorario[tramo.etiqueta][dia].length > 0">
+              <div class="curso-item" *ngFor="let c of matrizHorario[tramo.etiqueta][dia]">
+                <div class="curso-nombre">{{ c.cursoNombre }}</div>
+                <div class="curso-meta">{{ c.gradoNombre }} · Sec. {{ c.seccionLetra }}</div>
+                <div class="curso-aula">{{ c.aulaDescripcion || 'Aula General' }}</div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- BOTTOM BANNERS: NOMBRE Y GRADO/GRUPO -->
+  <div class="bottom-banners">
+    <div class="footer-banner left">
+      <span class="footer-label">NOMBRE:</span>
+      <span class="footer-value">{{ docenteNombre }}</span>
+    </div>
+    <div class="footer-banner right">
+      <span class="footer-label">GRADO Y GRUPO:</span>
+      <span class="footer-value">{{ cargas.length }} Curso(s) Asignado(s)</span>
+    </div>
+  </div>
+
 </div>
 
 <div *ngIf="loading" class="state-message loading">
   <div class="spinner"></div>
-  <span>Cargando cursos...</span>
+  <span>Cargando tu horario académico...</span>
 </div>
 
 <div *ngIf="errorMsg" class="state-message error">
@@ -15,42 +71,5 @@
     <line x1="12" y1="16" x2="12.01" y2="16"></line>
   </svg>
   <span>{{ errorMsg }}</span>
-</div>
-
-<div *ngIf="!loading && !errorMsg && cargas.length === 0" class="empty-state">
-  <h3>No tienes cursos asignados</h3>
-  <p>Si esto es un error, revisa tu asignación de carga académica.</p>
-</div>
-
-<div class="courses-grid" *ngIf="!loading && !errorMsg && cargas.length > 0">
-  <article class="course-card" *ngFor="let c of cargas; trackBy: trackByCargaId">
-    <div class="course-top">
-      <div class="course-title">
-        <h3>{{ c.cursoNombre }}</h3>
-        <p>{{ c.gradoNombre }} · Sección {{ c.seccionLetra }}</p>
-      </div>
-      <span class="pill">ID {{ c.id }}</span>
-    </div>
-
-    <div class="course-body">
-      <div class="meta-row">
-        <span class="label">Aula</span>
-        <span class="value">{{ c.aulaDescripcion || '—' }}</span>
-      </div>
-      <div class="meta-row">
-        <span class="label">Periodo</span>
-        <span class="value">{{ c.periodoLectivo || '—' }}</span>
-      </div>
-
-      <div class="horarios">
-        <span class="label">Horario</span>
-        <div class="chips">
-          <span class="chip" *ngFor="let h of c.horarios">
-            {{ h.diaSemana }} · {{ h.horaInicio }}–{{ h.horaFin }}
-          </span>
-        </div>
-      </div>
-    </div>
-  </article>
 </div>
 

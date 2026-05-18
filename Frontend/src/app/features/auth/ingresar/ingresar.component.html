@@ -1,0 +1,81 @@
+<div class="auth-page-wrapper">
+
+  <div class="auth-card">
+    <!-- LADO IZQUIERDO: INSIGNIA Y BRANDING -->
+    <div class="auth-branding">
+      <div class="branding-content">
+        <div class="glow-circle"></div>
+        <img src="/assets/img/insignia_colegio.png" alt="Insignia Kumamoto" class="insignia-img">
+        <h1 class="school-name">I.E. 3092<br>Kumamoto I</h1>
+        <p class="school-motto">Excelencia Educativa y Formación en Valores para un Mundo Global</p>
+        <div class="school-badges">
+          <span class="badge">Gestión Pública</span>
+          <span class="badge">Nivel Secundaria</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LADO DERECHO: FORMULARIO DE INICIO DE SESIÓN -->
+    <div class="auth-form-container">
+      <div class="form-header">
+        <h2>Ingreso al Sistema</h2>
+        <p>Acceda con sus credenciales institucionales</p>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="error-msg" *ngIf="mensajeError">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span>{{ mensajeError }}</span>
+        </div>
+
+        <div class="input-group">
+          <label>Correo Institucional</label>
+          <div class="input-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+            <input type="email" formControlName="correo" placeholder="ejemplo@kumamoto.edu.pe">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Contraseña</label>
+          <div class="input-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <input type="password" formControlName="password" placeholder="••••••••••••">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-login" [disabled]="loginForm.invalid || cargando">
+          <span *ngIf="!cargando">Ingresar ahora</span>
+          <div class="loader" *ngIf="cargando"></div>
+        </button>
+      </form>
+
+      <!-- Botón de volver integrado en el footer -->
+      <div class="form-footer">
+        <a routerLink="/login" class="btn-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          Volver al Portal
+        </a>
+        <span class="footer-divider">·</span>
+        <a href="https://wa.me/51987654321" target="_blank" class="btn-support">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.18-1.42a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+          </svg>
+          Soporte Técnico
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

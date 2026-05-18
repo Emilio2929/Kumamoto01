@@ -61,8 +61,12 @@ export class Perfil implements OnInit {
         this.userData.username = res.correo || '';
         this.userData.email = res.correoPersonal || '';
         this.userData.phone = res.telefono || '';
+        this.cdr.detectChanges();
       },
-      error: () => this.showModal('Error', 'Error al cargar el perfil.', 'error')
+      error: () => {
+        this.showModal('Error', 'Error al cargar el perfil.', 'error');
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -74,9 +78,11 @@ export class Perfil implements OnInit {
       }).subscribe({
         next: (res: any) => {
           this.showModal('Perfil Actualizado', res.mensaje || "¡Datos de contacto actualizados correctamente!", 'success');
+          this.cdr.detectChanges();
         },
         error: (err: any) => {
           this.showModal('Error', err.error?.mensaje || "Error al actualizar los datos.", 'error');
+          this.cdr.detectChanges();
         }
       });
     });

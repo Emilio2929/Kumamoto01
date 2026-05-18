@@ -1,7 +1,6 @@
 <div class="page-container">
   <div class="header">
     <h1>Mis Aulas Asignadas</h1>
-    <p>Supervisión diaria y verificación de asistencia por curso.</p>
   </div>
 
   <div *ngIf="loading" class="loading-state">
@@ -18,16 +17,15 @@
       <div class="card-header">
         <div class="aula-info">
           <h3>{{ aula.gradoNombre }} · Sección {{ aula.seccionLetra }}</h3>
-          <span class="aula-desc">{{ aula.aulaDescripcion || 'Aula General' }}</span>
+          <span class="aula-desc" *ngIf="aula.aulaDescripcion">{{ aula.aulaDescripcion }}</span>
         </div>
-        <div class="status-badge" [ngClass]="estadoClass(aula.estadoAsistenciaHoy)">
-          {{ estadoLabel(aula.estadoAsistenciaHoy) }}
+        <div class="status-badge" [ngClass]="estadoClass(aula)">
+          {{ estadoLabel(aula) }}
         </div>
       </div>
 
       <div class="courses-section">
-        <label>Cursos de Hoy</label>
-        <div class="course-list">
+        <div class="course-list" *ngIf="aula.cursosHoy.length > 0">
           <div class="course-item" *ngFor="let curso of aula.cursosHoy" 
                [class.active]="curso.esActual" 
                (click)="irAsistencia(aula.aulaId, curso.cargaId)">
@@ -40,10 +38,10 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </div>
           </div>
+        </div>
 
-          <div class="no-courses" *ngIf="aula.cursosHoy.length === 0">
-            No hay clases programadas para hoy.
-          </div>
+        <div class="no-courses" *ngIf="aula.cursosHoy.length === 0">
+          Sin clases programadas hoy
         </div>
       </div>
     </div>

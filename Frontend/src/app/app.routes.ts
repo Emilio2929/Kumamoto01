@@ -14,6 +14,11 @@ export const routes: Routes = [
 			import('./features/auth/login/login').then((m) => m.LoginComponent),
 	},
 	{
+		path: 'ingresar',
+		loadComponent: () =>
+			import('./features/auth/ingresar/ingresar').then((m) => m.IngresarComponent),
+	},
+	{
 		path: 'dashboard/directora',
 		canActivate: [directoraGuard],
 		loadComponent: () =>
@@ -71,9 +76,11 @@ export const routes: Routes = [
 			{
 				path: 'desbloqueo-notas',
 				loadComponent: () => import('./features/dashboard/directora/pages/desbloqueo-notas/desbloqueo-notas').then(m => m.DesbloqueoNotas)
+			},
+			{
+				path: 'configuracion-anio',
+				loadComponent: () => import('./features/dashboard/directora/pages/configuracion-anio/configuracion-anio').then(m => m.ConfiguracionAnioComponent)
 			}
-
-
 		]
 	},
 	{
@@ -126,12 +133,36 @@ export const routes: Routes = [
 				data: { title: 'Calificaciones', description: 'Módulo de gestión de competencias y notas.' },
 			},
 			{
+				path: 'incidencias',
+				loadComponent: () =>
+					import('./features/dashboard/docente/pages/incidencias/incidencias').then(
+						(m) => m.IncidenciasDocenteComponent
+					),
+				data: { title: 'Registro de Incidencias', description: 'Registro de incidencias disciplinarias y académicas.' },
+			},
+			{
+				path: 'reportes',
+				loadComponent: () =>
+					import('./features/dashboard/docente/pages/reportes/reportes-docente').then(
+						(m) => m.ReportesDocenteComponent
+					),
+				data: { title: 'Reportes y Métricas', description: 'Monitoreo de competencias y detección de estudiantes para refuerzo.' },
+			},
+			{
 				path: 'avisos',
 				loadComponent: () =>
 					import('./features/dashboard/docente/pages/placeholder/placeholder').then(
 						(m) => m.PlaceholderDocenteComponent
 					),
 				data: { title: 'Mis Avisos', description: 'Próximamente: avisos y comunicaciones.' },
+			},
+			{
+				path: 'perfil',
+				loadComponent: () =>
+					import('./features/dashboard/directora/pages/perfil/perfil').then(
+						(m) => m.Perfil
+					),
+				data: { title: 'Configuración de Perfil', description: 'Actualización de datos de contacto y cambio de credenciales de acceso.' },
 			},
 		],
 	},
@@ -150,12 +181,32 @@ export const routes: Routes = [
 				loadComponent: () => import('./features/padres/pages/dashboard/dashboard-padre').then(m => m.DashboardPadresComponent)
 			},
 			{
-				path: 'notas',
-				loadComponent: () => import('./features/padres/pages/dashboard/notas-padre').then(m => m.NotasPadresComponent)
+				path: 'asistencia-diaria',
+				loadComponent: () => import('./features/padres/pages/dashboard/asistencia-diaria/asistencia-diaria').then(m => m.AsistenciaDiariaComponent)
 			},
 			{
 				path: 'asistencia',
 				loadComponent: () => import('./features/padres/pages/dashboard/asistencia-padre').then(m => m.AsistenciaPadresComponent)
+			},
+			{
+				path: 'incidencias',
+				loadComponent: () => import('./features/padres/pages/dashboard/incidencias/incidencias-padre').then(m => m.IncidenciasPadresComponent)
+			},
+			{
+				path: 'notas',
+				loadComponent: () => import('./features/padres/pages/dashboard/notas-padre').then(m => m.NotasPadresComponent)
+			},
+			{
+				path: 'horario',
+				loadComponent: () => import('./features/padres/pages/dashboard/horario/horario-padre').then(m => m.HorarioPadresComponent)
+			},
+			{
+				path: 'perfil',
+				loadComponent: () =>
+					import('./features/dashboard/directora/pages/perfil/perfil').then(
+						(m) => m.Perfil
+					),
+				data: { title: 'Configuración de Perfil', description: 'Actualización de datos de contacto y cambio de credenciales de acceso.' },
 			}
 		]
 	},
@@ -192,11 +243,26 @@ export const routes: Routes = [
 					),
 			},
 			{
+				path: 'incidencias',
+				loadComponent: () =>
+					import('./features/auxiliar/pages/incidencias-auxiliar/incidencias-auxiliar').then(
+						(m) => m.IncidenciasAuxiliarComponent
+					),
+			},
+			{
 				path: 'asistencia/:aulaId/:cargaId',
 				loadComponent: () =>
 					import(
 						'./features/auxiliar/pages/registro-asistencia-auxiliar'
 					).then((m) => m.RegistroAsistenciaAuxiliarComponent),
+			},
+			{
+				path: 'perfil',
+				loadComponent: () =>
+					import('./features/dashboard/directora/pages/perfil/perfil').then(
+						(m) => m.Perfil
+					),
+				data: { title: 'Configuración de Perfil', description: 'Actualización de datos de contacto y cambio de credenciales de acceso.' },
 			},
 		],
 	},

@@ -1,7 +1,8 @@
 import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 export interface PadreDetalleDto {
   id: number;
@@ -41,6 +42,11 @@ export class PadresService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/padres`;
 
+  private resumenCache: any = null;
+  private libretaCache: { [id: number]: any } = {};
+  private asistenciasCache: { [id: number]: any } = {};
+  private dashboardCache: { [dni: string]: any } = {};
+
   getAll(): Observable<PadreDetalleDto[]> {
     return this.http.get<PadreDetalleDto[]>(this.api);
   }
@@ -68,18 +74,53 @@ export class PadresService {
   // --- PORTAL PADRES ---
 
   getResumenHijo(): Observable<any> {
-    return this.http.get<any>(`${this.api}/me/estudiante/resumen`);
+    if (this.resumenCache) {
+      return of(this.resumenCache);
+    }
+    return this.http.get<any>(`${this.api}/me/estudiante/resumen`).pipe(
+      tap(data => this.resumenCache = data)
+    );
   }
 
   getLibretaHijo(idEstudiante: number): Observable<any> {
-    return this.http.get<any>(`${this.api}/libreta/${idEstudiante}`);
+    if (this.libretaCache[idEstudiante]) {
+      return of(this.libretaCache[idEstudiante]);
+    }
+    return this.http.get<any>(`${this.api}/libreta/${idEstudiante}`).pipe(
+      tap(data => this.libretaCache[idEstudiante] = data)
+    );
   }
 
   getAsistenciasHijo(): Observable<any[]> {
     return this.http.get<any[]>(`${this.api}/me/estudiante/asistencias`);
   }
 
+  getAsistenciasEIncidenciasHijo(idEstudiante: number): Observable<any> {
+    if (this.asistenciasCache[idEstudiante]) {
+      return of(this.asistenciasCache[idEstudiante]);
+    }
+    return this.http.get<any>(`${this.api}/asistencias/${idEstudiante}`).pipe(
+      tap(data => this.asistenciasCache[idEstudiante] = data)
+    );
+  }
+
+  getHorarioHijo(idEstudiante: number): Observable<any> {
+    return this.http.get<any>(`${this.api}/horario/${idEstudiante}`);
+  }
+
   getDashboardCompleto(dni: string): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/api/parent/dashboard/${dni}`);
+    if (this.dashboardCache[dni]) {
+      return of(this.dashboardCache[dni]);
+    }
+    return this.http.get<any>(`${environment.apiUrl}/api/parent/dashboard/${dni}`).pipe(
+      tap(data => this.dashboardCache[dni] = data)
+    );
+  }
+
+  limpiarCachePadres() {
+    this.resumenCache = null;
+    this.libretaCache = {};
+    this.asistenciasCache = {};
+    this.dashboardCache = {};
   }
 }

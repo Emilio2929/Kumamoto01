@@ -235,5 +235,18 @@ export class EstructuraService {
   asignarTutor(aulaId: number, tutorId: number | null): Observable<any> {
     return this.http.patch(`${this.apiBase}/aulas/${aulaId}/tutor`, { tutorId });
   }
+
+  // ══════════════════════════════════════════════════════
+  //  CONFIGURACIÓN AÑO LECTIVO (BIMESTRES Y SEMANAS)
+  // ══════════════════════════════════════════════════════
+
+  getConfiguracionAnio(anioLectivo?: string): Observable<any> {
+    const param = anioLectivo ? `?anioLectivo=${anioLectivo}` : '';
+    return this.http.get<any>(`${this.apiBase}/configuracion-anio${param}`);
+  }
+
+  saveConfiguracionAnio(dto: any): Observable<any> {
+    return this.http.post<any>(`${this.apiBase}/configuracion-anio`, dto);
+  }
 }
 

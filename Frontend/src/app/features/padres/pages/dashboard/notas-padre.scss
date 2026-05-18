@@ -23,75 +23,165 @@
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   
-  &:hover {
-    background-color: var(--primary-dark);
+  svg { width: 18px; height: 18px; }
+  &:hover { background-color: var(--primary-dark); }
+}
+
+.bimestres-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+
+  .tab-btn {
+    background: white;
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1.5rem;
+    border-radius: 14px;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+    white-space: nowrap;
+
+    &:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    &.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
   }
 }
 
-.card {
+.bimestre-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.curso-card {
   background: white;
   border-radius: 20px;
   padding: 1.5rem;
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
 
-  .card-header {
+  .curso-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    h3 { font-size: 1.25rem; font-weight: 700; color: var(--text-main); }
-    svg { width: 24px; height: 24px; color: var(--primary); }
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+
+    .curso-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .curso-promedio {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+
+      .badge-prom {
+        padding: 0.4rem 1rem;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        background: #f1f5f9;
+        color: var(--text-muted);
+
+        &.nota-a { background: #dcfce7; color: #166534; }
+        &.nota-b { background: #fef9c3; color: #854d0e; }
+        &.nota-c { background: #fee2e2; color: #991b1b; }
+      }
+    }
   }
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
 }
 
 .grades-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 600px;
-  
+  min-width: 850px;
+
   th, td {
-    padding: 1rem;
+    padding: 0.85rem 0.5rem;
     text-align: center;
     border-bottom: 1px solid var(--border-color);
+    font-size: 0.95rem;
   }
-  
+
   th {
     background-color: var(--bg-main);
     color: var(--text-main);
     font-weight: 700;
-    font-size: 0.95rem;
-    &:first-child { text-align: left; border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
-    &:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+
+    &.col-comp { text-align: left; padding-left: 1rem; border-top-left-radius: 12px; border-bottom-left-radius: 12px; width: 40%; }
+    &.col-final { border-top-right-radius: 12px; border-bottom-right-radius: 12px; width: 15%; }
+    &.col-sem { width: 5%; }
   }
-  
-  .course-name {
-    text-align: left;
-    font-weight: 600;
-    color: var(--text-main);
+
+  td {
+    &.comp-name-cell {
+      text-align: left;
+      padding-left: 1rem;
+      color: var(--text-main);
+      font-weight: 500;
+      line-height: 1.4;
+
+      strong { color: var(--primary); font-weight: 700; }
+    }
   }
-  
-  .grade-badge {
+
+  .nota-pill {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 8px;
-    font-weight: 800;
+    font-weight: 700;
+    font-size: 0.9rem;
     background-color: #f1f5f9;
     color: var(--text-muted);
-    
-    &.AD, &.A { background-color: #dcfce7; color: #166534; }
-    &.B { background-color: #fef9c3; color: #854d0e; }
-    &.C { background-color: #fee2e2; color: #991b1b; }
+
+    &.nota-a { background-color: #dcfce7; color: #166534; }
+    &.nota-b { background-color: #fef9c3; color: #854d0e; }
+    &.nota-c { background-color: #fee2e2; color: #991b1b; }
+
+    &.final-pill {
+      width: 40px;
+      height: 40px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      border-radius: 10px;
+    }
   }
 }
 
-/* Empty State */
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
@@ -119,3 +209,9 @@
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+@media print {
+  .no-print { display: none !important; }
+  .printable-area { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+  .curso-card { box-shadow: none !important; border: 1px solid #ccc !important; page-break-inside: avoid; margin-bottom: 1.5rem; }
+}

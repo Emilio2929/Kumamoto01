@@ -1,0 +1,47 @@
+<div class="dashboard-header" *ngIf="datos">
+  <div class="header-content">
+    <div>
+      <h1>Registro de Incidencias</h1>
+      <p>Seguimiento conductual y académico en tiempo real · {{ datos?.estudiante }}</p>
+    </div>
+  </div>
+</div>
+
+<div class="loading-state" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>Cargando incidencias del estudiante...</p>
+</div>
+
+<div class="empty-state" *ngIf="!loading && !datos">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+  <h3>No se pudo cargar la información</h3>
+  <p>Verifique su conexión o intente nuevamente más tarde.</p>
+</div>
+
+<div class="main-container" *ngIf="!loading && datos">
+  <div class="card">
+    <div class="card-header">
+      <h3>Incidencias Registradas ({{ datos.incidencias?.length ?? 0 }})</h3>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+    </div>
+
+    <div class="incidencias-grid" *ngIf="datos.incidencias?.length > 0">
+      <div class="incidencia-card" *ngFor="let inc of datos.incidencias">
+        <div class="inc-header">
+          <span class="inc-tipo">{{ inc.tipo }}</span>
+          <span class="inc-fecha">{{ inc.fecha }}</span>
+        </div>
+        <p class="inc-desc">{{ inc.descripcion }}</p>
+        <div class="inc-footer">
+          <span>Registrado por: <strong>{{ inc.registradoPor }}</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="datos.incidencias?.length === 0" class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /><path d="m9 12 2 2 4-4" /></svg>
+      <h3>Expediente Impecable</h3>
+      <p>El estudiante no tiene ninguna incidencia conductual o académica registrada en el periodo actual.</p>
+    </div>
+  </div>
+</div>

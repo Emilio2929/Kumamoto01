@@ -1,0 +1,136 @@
+<div class="config-container">
+  <!-- Cabecera de Pantalla -->
+  <div class="header-section">
+    <div class="title-area">
+      <h1>Configuración del Año Lectivo</h1>
+      <p>Define la estructura de periodos (bimestres) y la duración en semanas para el año escolar actual</p>
+    </div>
+  </div>
+
+  <!-- Estado de Carga -->
+  <div class="state-card loading" *ngIf="loading">
+    <div class="spinner"></div>
+    <span>Cargando la configuración del año lectivo...</span>
+  </div>
+
+  <!-- Alertas de Éxito y Error -->
+  <div class="alert alert-success" *ngIf="mensajeExito">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
+    <span>{{ mensajeExito }}</span>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="mensajeError">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <span>{{ mensajeError }}</span>
+  </div>
+
+  <!-- Formulario Principal -->
+  <form [formGroup]="configForm" (ngSubmit)="abrirModalConfirmacion()" *ngIf="!loading">
+    <!-- Tarjeta de Configuración General -->
+    <div class="card general-card">
+      <div class="card-header">
+        <h2>Parámetros Generales</h2>
+      </div>
+      <div class="card-body general-grid">
+        <div class="form-group">
+          <label for="anioLectivo">Año Lectivo Oficial</label>
+          <input id="anioLectivo" type="text" formControlName="anioLectivo" readonly class="input-readonly" />
+          <span class="hint">El año en curso configurado para la institución.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="bimestresCount">Cantidad de Bimestres en el Año</label>
+          <select id="bimestresCount" formControlName="bimestresCount" (change)="actualizarConteoBimestres()" class="form-select">
+            <option [ngValue]="1">1 Periodo (Anual / Monolítico)</option>
+            <option [ngValue]="2">2 Periodos (Semestral)</option>
+            <option [ngValue]="3">3 Periodos (Trimestral)</option>
+            <option [ngValue]="4">4 Periodos (Bimestral - Estándar)</option>
+            <option [ngValue]="5">5 Periodos</option>
+            <option [ngValue]="6">6 Periodos</option>
+          </select>
+          <span class="hint">Selecciona en cuántos periodos de evaluación se dividirá el año.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de Bimestres -->
+    <div class="bimestres-grid" formArrayName="bimestres">
+      <div class="card bimestre-card" *ngFor="let bForm of bimestresFormArray.controls; let i = index" [formGroupName]="i">
+        <div class="card-header">
+          <div class="header-badge">
+            <span class="badge-num">{{ i + 1 }}</span>
+            <h2>{{ bForm.get('nombre')?.value || (i + 1) + '° Bimestre' }}</h2>
+          </div>
+        </div>
+        <div class="card-body form-grid">
+          <div class="form-group">
+            <label>Nombre del Periodo</label>
+            <input type="text" formControlName="nombre" placeholder="Ej. 1° Bimestre" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label>Duración (Semanas Académicas)</label>
+            <input type="number" formControlName="semanasCount" min="1" max="52" class="form-input" />
+            <span class="hint">Cantidad de semanas para registro de notas y asistencia.</span>
+          </div>
+
+          <div class="form-group">
+            <label>Fecha de Inicio</label>
+            <input type="date" formControlName="fechaInicio" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label>Fecha de Fin</label>
+            <input type="date" formControlName="fechaFin" class="form-input" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón de Guardado General -->
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary btn-save" [disabled]="saving || configForm.invalid">
+        <span class="spinner-btn" *ngIf="saving"></span>
+        <svg *ngIf="!saving" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        <span>{{ saving ? 'Guardando Configuración...' : 'Guardar Estructura del Año Lectivo' }}</span>
+      </button>
+    </div>
+  </form>
+
+  <!-- Modal de Confirmación y Autorización -->
+  <div class="modal-backdrop" *ngIf="mostrarModalAuth" (click)="cerrarModalAuth()"></div>
+  <div class="modal-container" *ngIf="mostrarModalAuth">
+    <div class="modal-header">
+      <h2>Confirmación de Seguridad</h2>
+      <button type="button" class="btn-close" (click)="cerrarModalAuth()">&times;</button>
+    </div>
+    <form (ngSubmit)="guardarConfiguracion()">
+      <div class="modal-body">
+        <p class="modal-warning">Estás a punto de modificar la estructura de bimestres y semanas del año lectivo actual. Esta acción actualizará las vistas de todos los docentes y padres de familia.</p>
+        <div class="form-group modal-auth-group">
+          <label for="contrasenaAuthModal">Contraseña de Autorización (Directivo Actual) <span class="required">*</span></label>
+          <input id="contrasenaAuthModal" name="contrasenaAuth" type="password" [(ngModel)]="contrasenaAuth" placeholder="Introduce tu contraseña actual" class="form-input modal-auth-input" />
+          <span class="hint modal-auth-hint">Por seguridad, valida tu identidad para aplicar los cambios.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-cancel" (click)="cerrarModalAuth()" [disabled]="saving">Cancelar</button>
+        <button type="submit" class="btn btn-primary btn-confirm" [disabled]="saving || !contrasenaAuth">
+          <span class="spinner-btn" *ngIf="saving"></span>
+          <span>{{ saving ? 'Validando y Guardando...' : 'Confirmar y Guardar Cambios' }}</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

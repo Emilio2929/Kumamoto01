@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Kumamoto.API.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -104,7 +105,6 @@ public static class DashboardEndpoints
                 double pctPresente = total > 0 ? Math.Round((double)presentes / total * 100, 1) : 0.0;
                 double pctTarde = total > 0 ? Math.Round((double)tardes / total * 100, 1) : 0.0;
                 double pctFalta = total > 0 ? Math.Round((double)faltas / total * 100, 1) : 0.0;
-
                 // Formatear el nombre corto para la gráfica (ej. "1er Grado" -> "1ro", "2do Grado" -> "2do")
                 string label = g.Nombre;
                 if (label.StartsWith("1")) label = "1ro";
@@ -127,7 +127,7 @@ public static class DashboardEndpoints
             return Results.Ok(resultado);
         })
         .WithName("GetAsistenciaGlobal")
-        .WithSummary("Obtiene el porcentaje de asistencia por grado según filtro (today, week, month)");
+        .WithSummary("Obtiene el porcentaje de asistencia por grado según filtro");
 
         // GET /api/dashboard/risk-monitor-ai
         group.MapGet("/risk-monitor-ai", async (KumamotoDbContext db) =>
@@ -196,7 +196,7 @@ public static class DashboardEndpoints
             });
         })
         .WithName("GetRiskMonitorAI")
-        .WithSummary("Calcula proyecciones de riesgo usando un modelo heurístico (IA) basado en notas y asistencias");
+        .WithSummary("Calcula proyecciones de riesgo usando un modelo heurístico (IA)");
 
         // GET /api/dashboard/risk-monitor-ai/details
         group.MapGet("/risk-monitor-ai/details", async (KumamotoDbContext db) =>
@@ -222,7 +222,7 @@ public static class DashboardEndpoints
                         .Where(c => c.EstudianteId == e.Id && c.Estado == 1 && c.Escala != null)
                         .Select(c => new { 
                             Letra = c.Escala!.Letra, 
-                            Curso = c.Competencia != null && c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : "Curso General", 
+                            Curso = c.Competencia != null ? (c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : (c.Competencia.Carga != null && c.Competencia.Carga.Curso != null ? c.Competencia.Carga.Curso.Nombre : "Curso General")) : "Curso General", 
                             Competencia = c.Competencia != null ? c.Competencia.Nombre : "Evaluación General" 
                         })
                         .ToList()
@@ -299,7 +299,7 @@ public static class DashboardEndpoints
         .WithSummary("Devuelve el detalle de los estudiantes en riesgo detectados por la IA");
 
         // POST /api/dashboard/risk-monitor-ai/notify/{id}
-        group.MapPost("/risk-monitor-ai/notify/{id:int}", async (int id, NotifyRiskDto dto, KumamotoDbContext db) =>
+        group.MapPost("/risk-monitor-ai/notify/{id:int}", async (int id, NotifyRiskDto dto, ClaimsPrincipal user, KumamotoDbContext db) =>
         {
             var estudiante = await db.Estudiantes.FindAsync(id);
             if (estudiante == null)
@@ -308,14 +308,22 @@ public static class DashboardEndpoints
             if (estudiante.PadreId == null)
                 return Results.BadRequest(new { mensaje = "El estudiante no tiene un padre asignado en el sistema." });
 
-            var comunicado = new Kumamoto.API.Models.Comunicado
+            var claim = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? user.FindFirstValue("sub");
+            int remitenteId = int.TryParse(claim, out var uid) ? uid : 1;
+
+            var notificacion = new Kumamoto.API.Models.Notificacion
             {
+                UsuarioDestinoId = estudiante.PadreId.Value,
+                EstudianteId = estudiante.Id,
+                RemitenteId = remitenteId,
+                Tipo = "Académica",
                 Titulo = $"🚨 Alerta Académica (IA) - Nivel {dto.NivelRiesgo}: {estudiante.Nombres} {estudiante.Apellidos}",
-                Contenido = $"Estimado padre de familia, nuestro sistema de Inteligencia Artificial ha detectado un posible riesgo académico para su menor hijo(a).\n\nDetalles del Análisis:\n{dto.Motivo}\n\nPor favor, comuníquese con el tutor del aula lo antes posible para coordinar apoyo.",
-                EsImportante = true,
-                UsuarioId = estudiante.PadreId
+                Mensaje = $"Estimado padre de familia, nuestro sistema de Inteligencia Artificial ha detectado un posible riesgo académico para su menor hijo(a) {estudiante.Nombres} {estudiante.Apellidos}.\n\nDetalles del Análisis:\n{dto.Motivo}\n\nPor favor, comuníquese con el tutor del aula lo antes posible para coordinar apoyo.",
+                FechaEnvio = DateTime.UtcNow,
+                Leido = 0,
+                Estado = 1
             };
-            db.Comunicados.Add(comunicado);
+            db.Notificaciones.Add(notificacion);
 
             // También actualizamos el panel del Padre insertando en AlumnoRiesgo
             var alumnoRiesgo = new Kumamoto.API.Models.AlumnoRiesgo
@@ -331,10 +339,10 @@ public static class DashboardEndpoints
 
             await db.SaveChangesAsync();
 
-            return Results.Ok(new { mensaje = "Notificación enviada al padre exitosamente." });
+            return Results.Ok(new { mensaje = "Notificación directa enviada al padre exitosamente." });
         })
         .WithName("NotifyRiskParent")
-        .WithSummary("Envía una alerta (comunicado) al padre del estudiante");
+        .WithSummary("Envía una notificación directa al padre del estudiante");
 
         // GET /api/dashboard/libreta/{id}
         group.MapGet("/libreta/{id:int}", async (int id, KumamotoDbContext db) =>
@@ -355,6 +363,7 @@ public static class DashboardEndpoints
             // 2. Obtener todas las calificaciones del estudiante
             var calificaciones = await db.Calificaciones
                 .Include(c => c.Competencia).ThenInclude(comp => comp!.Curso)
+                .Include(c => c.Competencia).ThenInclude(comp => comp!.Carga).ThenInclude(ca => ca!.Curso)
                 .Include(c => c.Semana).ThenInclude(s => s!.Periodo)
                 .Include(c => c.Escala)
                 .Where(c => c.EstudianteId == estudiante.Id && c.Estado == 1)
@@ -383,7 +392,7 @@ public static class DashboardEndpoints
 
                 // Iterar sobre los cursos del aula (o cursos con notas si no hay cargas)
                 var nombresCursos = cargas.Select(ca => ca.Curso?.Nombre ?? "Curso General").Distinct().ToList();
-                var cursosConNotas = calificaciones.Select(c => c.Competencia?.Curso?.Nombre ?? "Curso General").Distinct();
+                var cursosConNotas = calificaciones.Select(c => c.Competencia != null ? (c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : (c.Competencia.Carga != null && c.Competencia.Carga.Curso != null ? c.Competencia.Carga.Curso.Nombre : "Curso General")) : "Curso General").Distinct();
                 var todosLosCursos = nombresCursos.Union(cursosConNotas).Distinct().ToList();
 
                 foreach (var nombreCurso in todosLosCursos)
@@ -391,7 +400,7 @@ public static class DashboardEndpoints
                     // Calificaciones de este curso en este periodo
                     var califCurso = calificaciones
                         .Where(c => (c.Semana?.Periodo?.Nombre ?? "Periodo General") == periodo &&
-                                    (c.Competencia?.Curso?.Nombre ?? "Curso General") == nombreCurso &&
+                                    (c.Competencia != null ? (c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : (c.Competencia.Carga != null && c.Competencia.Carga.Curso != null ? c.Competencia.Carga.Curso.Nombre : "Curso General")) : "Curso General") == nombreCurso &&
                                     c.Escala != null)
                         .ToList();
 

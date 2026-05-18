@@ -1,0 +1,348 @@
+<div class="reportes-container">
+  
+  <!-- SELECTOR DE VISTAS / PESTAÑAS (No se imprime) -->
+  <div class="view-selector no-print">
+    <button [class.active]="activeTab === 'METRICAS'" (click)="setTab('METRICAS')">
+      <span>Reporte de Métricas y Logros</span>
+    </button>
+    <button [class.active]="activeTab === 'REFUERZO'" (click)="setTab('REFUERZO')">
+      <span>Reporte de Estudiantes para Refuerzo</span>
+    </button>
+  </div>
+
+  <!-- CABECERA DE PANTALLA (No se imprime) -->
+  <div class="header-section no-print">
+    <div class="title-area">
+      <h1>{{ activeTab === 'METRICAS' ? 'Reportes y Métricas Académicas' : 'Reporte de Estudiantes para Refuerzo' }}</h1>
+      <p>{{ activeTab === 'METRICAS' ? 'Monitoreo de competencias, niveles de logro y detección de estudiantes para refuerzo' : 'Cálculo dinámico de promedios por semanas seleccionadas para identificar alumnos con bajo rendimiento' }}</p>
+    </div>
+    <div class="actions-area">
+      <button class="btn-print" (click)="imprimirReporte()" [disabled]="loadingReporte || !reporteData">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+        <span>Descargar / Imprimir Reporte</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- BARRA DE FILTROS COMÚN: CURSO Y BIMESTRE (No se imprime) -->
+  <div class="filtros-card no-print">
+    <div class="filtro-group">
+      <label>Curso Asignado</label>
+      <select [(ngModel)]="selectedCargaId" (change)="onCargaChange()" [disabled]="loadingCursos">
+        <option *ngFor="let c of cursos" [value]="c.cargaId">{{ c.curso }} ({{ c.grado }} {{ c.seccion }})</option>
+      </select>
+    </div>
+    <div class="filtro-group">
+      <label>Bimestre</label>
+      <select [(ngModel)]="selectedPeriodoId" (change)="onPeriodoChange()" [disabled]="loadingCursos">
+        <option *ngFor="let p of periodos" [value]="p.id">{{ p.nombre }}</option>
+      </select>
+    </div>
+
+    <!-- Filtro de Semana (Solo para pestaña de Métricas) -->
+    <div class="filtro-group" *ngIf="activeTab === 'METRICAS'">
+      <label>Semana / Evaluación</label>
+      <select [(ngModel)]="selectedSemanaId" (change)="onSemanaChange()" [disabled]="loadingCursos || loadingReporte">
+        <option [value]="0">Promedio Bimestral</option>
+        <option *ngFor="let s of semanasDisponibles" [value]="s.id">Semana {{ s.numeroSemana }}</option>
+      </select>
+    </div>
+
+    <!-- Filtro de Criterio de Refuerzo (Solo para pestaña de Refuerzo) -->
+    <div class="filtro-group" *ngIf="activeTab === 'REFUERZO'">
+      <label>Criterio de Detección</label>
+      <select [(ngModel)]="criterioRefuerzo" (change)="onCriterioRefuerzoChange(criterioRefuerzo)" [disabled]="loadingCursos || loadingReporte">
+        <option value="SOLO_C">Solo Estudiantes con C (Urgente)</option>
+        <option value="C_Y_B">Estudiantes con C o B (Preventivo)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- SELECCIÓN MÚLTIPLE DE SEMANAS PARA REPORTE DE REFUERZO (No se imprime) -->
+  <div class="semanas-refuerzo-card no-print" *ngIf="activeTab === 'REFUERZO' && semanasDisponibles.length > 0">
+    <div class="sr-header">
+      <span class="sr-title">Semanas a incluir en el cálculo de promedio:</span>
+      <div class="sr-actions">
+        <button (click)="toggleTodasSemanas(true)">Seleccionar Todas</button>
+        <button (click)="toggleTodasSemanas(false)">Desmarcar Todas</button>
+      </div>
+    </div>
+    <div class="sr-grid">
+      <label class="sr-checkbox-item" *ngFor="let s of semanasDisponibles">
+        <input type="checkbox" [(ngModel)]="semanasSeleccionadasRefuerzo[s.id]" (change)="onSemanaRefuerzoToggle(s.id)">
+        <span>Semana {{ s.numeroSemana }}</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- ESTADOS DE CARGA Y ERROR -->
+  <div *ngIf="loadingCursos || loadingReporte" class="state-card loading no-print">
+    <div class="spinner"></div>
+    <span>Generando métricas y consolidando calificaciones del curso...</span>
+  </div>
+
+  <div *ngIf="errorMsg" class="state-card error no-print">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span>{{ errorMsg }}</span>
+  </div>
+
+  <div *ngIf="!loadingCursos && !loadingReporte && reporteData">
+    
+    <!-- ENCABEZADO OFICIAL DE IMPRESIÓN (Solo visible al imprimir) -->
+    <div class="print-header only-print">
+      <div class="print-logo">
+        <img src="/assets/img/insignia_colegio.png" alt="Insignia Colegio">
+      </div>
+      <div class="print-inst-titles">
+        <h2>I.E. KUMAMOTO I</h2>
+        <h3>{{ activeTab === 'METRICAS' ? 'REPORTE OFICIAL DE LOGROS Y METRICAS ACADEMICAS' : 'REPORTE OFICIAL DE ESTUDIANTES PARA REFUERZO ACADEMICO' }}</h3>
+        <p class="print-meta">Curso: <strong>{{ getCursoNombre() }}</strong> | Bimestre: <strong>{{ getPeriodoNombre() }}</strong></p>
+        <p class="print-meta-sub" *ngIf="activeTab === 'METRICAS'">Evaluación: <strong>{{ getSemanaNombre() }}</strong></p>
+        <p class="print-meta-sub" *ngIf="activeTab === 'REFUERZO'">Cálculo basado en semanas seleccionadas del bimestre</p>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         VISTA 1: PESTAÑA DE MÉTRICAS Y LOGROS
+         ========================================================================= -->
+    <ng-container *ngIf="activeTab === 'METRICAS'">
+      <!-- TARJETAS DE METRICAS GENERALES -->
+      <div class="summary-grid">
+        <div class="metric-card card-total">
+          <span class="m-label">Total Estudiantes</span>
+          <span class="m-value">{{ totalAlumnos }}</span>
+          <span class="m-desc">Inscritos en el curso</span>
+        </div>
+        <div class="metric-card card-esperado">
+          <span class="m-label">Logro Esperado (AD / A)</span>
+          <span class="m-value">{{ totalEsperado }}</span>
+          <span class="m-desc">Nivel satisfactorio</span>
+        </div>
+        <div class="metric-card card-proceso">
+          <span class="m-label">En Proceso (B)</span>
+          <span class="m-value">{{ totalProceso }}</span>
+          <span class="m-desc">Requiere acompañamiento</span>
+        </div>
+        <div class="metric-card card-refuerzo">
+          <span class="m-label">En Refuerzo / Riesgo (C)</span>
+          <span class="m-value">{{ totalRefuerzo }}</span>
+          <span class="m-desc">Prioridad de intervención</span>
+        </div>
+      </div>
+
+      <!-- SECCION DE GRAFICOS POR COMPETENCIA -->
+      <div class="charts-section">
+        <h2 class="section-title">Rendimiento por Competencia ({{ getSemanaNombre() }})</h2>
+        <div class="charts-grid">
+          <div class="chart-card" *ngFor="let m of metricasCompetencias">
+            <div class="chart-header">
+              <span class="comp-code">{{ m.competencia.codigo }}</span>
+              <span class="comp-name">{{ m.competencia.nombre }}</span>
+            </div>
+
+            <div class="bars-container">
+              <div class="bar-row">
+                <div class="bar-label"><span>AD (Destacado)</span><span class="cnt">{{ m.conteo.AD }} alum. ({{ m.porcentajes.AD }}%)</span></div>
+                <div class="bar-track"><div class="bar-fill fill-ad" [style.width.%]="m.porcentajes.AD"></div></div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-label"><span>A (Esperado)</span><span class="cnt">{{ m.conteo.A }} alum. ({{ m.porcentajes.A }}%)</span></div>
+                <div class="bar-track"><div class="bar-fill fill-a" [style.width.%]="m.porcentajes.A"></div></div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-label"><span>B (Proceso)</span><span class="cnt">{{ m.conteo.B }} alum. ({{ m.porcentajes.B }}%)</span></div>
+                <div class="bar-track"><div class="bar-fill fill-b" [style.width.%]="m.porcentajes.B"></div></div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-label"><span>C (Refuerzo)</span><span class="cnt">{{ m.conteo.C }} alum. ({{ m.porcentajes.C }}%)</span></div>
+                <div class="bar-track"><div class="bar-fill fill-c" [style.width.%]="m.porcentajes.C"></div></div>
+              </div>
+            </div>
+            <div class="chart-footer">
+              <span>Total evaluados: <strong>{{ m.totalEvaluados }}</strong> alumnos</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LISTA DE ESTUDIANTES Y FILTROS POR ESCALA -->
+      <div class="students-section">
+        <div class="section-header no-print">
+          <h2 class="section-title">Nómina de Estudiantes y Nivel de Logro</h2>
+          <div class="tabs-escala">
+            <button [class.active]="filtroEscala === 'TODOS'" (click)="onFiltroChange('TODOS')">Todos ({{ reporteData.alumnos.length }})</button>
+            <button [class.active]="filtroEscala === 'AD'" (click)="onFiltroChange('AD')">AD</button>
+            <button [class.active]="filtroEscala === 'A'" (click)="onFiltroChange('A')">A</button>
+            <button [class.active]="filtroEscala === 'B'" (click)="onFiltroChange('B')">B</button>
+            <button [class.active]="filtroEscala === 'C'" (click)="onFiltroChange('C')" class="tab-refuerzo">Requiere Refuerzo (C)</button>
+          </div>
+        </div>
+
+        <!-- TABLA INTERACTIVA WEB (No se imprime) -->
+        <div class="table-card no-print">
+          <table class="students-table">
+            <thead>
+              <tr>
+                <th class="col-num">N°</th>
+                <th class="col-name">Estudiante</th>
+                <th *ngFor="let c of reporteData.competencias" class="col-comp" [title]="c.nombre">{{ c.codigo }}</th>
+                <th class="col-global">Promedio / Global</th>
+                <th class="col-status">Estado Académico</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let a of alumnosFiltrados; let i = index" [class.row-refuerzo]="a.necesitaRefuerzo">
+                <td class="cell-num">{{ i + 1 }}</td>
+                <td class="cell-name">{{ a.nombreCompleto }}</td>
+                <td *ngFor="let c of reporteData.competencias" class="cell-comp">
+                  <span class="badge-nota" [ngClass]="getBadgeClass(a.notasComp[c.id])">{{ a.notasComp[c.id] }}</span>
+                </td>
+                <td class="cell-global">
+                  <span class="badge-nota badge-global" [ngClass]="getBadgeClass(a.notaGlobal)">{{ a.notaGlobal }}</span>
+                </td>
+                <td class="cell-status">
+                  <span class="status-pill" [class.refuerzo]="a.necesitaRefuerzo" [class.ok]="!a.necesitaRefuerzo">
+                    {{ a.necesitaRefuerzo ? 'Requiere Refuerzo' : 'Nivel Esperado' }}
+                  </span>
+                </td>
+              </tr>
+              <tr *ngIf="alumnosFiltrados.length === 0">
+                <td [attr.colspan]="reporteData.competencias.length + 4" class="cell-empty">
+                  No se encontraron estudiantes que coincidan con el filtro seleccionado ({{ filtroEscala }}).
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TABLA OFICIAL PARA IMPRESIÓN PDF (Solo visible al imprimir) -->
+        <div class="print-table-wrapper only-print">
+          <table class="print-pdf-table">
+            <thead>
+              <tr>
+                <th class="col-p-num">N°</th>
+                <th class="col-p-name">Apellidos y Nombres</th>
+                <th class="col-p-mal">Competencias que requieren refuerzo / atención</th>
+                <th class="col-p-global">Calificación Global</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let a of alumnosFiltrados; let i = index" [class.row-p-refuerzo]="a.necesitaRefuerzo">
+                <td class="cell-p-num">{{ i + 1 }}</td>
+                <td class="cell-p-name"><strong>{{ a.nombreCompleto }}</strong></td>
+                <td class="cell-p-mal">
+                  <div class="malas-list" *ngIf="getCompetenciasMal(a).length > 0">
+                    <div class="mala-item" *ngFor="let m of getCompetenciasMal(a)">
+                      <span class="m-badge" [ngClass]="getBadgeClass(m.nota)">{{ m.nota }}</span>
+                      <span class="m-text"><strong>{{ m.codigo }}:</strong> {{ m.nombre }}</span>
+                    </div>
+                  </div>
+                  <div class="malas-none" *ngIf="getCompetenciasMal(a).length === 0">
+                    <span class="none-text">Nivel Esperado (Sin deficiencias)</span>
+                  </div>
+                </td>
+                <td class="cell-p-global">
+                  <span class="p-badge-global" [ngClass]="getBadgeClass(a.notaGlobal)">{{ a.notaGlobal }}</span>
+                </td>
+              </tr>
+              <tr *ngIf="alumnosFiltrados.length === 0">
+                <td colspan="4" class="cell-p-empty">
+                  No se encontraron estudiantes en esta categoría.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- =========================================================================
+         VISTA 2: PESTAÑA DE ESTUDIANTES PARA REFUERZO (Con Rowspan)
+         ========================================================================= -->
+    <ng-container *ngIf="activeTab === 'REFUERZO'">
+      <div class="refuerzo-section">
+        <div class="section-header no-print">
+          <h2 class="section-title">Nómina de Estudiantes para Refuerzo Académico ({{ alumnosRefuerzo.length }} alumnos detectados)</h2>
+        </div>
+
+        <!-- TABLA INTERACTIVA WEB (No se imprime) -->
+        <div class="table-card no-print">
+          <table class="refuerzo-table">
+            <thead>
+              <tr>
+                <th class="col-r-num">N°</th>
+                <th class="col-r-name">Apellidos y Nombres</th>
+                <th class="col-r-comp">Competencia Deficiente</th>
+                <th class="col-r-nota">Calificación Promedio</th>
+              </tr>
+            </thead>
+            <tbody>
+              <ng-container *ngFor="let a of alumnosRefuerzo; let i = index">
+                <!-- Primera Fila con Rowspan -->
+                <tr class="row-r-main">
+                  <td [attr.rowspan]="a.competenciasMal.length" class="cell-r-num">{{ i + 1 }}</td>
+                  <td [attr.rowspan]="a.competenciasMal.length" class="cell-r-name"><strong>{{ a.nombreCompleto }}</strong></td>
+                  <td class="cell-r-comp"><strong>{{ a.competenciasMal[0].codigo }}:</strong> {{ a.competenciasMal[0].nombre }}</td>
+                  <td class="cell-r-nota"><span class="badge-nota" [ngClass]="getBadgeClass(a.competenciasMal[0].notaPromedio)">{{ a.competenciasMal[0].notaPromedio }}</span></td>
+                </tr>
+                <!-- Filas secundarias para el mismo alumno -->
+                <tr *ngFor="let m of a.competenciasMal.slice(1)" class="row-r-sub">
+                  <td class="cell-r-comp"><strong>{{ m.codigo }}:</strong> {{ m.nombre }}</td>
+                  <td class="cell-r-nota"><span class="badge-nota" [ngClass]="getBadgeClass(m.notaPromedio)">{{ m.notaPromedio }}</span></td>
+                </tr>
+              </ng-container>
+              <tr *ngIf="alumnosRefuerzo.length === 0">
+                <td colspan="4" class="cell-empty">
+                  No se encontraron estudiantes que requieran refuerzo bajo el criterio seleccionado.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TABLA OFICIAL PARA IMPRESIÓN PDF (Solo visible al imprimir) -->
+        <div class="print-table-wrapper only-print">
+          <table class="print-pdf-table">
+            <thead>
+              <tr>
+                <th class="col-p-num">N°</th>
+                <th class="col-p-name">Apellidos y Nombres</th>
+                <th class="col-p-mal">Competencia Deficiente</th>
+                <th class="col-p-global">Calificación Promedio</th>
+              </tr>
+            </thead>
+            <tbody>
+              <ng-container *ngFor="let a of alumnosRefuerzo; let i = index">
+                <tr class="row-p-refuerzo">
+                  <td [attr.rowspan]="a.competenciasMal.length" class="cell-p-num">{{ i + 1 }}</td>
+                  <td [attr.rowspan]="a.competenciasMal.length" class="cell-p-name"><strong>{{ a.nombreCompleto }}</strong></td>
+                  <td class="cell-p-mal"><strong>{{ a.competenciasMal[0].codigo }}:</strong> {{ a.competenciasMal[0].nombre }}</td>
+                  <td class="cell-p-global"><span class="badge-nota" [ngClass]="getBadgeClass(a.competenciasMal[0].notaPromedio)">{{ a.competenciasMal[0].notaPromedio }}</span></td>
+                </tr>
+                <tr *ngFor="let m of a.competenciasMal.slice(1)" class="row-p-refuerzo">
+                  <td class="cell-p-mal"><strong>{{ m.codigo }}:</strong> {{ m.nombre }}</td>
+                  <td class="cell-p-global"><span class="badge-nota" [ngClass]="getBadgeClass(m.notaPromedio)">{{ m.notaPromedio }}</span></td>
+                </tr>
+              </ng-container>
+              <tr *ngIf="alumnosRefuerzo.length === 0">
+                <td colspan="4" class="cell-p-empty">
+                  No se encontraron estudiantes que requieran refuerzo bajo el criterio seleccionado.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- PIE DE FIRMA COMÚN PARA IMPRESIÓN -->
+    <div class="print-footer only-print">
+      <p>Reporte generado desde el Sistema de Gestión Académica Kumamoto I</p>
+      <div class="firma-box">
+        <div class="linea-firma"></div>
+        <span>Firma del Docente</span>
+      </div>
+    </div>
+
+  </div>
+</div>

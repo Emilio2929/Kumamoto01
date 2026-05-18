@@ -53,20 +53,64 @@
           </div>
         </div>
 
-        <div class="stats-row">
-          <!-- Gráfico Circular CSS para Asistencia -->
-          <div class="asistencia-gauge">
-            <div class="gauge-container">
-              <div class="gauge-body">
-                <div class="gauge-fill" [style.background]="getSemaforoColor(hijoSeleccionado.riesgo.nivel)" [style.transform]="getAttendanceRotation(hijoSeleccionado.asistencia.porcentaje)"></div>
-                <div class="gauge-cover">
-                  <span class="pct">{{ hijoSeleccionado.asistencia.porcentaje }}%</span>
-                  <span class="sub">Asistencia</span>
+        <!-- Sección de Cursos y Competencias en Dificultad (IA) -->
+        <div class="cursos-malos-section">
+          <div class="section-header">
+            <div class="ia-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <h3>Alerta Temprana IA - Cursos y Competencias en Dificultad</h3>
+          </div>
+
+          <!-- Lista de cursos con B o C -->
+          <div *ngIf="hijoSeleccionado.cursosMalos && hijoSeleccionado.cursosMalos.length > 0">
+            <div class="curso-malo-card" *ngFor="let item of hijoSeleccionado.cursosMalos">
+              <div class="curso-title">{{ item.curso }}</div>
+              <div class="competencias-grid">
+                <div class="comp-item" *ngFor="let comp of item.competencias">
+                  <div class="comp-name">
+                    <strong>{{ comp.codigo }} (Semana {{ comp.semana }}):</strong> {{ comp.competencia }}
+                  </div>
+                  <div class="nota-badge" [ngClass]="getBadgeClass(comp.nota)">{{ comp.nota }}</div>
                 </div>
               </div>
             </div>
-            <div class="gauge-footer">
-              Límite permitido: 80%
+          </div>
+
+          <!-- Mensaje si no hay dificultades -->
+          <div *ngIf="!hijoSeleccionado.cursosMalos || hijoSeleccionado.cursosMalos.length === 0" class="no-dificultad">
+            ¡Excelente! El estudiante no presenta cursos ni competencias con calificación B o C en el periodo actual.
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <!-- Sección de Asistencia (Gráfico o Estado Diario) -->
+          <div class="asistencia-card-container">
+            <!-- Si HAY historial de asistencia (total > 0), mostramos el gráfico circular -->
+            <div *ngIf="hijoSeleccionado.asistencia.total > 0" class="asistencia-gauge">
+              <div class="gauge-container">
+                <div class="gauge-body">
+                  <div class="gauge-fill" [style.background]="getSemaforoColor(hijoSeleccionado.riesgo.nivel)" [style.transform]="getAttendanceRotation(hijoSeleccionado.asistencia.porcentaje)"></div>
+                  <div class="gauge-cover">
+                    <span class="pct">{{ hijoSeleccionado.asistencia.porcentaje }}%</span>
+                    <span class="sub">Asistencia</span>
+                  </div>
+                </div>
+              </div>
+              <div class="gauge-footer">
+                Límite permitido: 80%
+              </div>
+            </div>
+
+            <!-- Si NO HAY historial de asistencia (total === 0), mostramos la caja de asistencia diaria -->
+            <div *ngIf="hijoSeleccionado.asistencia.total === 0" class="asistencia-hoy-box" [ngClass]="getHoyClass(hijoSeleccionado.asistencia.hoy)">
+              <h4>Asistencia Diaria ({{ hijoSeleccionado.asistencia.hoyFecha }})</h4>
+              <div class="hoy-status">{{ hijoSeleccionado.asistencia.hoy }}</div>
+              <p class="hoy-curso">{{ hijoSeleccionado.asistencia.hoyCurso }}</p>
             </div>
           </div>
 
@@ -79,11 +123,11 @@
                   <span class="course-name">{{ nota.curso }}</span>
                 </div>
                 <div class="comp-info">
-                  <span class="comp-label">{{ nota.codigo }}:</span>
+                  <span class="comp-label">{{ nota.codigo }} (Semana {{ nota.semana }}):</span>
                   <span class="comp-desc">{{ nota.competencia }}</span>
                 </div>
               </div>
-              <div class="nota-badge" [class.low]="nota.nota === 'C'">{{ nota.nota }}</div>
+              <div class="nota-badge" [ngClass]="getBadgeClass(nota.nota)">{{ nota.nota }}</div>
             </div>
             <div *ngIf="hijoSeleccionado.ultimasNotas.length === 0" class="no-data">
               No hay calificaciones registradas esta semana.
@@ -93,7 +137,7 @@
       </div>
 
       <div class="card-footer">
-        <button class="btn-detail">Ver Reporte Detallado</button>
+        <button class="btn-detail" (click)="verReporteDetallado()">Ver Reporte Detallado</button>
       </div>
     </div>
   </div>

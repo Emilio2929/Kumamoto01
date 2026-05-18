@@ -9,4 +9,5 @@ import { RiskMonitor } from '../../components/risk-monitor/risk-monitor';
   templateUrl: './resumen.html',
   styleUrl: './resumen.scss',
 })
-export class Resumen {}
+export class Resumen {
+}

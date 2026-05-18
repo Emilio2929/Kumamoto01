@@ -1,0 +1,70 @@
+<div class="horario-container">
+  <!-- Cabecera de Pantalla -->
+  <div class="header-section">
+    <div class="title-area">
+      <h1>Horario de Clases</h1>
+      <p *ngIf="horarioData">Horario semanal de {{ horarioData.estudiante }} ({{ horarioData.grado }})</p>
+      <p *ngIf="!horarioData">Estructura académica semanal y asignación docente</p>
+    </div>
+    <div class="action-area" *ngIf="!loading && horarioData && horasUnicas.length > 0">
+      <button class="btn-print" (click)="imprimirHorario()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 6 2 18 2 18 9"></polyline>
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+          <rect x="6" y="14" width="12" height="8"></rect>
+        </svg>
+        <span>Imprimir Horario</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Estado de Carga -->
+  <div class="state-card loading" *ngIf="loading">
+    <div class="spinner"></div>
+    <span>Cargando el horario escolar del estudiante...</span>
+  </div>
+
+  <!-- Contenido Principal: Tabla de Horario Semanal -->
+  <div class="table-card" *ngIf="!loading && horarioData">
+    <div class="table-responsive">
+      <table class="horario-table">
+        <thead>
+          <tr>
+            <th class="th-hora">HORA</th>
+            <th *ngFor="let dia of diasSemana">{{ dia.toUpperCase() }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let hora of horasUnicas">
+            <td class="td-hora">
+              <span class="hora-text">{{ hora }}</span>
+            </td>
+            <td *ngFor="let dia of diasSemana" class="td-clase">
+              <ng-container *ngIf="getClase(dia, hora) as clase; else celdaVacia">
+                <div class="clase-block" [ngClass]="cursoColores[clase.curso] || 'corp-slate'">
+                  <span class="curso-title">{{ clase.curso }}</span>
+                  <span class="clase-rango">{{ clase.horaInicio }} – {{ clase.horaFin }}</span>
+                  <span class="docente-name">{{ clase.docente }}</span>
+                </div>
+              </ng-container>
+              <ng-template #celdaVacia>
+                <div class="celda-vacia"></div>
+              </ng-template>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Estado Vacío General -->
+    <div class="state-card empty" *ngIf="horasUnicas.length === 0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
+      <p>No hay clases registradas para este estudiante en el periodo actual.</p>
+    </div>
+  </div>
+</div>

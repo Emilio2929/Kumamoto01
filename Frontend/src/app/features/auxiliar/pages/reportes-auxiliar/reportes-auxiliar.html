@@ -29,12 +29,38 @@
 
     <div class="filter-row mt-1">
       <div class="filter-group">
-        <label>Desde</label>
-        <input type="date" [(ngModel)]="fechaInicio">
+        <label>Bimestre</label>
+        <select [(ngModel)]="selectedBimestre" (change)="onBimestreChange()">
+          <option [ngValue]="null">Personalizado / Libre</option>
+          <option *ngFor="let b of bimestres" [ngValue]="b">{{b.nombre}}</option>
+        </select>
+      </div>
+
+      <div class="filter-group" [class.disabled]="!selectedBimestre">
+        <label>Semana</label>
+        <select [(ngModel)]="selectedSemana" (change)="onSemanaChange()" [disabled]="!selectedBimestre">
+          <option [ngValue]="null">Todas las semanas</option>
+          <option *ngFor="let s of semanasOptions" [ngValue]="s">Semana {{s}}</option>
+        </select>
+      </div>
+
+      <div class="filter-group" [class.disabled]="!selectedSemana">
+        <label>Día</label>
+        <select [(ngModel)]="selectedDia" (change)="onDiaChange()" [disabled]="!selectedSemana">
+          <option [ngValue]="null">Todos los días</option>
+          <option *ngFor="let d of diasOptions" [ngValue]="d.value">{{d.label}}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="filter-row mt-1">
+      <div class="filter-group">
+        <label>Desde <span class="hint" *ngIf="selectedBimestre">(Auto)</span></label>
+        <input type="date" [(ngModel)]="fechaInicio" [readonly]="selectedBimestre != null" [class.readonly]="selectedBimestre != null">
       </div>
       <div class="filter-group">
-        <label>Hasta</label>
-        <input type="date" [(ngModel)]="fechaFin">
+        <label>Hasta <span class="hint" *ngIf="selectedBimestre">(Auto)</span></label>
+        <input type="date" [(ngModel)]="fechaFin" [readonly]="selectedBimestre != null" [class.readonly]="selectedBimestre != null">
       </div>
       <div class="filter-actions">
         <button class="btn-generate" (click)="generarReporte()" [disabled]="!selectedAulaId || !selectedCursoId || loadingReport">
@@ -57,12 +83,12 @@
   <div *ngIf="reportData && !loadingReport" class="report-paper">
     <div class="toolbar no-print">
       <div class="view-toggles">
-        <button [class.active]="vista === 'resumen'" (click)="setVista('resumen')">📊 Resumen</button>
-        <button [class.active]="vista === 'detallado'" (click)="setVista('detallado')">📝 Detallado</button>
+        <button [class.active]="vista === 'resumen'" (click)="setVista('resumen')">Resumen</button>
+        <button [class.active]="vista === 'detallado'" (click)="setVista('detallado')">Detallado</button>
       </div>
       <button class="btn-export" (click)="imprimir()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Exportar / Imprimir
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg>
+        Generar PDF
       </button>
     </div>
 
@@ -75,6 +101,30 @@
             <span><strong>Aula:</strong> {{getAulaSelectedName()}}</span>
             <span><strong>Periodo:</strong> {{fechaInicio | date:'dd/MM/yyyy'}} - {{fechaFin | date:'dd/MM/yyyy'}}</span>
             <span><strong>Curso:</strong> {{cursoNombreReporte}}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="global-chart" *ngIf="vista === 'resumen' && reportData?.length">
+        <h3>Resumen Global del Curso</h3>
+        <div class="chart-bars">
+          <div class="chart-item">
+            <div class="bar-container">
+              <div class="bar bar-p" [style.width.%]="getGlobalStats().pctP"></div>
+            </div>
+            <span>Presentes ({{getGlobalStats().totalP}})</span>
+          </div>
+          <div class="chart-item">
+            <div class="bar-container">
+              <div class="bar bar-f" [style.width.%]="getGlobalStats().pctF"></div>
+            </div>
+            <span>Faltas ({{getGlobalStats().totalF}})</span>
+          </div>
+          <div class="chart-item">
+            <div class="bar-container">
+              <div class="bar bar-t" [style.width.%]="getGlobalStats().pctT"></div>
+            </div>
+            <span>Tardanzas ({{getGlobalStats().totalT}})</span>
           </div>
         </div>
       </div>
@@ -107,8 +157,8 @@
                 </div>
               </td>
               <td>
-                <span class="risk-badge" [ngClass]="s.porcentaje < 80 ? 'risk-high' : 'risk-low'">
-                  {{s.porcentaje < 80 ? 'Riesgo' : 'Regular'}}
+                <span class="risk-badge" [ngClass]="s.total === 0 ? 'risk-none' : (s.porcentaje < 80 ? 'risk-high' : 'risk-low')">
+                  {{s.total === 0 ? 'Sin Registro' : (s.porcentaje < 80 ? 'Riesgo' : 'Regular')}}
                 </span>
               </td>
             </tr>
@@ -138,6 +188,9 @@
                 </span>
               </td>
             </tr>
+            <tr *ngIf="detailedLogs.length === 0">
+              <td colspan="4" class="center py-3 text-muted">No se encontraron registros de asistencia en el periodo seleccionado.</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -146,7 +199,9 @@
 
   <!-- Estado vacío -->
   <div *ngIf="!loadingReport && !reportData" class="empty-state no-print">
-    <div class="empty-icon">📂</div>
+    <div class="empty-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+    </div>
     <h3>Consulta de Asistencia</h3>
     <p>Selecciona grado, sección y el curso obligatorio para generar el reporte consolidado.</p>
   </div>

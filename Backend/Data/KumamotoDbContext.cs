@@ -29,6 +29,7 @@ public class KumamotoDbContext : DbContext
     public DbSet<AlumnoRiesgo> AlumnosRiesgo { get; set; } = null!;
     public DbSet<Comunicado> Comunicados { get; set; } = null!;
     public DbSet<DesbloqueoCalificacion> DesbloqueosCalificacion { get; set; } = null!;
+    public DbSet<Notificacion> Notificaciones { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -57,6 +58,24 @@ public class KumamotoDbContext : DbContext
         modelBuilder.Entity<AlumnoRiesgo>().ToTable("alumno_riesgo");
         modelBuilder.Entity<Comunicado>().ToTable("comunicado");
         modelBuilder.Entity<DesbloqueoCalificacion>().ToTable("desbloqueo_calificacion");
+        modelBuilder.Entity<Notificacion>().ToTable("notificacion");
+
+        // Relaciones de Notificacion
+        modelBuilder.Entity<Notificacion>()
+            .HasOne(n => n.UsuarioDestino)
+            .WithMany()
+            .HasForeignKey(n => n.UsuarioDestinoId);
+
+        modelBuilder.Entity<Notificacion>()
+            .HasOne(n => n.Remitente)
+            .WithMany()
+            .HasForeignKey(n => n.RemitenteId);
+
+        modelBuilder.Entity<Notificacion>()
+            .HasOne(n => n.Estudiante)
+            .WithMany()
+            .HasForeignKey(n => n.EstudianteId)
+            .IsRequired(false);
 
 
         // Relaciones de Calificacion (5NF)

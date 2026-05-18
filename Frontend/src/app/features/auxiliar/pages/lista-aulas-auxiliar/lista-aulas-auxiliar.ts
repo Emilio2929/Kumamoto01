@@ -37,15 +37,17 @@ export class ListaAulasAuxiliarComponent implements OnInit {
     });
   }
 
-  estadoLabel(estado: AulaAsignadaAuxiliarDto['estadoAsistenciaHoy']): string {
-    if (estado === 'RegistradaDocente') return 'Registrada por Docente';
-    if (estado === 'RegistradaAuxiliar') return 'Registrada (Auxiliar)';
+  estadoLabel(aula: AulaAsignadaAuxiliarDto): string {
+    if (!aula.cursosHoy || aula.cursosHoy.length === 0) return 'Sin Clases Hoy';
+    if (aula.estadoAsistenciaHoy === 'RegistradaDocente') return 'Registrada por Docente';
+    if (aula.estadoAsistenciaHoy === 'RegistradaAuxiliar') return 'Registrada (Auxiliar)';
     return 'Pendiente';
   }
 
-  estadoClass(estado: AulaAsignadaAuxiliarDto['estadoAsistenciaHoy']): string {
-    if (estado === 'RegistradaDocente') return 'ok';
-    if (estado === 'RegistradaAuxiliar') return 'mid';
+  estadoClass(aula: AulaAsignadaAuxiliarDto): string {
+    if (!aula.cursosHoy || aula.cursosHoy.length === 0) return 'none';
+    if (aula.estadoAsistenciaHoy === 'RegistradaDocente') return 'ok';
+    if (aula.estadoAsistenciaHoy === 'RegistradaAuxiliar') return 'mid';
     return 'bad';
   }
 

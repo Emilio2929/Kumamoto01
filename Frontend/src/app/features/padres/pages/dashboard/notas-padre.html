@@ -1,7 +1,7 @@
 <div class="dashboard-header" *ngIf="libreta">
   <div class="header-content">
     <div>
-      <h1>Historial de Calificaciones</h1>
+      <h1>Historial Detallado de Calificaciones</h1>
       <p>{{ libreta?.estudiante }} · {{ libreta?.grado }}</p>
     </div>
     <button class="btn btn-primary" (click)="descargarLibreta()">
@@ -20,36 +20,64 @@
   <p>Cargando calificaciones...</p>
 </div>
 
-<div class="empty-state" *ngIf="!loading && !libreta">
+<div class="empty-state" *ngIf="!loading && (!libreta || !libreta.historial || libreta.historial.length === 0)">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
   <h3>No hay calificaciones registradas</h3>
   <p>El estudiante aún no tiene notas registradas en el periodo actual.</p>
 </div>
 
-<div class="card printable-area" *ngIf="!loading && libreta">
-  <div class="card-header">
-    <h3>Consolidado Anual</h3>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
+<div class="printable-area" *ngIf="!loading && libreta && libreta.historial && libreta.historial.length > 0">
+  <!-- Pestañas de Bimestres -->
+  <div class="bimestres-tabs no-print">
+    <button class="tab-btn" *ngFor="let bim of getBimestres()" [ngClass]="{'active': bim === bimestreSeleccionado}" (click)="seleccionarBimestre(bim)">
+      {{ bim }}
+    </button>
   </div>
-  
-  <div class="table-responsive">
-    <table class="grades-table">
-      <thead>
-        <tr>
-          <th>Área Curricular</th>
-          <th *ngFor="let bim of getBimestres()">{{ bim }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let curso of getCursos()">
-          <td class="course-name">{{ curso }}</td>
-          <td *ngFor="let bim of getBimestres()">
-            <span class="grade-badge" [ngClass]="getNotaBimestre(curso, bim)">
-              {{ getNotaBimestre(curso, bim) || '-' }}
-            </span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+
+  <!-- Contenedor del Bimestre Seleccionado -->
+  <div class="bimestre-container">
+    <div class="curso-card" *ngFor="let item of getCursosBimestre()">
+      <div class="curso-header">
+        <h3 class="curso-title">{{ item.curso }}</h3>
+        <div class="curso-promedio">
+          <span>Promedio Bimestral:</span>
+          <span class="badge-prom" [ngClass]="getBadgeClass(item.promedioCurso)">{{ item.promedioCurso }}</span>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="grades-table">
+          <thead>
+            <tr>
+              <th class="col-comp">Competencias Evaluadas</th>
+              <th class="col-sem" *ngFor="let num of semanasNumeros">S{{ num }}</th>
+              <th class="col-final">Promedio Final</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let comp of item.competencias">
+              <td class="comp-name-cell">
+                <strong>{{ comp.codigo }}:</strong> {{ comp.nombre }}
+              </td>
+              <td class="sem-cell" *ngFor="let num of semanasNumeros">
+                <span class="nota-pill" [ngClass]="getBadgeClass(getNotaSemana(comp, num))">
+                  {{ getNotaSemana(comp, num) }}
+                </span>
+              </td>
+              <td class="final-cell">
+                <span class="nota-pill final-pill" [ngClass]="getBadgeClass(comp.promedioBimestre)">
+                  {{ comp.promedioBimestre }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div *ngIf="getCursosBimestre().length === 0" class="no-cursos empty-state">
+      <h3>Sin registros en este periodo</h3>
+      <p>No hay cursos con información registrada para este bimestre.</p>
+    </div>
   </div>
 </div>

@@ -152,3 +152,11 @@ CREATE INDEX IF NOT EXISTS idx_calificacion_semana_estado
 
 CREATE INDEX IF NOT EXISTS idx_calif_bimestral_periodo_estado
     ON public.calificacion_bimestral (periodo_id, estado) WHERE estado = 1;
+
+-- 6. Optimización de Rendimiento Extremo para Inicios de Sesión y Recuperación de Clave
+CREATE INDEX IF NOT EXISTS idx_usuario_correo_estado 
+    ON public.usuario (correo, estado) WHERE estado = 1;
+
+CREATE INDEX IF NOT EXISTS idx_usuario_codigo_recup 
+    ON public.usuario (codigo_recuperacion, estado) WHERE codigo_recuperacion IS NOT NULL AND estado = 1;
+

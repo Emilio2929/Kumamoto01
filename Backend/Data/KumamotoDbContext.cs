@@ -60,6 +60,10 @@ public class KumamotoDbContext : DbContext
         modelBuilder.Entity<DesbloqueoCalificacion>().ToTable("desbloqueo_calificacion");
         modelBuilder.Entity<Notificacion>().ToTable("notificacion");
 
+        // Mapeo de columnas de recuperación de contraseña para Usuario
+        modelBuilder.Entity<Usuario>().Property(u => u.CodigoRecuperacion).HasColumnName("codigo_recuperacion");
+        modelBuilder.Entity<Usuario>().Property(u => u.FechaExpiracionCodigo).HasColumnName("fecha_expiracion_codigo");
+
         // Relaciones de Notificacion
         modelBuilder.Entity<Notificacion>()
             .HasOne(n => n.UsuarioDestino)

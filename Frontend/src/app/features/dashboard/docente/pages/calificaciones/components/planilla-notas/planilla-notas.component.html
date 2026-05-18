@@ -127,7 +127,6 @@
                          placeholder="-"
                          [disabled]="celda.bloqueado"
                          style="text-transform: uppercase;">
-                  <span *ngIf="celda.bloqueado" class="lock-icon" title="Evaluación cerrada (pasaron 24h)">🔒</span>
                 </div>
               </ng-container>
             </td>
@@ -135,7 +134,7 @@
         </tbody>
       </table>
       <div class="table-footer-hint">
-        <p>🔒 Las calificaciones se bloquean automáticamente después de 24 horas de haber sido registradas.</p>
+        <p>Las calificaciones se bloquean automáticamente después de 24 horas de haber sido registradas.</p>
       </div>
     </div>
   </div>

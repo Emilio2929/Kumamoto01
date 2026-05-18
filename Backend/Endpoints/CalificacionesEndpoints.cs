@@ -213,6 +213,12 @@ public static class CalificacionesEndpoints
             var escalas = await db.EscalaCalificaciones.Where(e => e.Estado == 1).ToListAsync();
             var escalaDict = escalas.ToDictionary(e => e.Letra.ToUpper(), e => e.Id);
 
+            // Obtener todas las calificaciones previas de los estudiantes en esta semana
+            var estudiantesIdsRequest = request.Notas.Select(n => n.EstudianteId).Distinct().ToList();
+            var calificacionesPrevias = await db.Calificaciones
+                .Where(c => c.SemanaId == request.SemanaId && c.EstudianteId != null && estudiantesIdsRequest.Contains(c.EstudianteId.Value) && c.Estado == 1)
+                .ToListAsync();
+
             var desbloqueosActivos = await db.DesbloqueosCalificacion
                 .Where(d => d.CargaId == request.CargaId && 
                             d.SemanaId == request.SemanaId && 
@@ -225,11 +231,7 @@ public static class CalificacionesEndpoints
                 var letra = item.Nota?.ToUpper() ?? "";
                 if (!escalaDict.TryGetValue(letra, out var escalaId)) continue;
 
-                var existente = await db.Calificaciones
-                    .FirstOrDefaultAsync(c => c.EstudianteId == item.EstudianteId 
-                                           && c.CompetenciaId == item.CompetenciaId 
-                                           && c.SemanaId == request.SemanaId 
-                                           && c.Estado == 1);
+                var existente = calificacionesPrevias.FirstOrDefault(c => c.EstudianteId == item.EstudianteId && c.CompetenciaId == item.CompetenciaId);
                 
                 if (existente != null)
                 {
@@ -237,10 +239,10 @@ public static class CalificacionesEndpoints
                     if ((ahora - existente.FechaRegistro).TotalHours > 24)
                     {
                         // Verificar desbloqueo
-                        var desbloqueo = desbloqueosActivos.FirstOrDefault(d => d.EstudianteId == item.EstudianteId);
+                        var desbloqueo = desbloqueosActivos.FirstOrDefault(d => d.EstudianteId == item.EstudianteId && d.Estado == 1);
                         if (desbloqueo == null)
                         {
-                            continue;
+                            continue; // Está bloqueado y no hay desbloqueo activo
                         }
                         
                         // Hacer que sea de un solo uso
@@ -250,6 +252,19 @@ public static class CalificacionesEndpoints
                 }
                 else
                 {
+                    // Es una nota nueva (competencia no registrada anteriormente para este estudiante en esta semana)
+                    // Verificamos si el estudiante ya tiene OTRAS notas en esta semana que tengan más de 24 horas
+                    var tieneNotasAntiguas = calificacionesPrevias.Any(c => c.EstudianteId == item.EstudianteId && (ahora - c.FechaRegistro).TotalHours > 24);
+                    
+                    // Si ya pasó la fecha de bloqueo (tiene notas antiguas) o si hay un desbloqueo activo para él (lo que implica que fue reabierto por la directora tras el bloqueo),
+                    // EL DOCENTE SOLO DEBE PODER AGREGAR NOTAS A LAS COMPETENCIAS REGISTRADAS ANTERIORMENTE. Por lo tanto, no se permite agregar esta nueva competencia.
+                    var tieneDesbloqueo = desbloqueosActivos.Any(d => d.EstudianteId == item.EstudianteId && d.Estado == 1);
+
+                    if (tieneNotasAntiguas || tieneDesbloqueo)
+                    {
+                        continue; // No se permite agregar nuevas competencias si ya pasó el bloqueo o está en modo desbloqueo
+                    }
+
                     db.Calificaciones.Add(new Calificacion
                     {
                         EstudianteId = item.EstudianteId,

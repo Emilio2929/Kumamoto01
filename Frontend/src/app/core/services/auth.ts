@@ -54,7 +54,30 @@ export class AuthService {
   }
 
   estaAutenticado(): boolean {
-    return !!localStorage.getItem('kumamoto_jwt');
+    const token = localStorage.getItem('kumamoto_jwt');
+    if (!token) return false;
+
+    try {
+      const payloadPart = token.split('.')[1];
+      if (!payloadPart) return false;
+
+      const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+      const json = atob(padded);
+      const payload = JSON.parse(json) as { exp?: number };
+
+      if (payload && payload.exp) {
+        const isExpired = (payload.exp * 1000) < Date.now();
+        if (isExpired) {
+          this.cerrarSesion();
+          return false;
+        }
+      }
+      return true;
+    } catch {
+      this.cerrarSesion();
+      return false;
+    }
   }
 
   obtenerToken(): string | null {
@@ -99,5 +122,13 @@ export class AuthService {
 
   changePassword(data: { contrasenaActual: string; nuevaContrasena: string }): Observable<any> {
     return this.http.put<any>(`${this.apiBase}/auth/me/password`, data);
+  }
+
+  forgotPassword(correo: string): Observable<any> {
+    return this.http.post<any>(`${this.apiBase}/auth/forgot-password`, { correo });
+  }
+
+  resetPassword(correo: string, codigo: string, nuevaPassword: string): Observable<any> {
+    return this.http.post<any>(`${this.apiBase}/auth/reset-password`, { correo, codigo, nuevaPassword });
   }
 }

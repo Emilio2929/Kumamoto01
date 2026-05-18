@@ -446,3 +446,216 @@ $text-muted: #cbd5e1;
   from { opacity: 0.4; transform: translate(-50%, -50%) scale(0.9); }
   to { opacity: 0.7; transform: translate(-50%, -50%) scale(1.1); }
 }
+
+// ── BOTÓN Y MODAL DE RECUPERACIÓN DE CONTRASEÑA ───────────────────────────
+.forgot-pwd-wrapper {
+  text-align: right;
+  margin-top: -0.8rem;
+  margin-bottom: 1.2rem;
+
+  .btn-forgot-pwd {
+    background: none;
+    border: none;
+    color: $celeste;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.3s, text-decoration 0.3s;
+
+    &:hover {
+      color: $white;
+      text-decoration: underline;
+    }
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba($navy-dark, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-card {
+  background: rgba($navy-dark, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1.8rem;
+  width: 100%;
+  max-width: 500px;
+  padding: 2.5rem;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  animation: modalScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  @media (max-width: 480px) {
+    padding: 1.8rem 1.5rem;
+    border-radius: 1.5rem;
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.8rem;
+
+  h3 {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: $white;
+    margin: 0;
+  }
+
+  .btn-close {
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    color: $text-muted;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: $white;
+      transform: rotate(90deg);
+    }
+  }
+}
+
+.modal-body {
+  .modal-instruction {
+    color: $text-muted;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: $celeste;
+      margin-bottom: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    input {
+      width: 100%;
+      padding: 1rem 1.2rem;
+      border-radius: 1rem;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+      color: $white;
+      font-size: 1rem;
+      transition: all 0.3s;
+
+      &:focus {
+        outline: none;
+        border-color: $celeste;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 15px rgba($celeste, 0.15);
+      }
+    }
+
+    .code-input {
+      font-size: 1.5rem;
+      letter-spacing: 0.5em;
+      text-align: center;
+      font-weight: bold;
+      color: $gold;
+    }
+  }
+}
+
+.modal-footer {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+
+  .btn-cancel, .btn-submit {
+    flex: 1;
+    padding: 1rem;
+    border-radius: 1rem;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+  }
+
+  .btn-cancel {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: $text-muted;
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.15);
+      color: $white;
+    }
+  }
+
+  .btn-submit {
+    background: linear-gradient(135deg, $celeste-deep 0%, $insignia-blue 100%);
+    border: none;
+    color: $white;
+    box-shadow: 0 8px 20px rgba($celeste-deep, 0.3);
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 25px rgba($celeste-deep, 0.4);
+      filter: brightness(1.1);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.modal-error {
+  background: rgba($insignia-red, 0.15);
+  border: 1px solid rgba($insignia-red, 0.3);
+  color: #fca5a5;
+  padding: 1rem;
+  border-radius: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.modal-success {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+  padding: 1rem;
+  border-radius: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalScale {
+  from { opacity: 0; transform: scale(0.92) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}

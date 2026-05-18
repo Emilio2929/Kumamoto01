@@ -54,6 +54,10 @@
           </div>
         </div>
 
+        <div class="forgot-pwd-wrapper">
+          <button type="button" class="btn-forgot-pwd" (click)="abrirModalRecuperacion()">¿Olvidó su contraseña?</button>
+        </div>
+
         <button type="submit" class="btn-login" [disabled]="loginForm.invalid || cargando">
           <span *ngIf="!cargando">Ingresar ahora</span>
           <div class="loader" *ngIf="cargando"></div>
@@ -78,4 +82,64 @@
       </div>
     </div>
   </div>
+
+  <!-- MODAL DE RECUPERACIÓN DE CONTRASEÑA -->
+  <div class="modal-overlay" *ngIf="showForgotModal" (click)="cerrarModalRecuperacion()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Recuperación de Contraseña</h3>
+        <button class="btn-close" (click)="cerrarModalRecuperacion()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="error-msg modal-error" *ngIf="errorRecuperacion">
+          <span>{{ errorRecuperacion }}</span>
+        </div>
+        <div class="success-msg modal-success" *ngIf="mensajeRecuperacion">
+          <span>{{ mensajeRecuperacion }}</span>
+        </div>
+
+        <!-- PASO 1: SOLICITAR CÓDIGO -->
+        <div *ngIf="pasoRecuperacion === 1" class="step-container">
+          <p class="modal-instruction">Ingrese su correo electrónico institucional. El sistema identificará su cuenta y le enviará de forma automática un código de verificación de 6 dígitos a su correo personal registrado.</p>
+          <div class="form-group">
+            <label>Correo Electrónico</label>
+            <input type="email" [(ngModel)]="correoRecuperacion" placeholder="ejemplo@kumamoto.edu.pe" [disabled]="cargandoRecuperacion">
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" (click)="cerrarModalRecuperacion()" [disabled]="cargandoRecuperacion">Cancelar</button>
+            <button class="btn-submit" (click)="solicitarCodigo()" [disabled]="cargandoRecuperacion || !correoRecuperacion">
+              <span *ngIf="!cargandoRecuperacion">Enviar Código</span>
+              <span *ngIf="cargandoRecuperacion">Enviando...</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO 2: INGRESAR CÓDIGO Y NUEVA CLAVE -->
+        <div *ngIf="pasoRecuperacion === 2" class="step-container">
+          <p class="modal-instruction">Hemos enviado un código de verificación de 6 dígitos a su correo personal registrado <b>{{ correoEnmascarado || correoRecuperacion }}</b>. Ingréselo a continuación junto con su nueva contraseña.</p>
+          
+          <div class="form-group">
+            <label>Código de Verificación (6 dígitos)</label>
+            <input type="text" [(ngModel)]="codigoRecuperacion" placeholder="123456" maxlength="6" [disabled]="cargandoRecuperacion" class="code-input">
+          </div>
+
+          <div class="form-group">
+            <label>Nueva Contraseña</label>
+            <input type="password" [(ngModel)]="nuevaPassword" placeholder="Mínimo 4 caracteres" [disabled]="cargandoRecuperacion">
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn-cancel" (click)="pasoRecuperacion = 1" [disabled]="cargandoRecuperacion">Volver</button>
+            <button class="btn-submit" (click)="restablecerPassword()" [disabled]="cargandoRecuperacion || !codigoRecuperacion || !nuevaPassword">
+              <span *ngIf="!cargandoRecuperacion">Cambiar Contraseña</span>
+              <span *ngIf="cargandoRecuperacion">Guardando...</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
 </div>

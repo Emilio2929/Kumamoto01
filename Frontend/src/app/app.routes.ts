@@ -21,6 +21,7 @@ export const routes: Routes = [
 	{
 		path: 'dashboard/directora',
 		canActivate: [directoraGuard],
+		canActivateChild: [directoraGuard],
 		loadComponent: () =>
 			import('./features/dashboard/directora/directora').then((m) => m.Directora),
 		children: [
@@ -86,6 +87,7 @@ export const routes: Routes = [
 	{
 		path: 'dashboard/docente',
 		canActivate: [docenteGuard],
+		canActivateChild: [docenteGuard],
 		loadComponent: () =>
 			import('./features/dashboard/docente/docente').then((m) => m.Docente),
 		children: [
@@ -169,6 +171,7 @@ export const routes: Routes = [
 	{
 		path: 'dashboard/padre',
 		canActivate: [padresGuard],
+		canActivateChild: [padresGuard],
 		loadComponent: () => import('./features/padres/layout/padre-layout').then((m) => m.PadreLayoutComponent),
 		children: [
 			{
@@ -213,6 +216,7 @@ export const routes: Routes = [
 	{
 		path: 'dashboard/auxiliar',
 		canActivate: [auxiliarGuard],
+		canActivateChild: [auxiliarGuard],
 		loadComponent: () =>
 			import('./features/auxiliar').then((m) => m.AuxiliarLayoutComponent),
 		children: [

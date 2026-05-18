@@ -10,6 +10,8 @@ public class Usuario
     public string? CorreoPersonal { get; set; }
     public string? Telefono { get; set; }
     public string ClaveHash { get; set; } = string.Empty;
+    public string? CodigoRecuperacion { get; set; }
+    public DateTime? FechaExpiracionCodigo { get; set; }
     public int RolId { get; set; }
     public short Estado { get; set; } = 1;
 

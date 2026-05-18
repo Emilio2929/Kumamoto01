@@ -114,6 +114,38 @@ ALTER TABLE ONLY public.comunicado ADD CONSTRAINT comunicado_usuario_fkey FOREIG
 
 
 
+CREATE TABLE public.desbloqueo_calificacion (
+    id integer NOT NULL,
+    carga_id integer NOT NULL,
+    semana_id integer NOT NULL,
+    estudiante_id integer NOT NULL,
+    habilitado_por_id integer NOT NULL,
+    fecha_autorizacion timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    fecha_expiracion timestamp without time zone NOT NULL,
+    estado integer DEFAULT 1 NOT NULL
+);
+
+CREATE SEQUENCE public.desbloqueo_calificacion_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE public.desbloqueo_calificacion_id_seq OWNED BY public.desbloqueo_calificacion.id;
+ALTER TABLE ONLY public.desbloqueo_calificacion ALTER COLUMN id SET DEFAULT nextval('public.desbloqueo_calificacion_id_seq'::regclass);
+ALTER TABLE ONLY public.desbloqueo_calificacion ADD CONSTRAINT desbloqueo_calificacion_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.desbloqueo_calificacion ADD CONSTRAINT desbloqueo_carga_fkey FOREIGN KEY (carga_id) REFERENCES public.carga_academica(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.desbloqueo_calificacion ADD CONSTRAINT desbloqueo_semana_fkey FOREIGN KEY (semana_id) REFERENCES public.semana_academica(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.desbloqueo_calificacion ADD CONSTRAINT desbloqueo_estudiante_fkey FOREIGN KEY (estudiante_id) REFERENCES public.estudiante(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.desbloqueo_calificacion ADD CONSTRAINT desbloqueo_usuario_fkey FOREIGN KEY (habilitado_por_id) REFERENCES public.usuario(id) ON DELETE CASCADE;
+
+CREATE INDEX idx_desbloqueo_carga_semana ON public.desbloqueo_calificacion USING btree (carga_id, semana_id, estado);
+CREATE INDEX idx_desbloqueo_estudiante ON public.desbloqueo_calificacion USING btree (estudiante_id, estado);
+
+
+
 CREATE TABLE public.alumno_riesgo (
 
     id integer NOT NULL,
@@ -824,6 +856,7 @@ CREATE TABLE public.usuario (
     nombres character varying(100) NOT NULL,
     apellidos character varying(100) NOT NULL,
     correo character varying(150),
+    correo_personal character varying(255),
     telefono character varying(15),
     clave_hash text NOT NULL,
     rol_id integer,
@@ -1300,12 +1333,12 @@ INSERT INTO public.semana_academica (id, periodo_id, numero_semana, estado) VALU
 -- Data for Name: usuario; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.usuario (id, dni, nombres, apellidos, correo, telefono, clave_hash, rol_id, estado) VALUES (1, '11111111', 'Ana', 'Pérez', 'directora@kumamoto.edu.pe', '987654321', '123456', 1, 1);
-INSERT INTO public.usuario (id, dni, nombres, apellidos, correo, telefono, clave_hash, rol_id, estado) VALUES (2, '22222222', 'Carlos', 'Mendoza', 'cmendoza@kumamoto.edu.pe', '999888777', '123456', 2, 1);
-INSERT INTO public.usuario (id, dni, nombres, apellidos, correo, telefono, clave_hash, rol_id, estado) VALUES (4, '44444444', 'Jorge', 'Salinas', 'jsalinas@kumamoto.edu.pe', '922333444', '123456', 3, 1);
-INSERT INTO public.usuario (id, dni, nombres, apellidos, correo, telefono, clave_hash, rol_id, estado) VALUES (6, '13467966', 'Prueba docente 4', 'Quispee', 'pquispe@kumamoto.edu.pe', '999999998', 'Kuma13467966', 2, 1);
-INSERT INTO public.usuario (id, dni, nombres, apellidos, correo, telefono, clave_hash, rol_id, estado) VALUES (3, '33333333', 'María', 'López', 'mlopez@kumamoto.edu.pe', '911222333', '123456', 2, 1);
-INSERT INTO public.usuario (id, dni, nombres, apellidos, correo, telefono, clave_hash, rol_id, estado) VALUES (5, '12345678', 'Jerso', 'mari', '12345678@kumamoto.edu.pe', '123456784', '123456', 4, 1);
+INSERT INTO public.usuario (id, dni, nombres, apellidos, correo, correo_personal, telefono, clave_hash, rol_id, estado) VALUES (1, '11111111', 'Ana', 'Pérez', 'directora@kumamoto.edu.pe', 'ana.perez.personal@gmail.com', '987654321', '123456', 1, 1);
+INSERT INTO public.usuario (id, dni, nombres, apellidos, correo, correo_personal, telefono, clave_hash, rol_id, estado) VALUES (2, '22222222', 'Carlos', 'Mendoza', 'cmendoza@kumamoto.edu.pe', 'carlos.mendoza.personal@gmail.com', '999888777', '123456', 2, 1);
+INSERT INTO public.usuario (id, dni, nombres, apellidos, correo, correo_personal, telefono, clave_hash, rol_id, estado) VALUES (4, '44444444', 'Jorge', 'Salinas', 'jsalinas@kumamoto.edu.pe', 'jorge.salinas.personal@gmail.com', '922333444', '123456', 3, 1);
+INSERT INTO public.usuario (id, dni, nombres, apellidos, correo, correo_personal, telefono, clave_hash, rol_id, estado) VALUES (6, '13467966', 'Prueba docente 4', 'Quispee', 'pquispe@kumamoto.edu.pe', 'pquispe.personal@gmail.com', '999999998', 'Kuma13467966', 2, 1);
+INSERT INTO public.usuario (id, dni, nombres, apellidos, correo, correo_personal, telefono, clave_hash, rol_id, estado) VALUES (3, '33333333', 'María', 'López', 'mlopez@kumamoto.edu.pe', 'maria.lopez.personal@gmail.com', '911222333', '123456', 2, 1);
+INSERT INTO public.usuario (id, dni, nombres, apellidos, correo, correo_personal, telefono, clave_hash, rol_id, estado) VALUES (5, '12345678', 'Jerso', 'mari', '12345678@kumamoto.edu.pe', 'jerso.personal@gmail.com', '123456784', '123456', 4, 1);
 
 
 --

@@ -3,7 +3,7 @@ services:
     name: kumamoto-backend
     runtime: docker
     rootDirectory: Backend
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: Backend/Dockerfile
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production

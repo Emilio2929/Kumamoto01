@@ -3,7 +3,7 @@
   "build": {
     "rootDirectory": "Backend",
     "builder": "DOCKERFILE",
-    "dockerfilePath": "Dockerfile"
+    "dockerfilePath": "Backend/Dockerfile"
   },
   "deploy": {
     "restartPolicyType": "ON_FAILURE",

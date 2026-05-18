@@ -39,7 +39,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy("FrontendPolicy", p =>
         p.SetIsOriginAllowed(origin => 
             origin.StartsWith("http://localhost") || 
-            origin.EndsWith(".trycloudflare.com"))
+            origin.EndsWith(".trycloudflare.com") ||
+            origin.EndsWith(".vercel.app") ||
+            (builder.Configuration["AllowedOrigins"] != null && builder.Configuration["AllowedOrigins"]!.Split(',').Any(o => origin.Equals(o.Trim(), StringComparison.OrdinalIgnoreCase))))
          .AllowAnyHeader()
          .AllowAnyMethod()
          .AllowCredentials()));

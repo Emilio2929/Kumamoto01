@@ -5,7 +5,7 @@ import { IncidenciasService } from '../../../../core/services/incidencias';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 
-type AsistenciaValor = 'P' | 'F' | 'T';
+type AsistenciaValor = 'P' | 'F' | 'T' | '';
 
 type Row = {
   alumno: AsistenciaAlumnoHoyDto;
@@ -141,11 +141,12 @@ export class RegistroAsistenciaAuxiliarComponent implements OnInit {
   }
 
   private normalizarValor(v: string | null): AsistenciaValor {
-    if (!v) return 'P';
+    if (!v) return '';
     const val = v.toUpperCase();
     if (val === 'T') return 'T';
     if (val === 'F') return 'F';
-    return 'P';
+    if (val === 'P') return 'P';
+    return '';
   }
 
   setValor(row: Row, valor: AsistenciaValor) {
@@ -153,7 +154,14 @@ export class RegistroAsistenciaAuxiliarComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  get canSave(): boolean {
+    return this.rows.length > 0 && 
+           this.rows.every(r => r.valor === 'P' || r.valor === 'F' || r.valor === 'T') && 
+           !this.saving;
+  }
+
   guardar() {
+    if (!this.canSave) return;
     this.confirmarGuardarOpen = true;
     this.cdr.markForCheck();
   }

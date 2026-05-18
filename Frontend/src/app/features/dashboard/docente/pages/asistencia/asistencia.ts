@@ -51,7 +51,7 @@ export class AsistenciaDocenteComponent implements OnInit {
       next: (res: any[]) => {
         this.estudiantes = res;
         this.estudiantes.forEach(e => {
-          this.asistenciaMarcada[e.id] = (e as any).valorActual || 'P';
+          this.asistenciaMarcada[e.id] = (e as any).valorActual || '';
         });
         this.loading = false;
         this.cdr.detectChanges();
@@ -68,7 +68,9 @@ export class AsistenciaDocenteComponent implements OnInit {
   }
 
   get canSave(): boolean {
-    return Object.keys(this.asistenciaMarcada).length > 0 && !this.guardando;
+    return this.estudiantes.length > 0 && 
+           this.estudiantes.every(e => this.asistenciaMarcada[e.id] === 'P' || this.asistenciaMarcada[e.id] === 'F' || this.asistenciaMarcada[e.id] === 'T') && 
+           !this.guardando;
   }
 
   confirmarGuardarOpen = false;

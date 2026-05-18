@@ -32,7 +32,6 @@
 
     <div class="banners-stack" *ngIf="!loading && !errorMsg">
       <div *ngIf="bloqueadaPorDocente" class="banner rectify">
-        <div class="banner-icon">⚠️</div>
         <div class="banner-text">
           <strong>Asistencia Registrada por Docente</strong>
           <p>Puedes rectificar si existe una justificación (Tardanza/Falta).</p>
@@ -40,7 +39,6 @@
       </div>
 
       <div *ngIf="cursoActual" class="banner info">
-        <div class="banner-icon">📘</div>
         <div class="banner-text">
           <strong>Clase: {{ cursoActual }}</strong>
           <p>Horario: {{ horarioClase }}</p>
@@ -53,6 +51,7 @@
         <div class="student-info">
           <span class="student-name">{{ r.alumno.apellidos }}, {{ r.alumno.nombres }}</span>
           <div class="status-labels">
+            <span class="badge blank" *ngIf="r.valor === ''">SIN MARCAR</span>
             <span class="badge p" *ngIf="r.valor === 'P'">PRESENTE</span>
             <span class="badge t" *ngIf="r.valor === 'T'">TARDANZA</span>
             <span class="badge f" *ngIf="r.valor === 'F'">FALTÓ</span>
@@ -60,12 +59,9 @@
         </div>
 
         <div class="student-actions">
-          <button class="btn-incidencia" (click)="abrirIncidencia(r.alumno.estudianteId)" title="Registrar Incidencia">
-            <span>📋</span>
-          </button>
-
-          <!-- Selector de 3 estados (P, T, F) -->
+          <!-- Selector de 4 estados (Blanco, P, T, F) -->
           <div class="state-selector">
+            <button class="state-btn blank" [class.active]="r.valor === ''" (click)="setValor(r, '')" title="Sin Marcar"></button>
             <button class="state-btn p" [class.active]="r.valor === 'P'" (click)="setValor(r, 'P')">P</button>
             <button class="state-btn t" [class.active]="r.valor === 'T'" (click)="setValor(r, 'T')">T</button>
             <button class="state-btn f" [class.active]="r.valor === 'F'" (click)="setValor(r, 'F')">F</button>
@@ -77,7 +73,7 @@
 
   <footer class="content-footer" *ngIf="!loading && !errorMsg">
     <div class="footer-container">
-      <button class="btn-save" (click)="guardar()" [disabled]="saving">
+      <button class="btn-save" (click)="guardar()" [disabled]="!canSave || saving">
         {{ saving ? 'Guardando...' : 'Guardar y Rectificar' }}
       </button>
       <button class="btn-back" routerLink="/dashboard/auxiliar/aulas">VOLVER</button>

@@ -365,16 +365,18 @@ $text-muted: #cbd5e1;
 
 // Removido login-card antiguo ya que ahora se usan modales
 
-// ── MODAL LOGIN ─────────────────────────────────────────────────────────────
+// ── MODALES (LOGIN Y DETALLE) ───────────────────────────────────────────────
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba($navy, 0.8);
-  backdrop-filter: blur(10px);
+  background: rgba($navy, 0.85);
+  backdrop-filter: blur(12px);
   z-index: 2000;
   display: flex;
-  align-items: center;
+  align-items: flex-start; // Alineación al inicio para permitir scroll perfecto en modales altos
   justify-content: center;
+  padding: 2rem 1rem;
+  overflow-y: auto;
   animation: fadeIn 0.3s ease-out;
 }
 
@@ -389,6 +391,7 @@ $text-muted: #cbd5e1;
   backdrop-filter: blur(20px);
   animation: modalScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   overflow: hidden;
+  margin: auto; // Centrado perfecto en combinación con flex-start del overlay
   
   &::before {
     content: '';
@@ -557,70 +560,140 @@ $text-muted: #cbd5e1;
 // ── DETAIL MODAL ────────────────────────────────────────────────────────────
 .detail-modal-card {
   width: 95%;
-  max-width: 900px;
-  background: white; // Usamos fondo blanco para lectura clara como el ejemplo
+  max-width: 1100px;
+  background: $white;
   border-radius: 2.5rem;
   overflow: hidden;
   position: relative;
   box-shadow: 0 50px 100px rgba(0,0,0,0.6);
   animation: modalIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex;
-  flex-direction: column;
-  max-height: 90vh;
+  flex-direction: column; // <-- CRÍTICO: Al ser column, su hijo .detail-content puede tener flex: 1 y min-height: 0
+  max-height: 85vh;
+  min-height: 400px;
+  margin: auto; // Centrado perfecto en overlay con flex-start
 
   .close-modal {
     position: absolute;
     top: 1.5rem; right: 1.5rem;
-    background: rgba(0,0,0,0.3); border: none; color: white;
-    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(0,0,0,0.4); border: none; color: white;
+    width: 42px; height: 42px; border-radius: 50%;
     font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
-    z-index: 10; transition: 0.3s;
+    z-index: 20; transition: 0.3s; backdrop-filter: blur(5px);
     &:hover { background: $insignia-red; transform: rotate(90deg); }
   }
 
   .detail-content {
-    display: grid;
-    grid-template-columns: 1fr 1.2fr;
-    height: 100%;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    flex: 1; // Ocupa todo el alto disponible de detail-modal-card
+    min-height: 0; // <-- CRÍTICO PARA QUE NO SE DESBORDE EL FLEXBOX
+    overflow: hidden;
   }
 
   .detail-img {
-    height: 100%;
-    img { width: 100%; height: 100%; object-fit: cover; }
+    flex: 1;
+    min-width: 0; // <-- CRÍTICO
+    min-height: 0; // <-- CRÍTICO
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+
+    img { 
+      max-width: 100%; 
+      max-height: 100%; 
+      width: auto;
+      height: auto;
+      object-fit: contain; // Renderiza completa sin recortes
+      border-radius: 1rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      transition: transform 0.3s ease;
+    }
   }
 
   .detail-info {
-    padding: 4rem;
-    overflow-y: auto;
+    flex: 1.2;
+    min-width: 0; // <-- CRÍTICO
+    min-height: 0; // <-- CRÍTICO PARA QUE FUNCIONE OVERFLOW-Y: AUTO EN FLEXBOX
+    padding: 4rem 3.5rem;
+    overflow-y: auto; // Scroll independiente para comunicados extensos en desktop
     background: white;
     color: $navy-dark;
+    display: flex;
+    flex-direction: column;
 
-    .detail-date { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 1rem; }
-    h2 { font-size: 2.5rem; font-weight: 900; color: $navy; margin-bottom: 2rem; line-height: 1.2; }
+    .detail-date { font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.12em; display: block; margin-bottom: 1rem; }
+    h2 { font-size: 2.2rem; font-weight: 900; color: $navy; margin-bottom: 1.5rem; line-height: 1.25; }
     
     .detail-text {
-      font-size: 1.1rem; line-height: 1.8; color: #334155; margin-bottom: 3rem;
-      p { margin-bottom: 1.5rem; white-space: pre-wrap; }
+      font-size: 1.1rem; line-height: 1.8; color: #334155; margin-bottom: 2.5rem; flex-grow: 1;
+      p { margin-bottom: 1.5rem; white-space: pre-wrap; word-break: break-word; }
+    }
+
+    .detail-actions {
+      margin-top: auto;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e2e8f0;
     }
 
     .btn-download {
-      display: inline-flex; align-items: center; gap: 1rem;
+      display: inline-flex; align-items: center; justify-content: center; gap: 1rem;
       background: $celeste-deep; color: white; text-decoration: none;
-      padding: 1.2rem 2rem; border-radius: 1rem; font-weight: 800;
-      transition: 0.3s;
+      padding: 1.2rem 2rem; border-radius: 1.2rem; font-weight: 800; font-size: 1rem;
+      transition: all 0.3s ease;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba($celeste-deep, 0.25);
       svg { width: 22px; height: 22px; }
-      &:hover { background: $navy; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+      &:hover { background: $navy; transform: translateY(-3px); box-shadow: 0 15px 30px rgba($navy, 0.35); }
     }
   }
 }
 
+// Adaptación total para pantallas pequeñas, verticales y móviles
 @media (max-width: 900px) {
   .detail-modal-card {
-    max-width: 500px;
-    .detail-content { grid-template-columns: 1fr; }
-    .detail-img { height: 250px; }
-    .detail-info { padding: 2.5rem; }
-    h2 { font-size: 1.8rem; }
+    max-width: 600px;
+    max-height: none; // Permitimos que la tarjeta crezca en el modal-overlay
+    height: auto;
+    flex-direction: column;
+    overflow: visible; // El scroll lo maneja el modal-overlay de forma natural en móvil
+    margin: auto;
+
+    .detail-content { 
+      flex-direction: column; 
+      height: auto;
+      flex: none;
+      overflow: visible;
+    }
+
+    .detail-img { 
+      width: 100%;
+      height: min(380px, 50vh);
+      padding: 1.5rem;
+      flex: none;
+
+      img {
+        max-height: 100%;
+        max-width: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+      }
+    }
+
+    .detail-info { 
+      flex: none;
+      padding: 2.5rem 1.8rem; 
+      overflow-y: visible;
+
+      h2 { font-size: 1.8rem; margin-bottom: 1.2rem; }
+      .detail-text { font-size: 1.05rem; margin-bottom: 2rem; }
+    }
   }
 }
 

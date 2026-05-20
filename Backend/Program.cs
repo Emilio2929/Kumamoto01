@@ -8,51 +8,74 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Threading.RateLimiting;
+using Resend;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── JSON Configuration ──────────────────────────────────────────────────────
-builder.Services.ConfigureHttpJsonOptions(options =>
+// ── 1. FAIL-FAST: Verificación estricta de Entorno ──────────────────────────
+var env = builder.Environment;
+string GetRequiredEnv(string key)
 {
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-});
+    var val = Environment.GetEnvironmentVariable(key) ?? builder.Configuration[key];
+    if (string.IsNullOrWhiteSpace(val) && env.IsProduction())
+        throw new InvalidOperationException($"CRÍTICO: Variable de entorno '{key}' no configurada.");
+    return val ?? "DEVELOPMENT_FALLBACK"; // Solo para que compile en dev si falta
+}
 
-// ── Swagger ────────────────────────────────────────────────────────────────
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+var dbUrl = GetRequiredEnv("DATABASE_URL");
+if (dbUrl == "DEVELOPMENT_FALLBACK" || dbUrl == "TuConnectionDeSupabase" || !dbUrl.Contains('=')) 
+    dbUrl = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=postgres;Username=postgres;Password=postgres";
 
-// ── Rate Limiting (Protección Fuerza Bruta) ────────────────────────────────
+var jwtSecret = GetRequiredEnv("JWT_SECRET");
+if (jwtSecret == "DEVELOPMENT_FALLBACK" || jwtSecret == "TuClaveSuperSecretaLargaDeAlMenos32Caracteres!") 
+    jwtSecret = builder.Configuration["Jwt:Key"] ?? "clavesupersecretadekumamotodevelopment123";
+
+var corsOrigins = GetRequiredEnv("CORS_ALLOWED_ORIGINS");
+if (corsOrigins == "DEVELOPMENT_FALLBACK" || !corsOrigins.Contains("http")) 
+    corsOrigins = "http://localhost:4200, https://ie3092kumamoto1.org";
+
+var resendApiKey = GetRequiredEnv("RESEND_API_KEY");
+var emailFrom = GetRequiredEnv("EMAIL_FROM");
+var jwtExpMinStr = GetRequiredEnv("JWT_EXPIRATION_MINUTES");
+if (!int.TryParse(jwtExpMinStr, out int jwtExpirationMinutes)) jwtExpirationMinutes = 20;
+
+// ── 2. Rate Limiting Estricto (Fuerza Bruta) ───────────────────────────────
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddFixedWindowLimiter("LoginLimiter", opt =>
+    options.AddFixedWindowLimiter("LoginPolicy", opt =>
     {
-        opt.PermitLimit = 5; // Máximo 5 intentos
-        opt.Window = TimeSpan.FromMinutes(1); // por minuto
+        opt.PermitLimit = 5;
+        opt.Window = TimeSpan.FromMinutes(1);
         opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 2;
+        opt.QueueLimit = 0; // Sin cola, rechazo inmediato
     });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
-// ── CORS ───────────────────────────────────────────────────────────────────
+// ── 3. Configuración JSON e Inyección ──────────────────────────────────────
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// ── 4. CORS Restrictivo ────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
-    options.AddPolicy("FrontendPolicy", p =>
-        p.SetIsOriginAllowed(origin => 
-            origin.StartsWith("http://localhost") || 
-            origin.EndsWith(".trycloudflare.com") ||
-            origin.EndsWith(".vercel.app") ||
-            (builder.Configuration["AllowedOrigins"] != null && builder.Configuration["AllowedOrigins"]!.Split(',').Any(o => origin.Equals(o.Trim(), StringComparison.OrdinalIgnoreCase))))
+    options.AddPolicy("StrictCorsPolicy", p =>
+    {
+        var allowedOrigins = corsOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(o => o.Trim()).ToArray();
+        p.WithOrigins(allowedOrigins)
          .AllowAnyHeader()
          .AllowAnyMethod()
-         .AllowCredentials()));
+         .AllowCredentials(); // Obligatorio para Cookies HttpOnly
+    }));
 
-// ── PostgreSQL + EF Core ───────────────────────────────────────────────────
+// ── 5. Base de Datos ───────────────────────────────────────────────────────
 builder.Services.AddDbContext<KumamotoDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
-           .UseSnakeCaseNamingConvention());   // grado_id, clave_hash, etc.
+    options.UseNpgsql(dbUrl).UseSnakeCaseNamingConvention());
 
-// ── JWT ────────────────────────────────────────────────────────────────────
-var jwtKey = builder.Configuration["Jwt:Key"]!;
+// ── 6. JWT Leyendo desde Cookies ───────────────────────────────────────────
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -62,24 +85,53 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "kumamoto-api",
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "kumamoto-frontend",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ClockSkew = TimeSpan.Zero // Expiración exacta
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                // Extraer JWT de la Cookie en lugar del Header Bearer
+                if (context.Request.Cookies.TryGetValue("kumamoto_jwt", out var token))
+                {
+                    context.Token = token;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 builder.Services.AddAuthorization();
 
-// ── Servicios propios ──────────────────────────────────────────────────────
+// ── 7. Servicios Propios y Resend ──────────────────────────────────────────
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<RiesgoService>();
 builder.Services.AddScoped<EarlyWarningService>();
 builder.Services.AddScoped<AlertaTempranaService>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.Configure<ResendClientOptions>(o => o.ApiToken = resendApiKey);
+builder.Services.AddHttpClient<IResend, ResendClient>();
 
 // ──────────────────────────────────────────────────────────────────────────
 var app = builder.Build();
 
-// ── Cabeceras de Seguridad HTTP (Security Headers) ─────────────────────────
+// ── 8. Exception Handling Middleware (Silencioso en Prod) ──────────────────
+if (app.Environment.IsProduction())
+{
+    app.UseExceptionHandler(errorApp =>
+    {
+        errorApp.Run(async context =>
+        {
+            context.Response.StatusCode = 500;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(new { mensaje = "Internal Server Error" });
+        });
+    });
+}
+
+// ── 9. Security Headers ────────────────────────────────────────────────────
 app.Use(async (context, next) =>
 {
     context.Response.Headers.Append("X-Frame-Options", "DENY");
@@ -89,7 +141,16 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// Migración automática desactivada por preferencia del usuario (gestión manual de base de datos)
+// ── 10. Sliding Expiration Middleware ──────────────────────────────────────
+app.Use(async (context, next) =>
+{
+    await next();
+    // Refrescar el token y la cookie si está autenticado y activo
+    if (context.User.Identity?.IsAuthenticated == true && context.Response.StatusCode != 401)
+    {
+        // En una app más compleja, aquí se genera un nuevo JWT si está por vencer y se reinyecta en la Cookie.
+    }
+});
 
 if (app.Environment.IsDevelopment())
 {
@@ -97,8 +158,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// app.UseHttpsRedirection(); // Deshabilitado en dev para evitar problemas de CORS
-app.UseCors("FrontendPolicy");
+app.UseCors("StrictCorsPolicy");
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();

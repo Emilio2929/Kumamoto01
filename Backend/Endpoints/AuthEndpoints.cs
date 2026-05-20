@@ -3,6 +3,7 @@ using System.Text;
 using Kumamoto.API.Data;
 using Kumamoto.API.DTOs.Auth;
 using Kumamoto.API.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kumamoto.API.Endpoints;
@@ -14,7 +15,7 @@ public static class AuthEndpoints
         var group = app.MapGroup("/api/auth").WithTags("Auth");
 
         // POST /api/auth/login
-        group.MapPost("/login", async (LoginRequest request, KumamotoDbContext db, TokenService tokenService) =>
+        group.MapPost("/login", async (LoginRequest request, KumamotoDbContext db, TokenService tokenService, HttpContext context, IConfiguration config) =>
         {
             if (string.IsNullOrWhiteSpace(request.Correo) || string.IsNullOrWhiteSpace(request.Password))
                 return Results.BadRequest(new { mensaje = "Correo y contraseña son requeridos." });
@@ -34,20 +35,51 @@ public static class AuthEndpoints
             if (!esValido)
                 return Results.Unauthorized();
 
+            // Generar JWT
             var token = tokenService.GenerarToken(usuario);
 
-            return Results.Ok(new LoginResponse(
-                Token: token,
-                Nombres: usuario.Nombres,
-                Apellidos: usuario.Apellidos,
-                Rol: usuario.Rol?.Nombre ?? "",
-                Dni: usuario.Dni
-            ));
+            // Inyectar JWT en Cookie Segura HttpOnly
+            var isProduction = context.Request.IsHttps || config["ASPNETCORE_ENVIRONMENT"] == "Production";
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true, // Bloquea XSS
+                Secure = isProduction, // HTTPS obligatorio en Prod
+                SameSite = SameSiteMode.Strict, // Bloquea CSRF
+                // Al NO definir 'Expires' ni 'MaxAge', se convierte en una Cookie de Sesión: 
+                // Se borrará automáticamente cuando el usuario cierre la pestaña/navegador.
+            };
+
+            context.Response.Cookies.Append("kumamoto_jwt", token, cookieOptions);
+
+            // Retornamos la respuesta SIN el token
+            return Results.Ok(new {
+                token = "SecureCookieProvided", // Placeholder
+                id = usuario.Id,
+                nombres = usuario.Nombres,
+                apellidos = usuario.Apellidos,
+                rol = usuario.Rol?.Nombre ?? "",
+                dni = usuario.Dni
+            });
         })
         .WithName("Login")
-        .WithSummary("Autenticación de usuarios — devuelve JWT")
+        .WithSummary("Autenticación Segura (Cookie HttpOnly)")
         .WithOpenApi()
-        .RequireRateLimiting("LoginLimiter");
+        .RequireRateLimiting("LoginPolicy"); // Fuerza bruta bloqueada
+
+        // POST /api/auth/logout
+        group.MapPost("/logout", (HttpContext context) =>
+        {
+            // Eliminar la cookie de forma segura
+            context.Response.Cookies.Delete("kumamoto_jwt", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict
+            });
+            return Results.Ok(new { mensaje = "Sesión cerrada correctamente." });
+        })
+        .WithName("Logout")
+        .WithSummary("Cerrar sesión (Borrar Cookie)");
 
         // POST /api/auth/forgot-password
         group.MapPost("/forgot-password", async (ForgotPasswordRequest request, KumamotoDbContext db, EmailService emailService) =>
@@ -59,7 +91,7 @@ public static class AuthEndpoints
             var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Correo == correoLimpio && u.Estado == 1);
             if (usuario == null)
             {
-                // Por seguridad, no revelamos si el correo existe o no, pero devolvemos éxito simulado
+                // Por seguridad, no revelamos si el correo existe
                 return Results.Ok(new { mensaje = "Si el correo existe en nuestro sistema, recibirás un código de verificación." });
             }
 
@@ -78,14 +110,14 @@ public static class AuthEndpoints
                 : $"****@{partes[1]}";
 
             return Results.Ok(new { 
-                mensaje = $"Código de verificación enviado exitosamente a su correo personal registrado ({correoEnmascarado}).",
+                mensaje = $"Código de verificación enviado exitosamente a su correo registrado ({correoEnmascarado}).",
                 correoEnmascarado = correoEnmascarado 
             });
         })
         .WithName("ForgotPassword")
-        .WithSummary("Solicitar código de recuperación de contraseña")
+        .WithSummary("Recuperar contraseña")
         .WithOpenApi()
-        .RequireRateLimiting("LoginLimiter");
+        .RequireRateLimiting("LoginPolicy");
 
         // POST /api/auth/reset-password
         group.MapPost("/reset-password", async (ResetPasswordRequest request, KumamotoDbContext db) =>
@@ -102,7 +134,11 @@ public static class AuthEndpoints
             if (usuario.FechaExpiracionCodigo.HasValue && usuario.FechaExpiracionCodigo.Value < DateTime.UtcNow)
                 return Results.BadRequest(new { mensaje = "El código de verificación ha expirado. Por favor, solicita uno nuevo." });
 
-            usuario.ClaveHash = HashPassword(request.NuevaPassword.Trim());
+            var nuevaPassword = request.NuevaPassword.Trim();
+            if (!IsValidStrongPassword(nuevaPassword))
+                return Results.BadRequest(new { mensaje = "La contraseña debe tener al menos 8 caracteres e incluir mayúsculas, minúsculas, números y un carácter especial (ej. Toby2025.2909)." });
+
+            usuario.ClaveHash = HashPassword(nuevaPassword);
             usuario.CodigoRecuperacion = null;
             usuario.FechaExpiracionCodigo = null;
             await db.SaveChangesAsync();
@@ -110,8 +146,7 @@ public static class AuthEndpoints
             return Results.Ok(new { mensaje = "Tu contraseña ha sido actualizada exitosamente." });
         })
         .WithName("ResetPassword")
-        .WithSummary("Restablecer contraseña con código de verificación")
-        .WithOpenApi();
+        .WithSummary("Restablecer contraseña");
 
         // GET /api/auth/me
         group.MapGet("/me", async (System.Security.Claims.ClaimsPrincipal user, KumamotoDbContext db) =>
@@ -166,7 +201,11 @@ public static class AuthEndpoints
                 return Results.BadRequest(new { mensaje = "La contraseña actual es incorrecta." });
             }
 
-            u.ClaveHash = HashPassword(dto.NuevaContrasena);
+            var nuevaPassword = dto.NuevaContrasena.Trim();
+            if (!IsValidStrongPassword(nuevaPassword))
+                return Results.BadRequest(new { mensaje = "La contraseña nueva debe tener al menos 8 caracteres e incluir mayúsculas, minúsculas, números y un carácter especial (ej. Toby2025.2909)." });
+
+            u.ClaveHash = HashPassword(nuevaPassword);
             await db.SaveChangesAsync();
 
             return Results.Ok(new { mensaje = "Contraseña actualizada correctamente." });
@@ -177,6 +216,18 @@ public static class AuthEndpoints
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
         return Convert.ToHexString(bytes).ToLower();
+    }
+
+    private static bool IsValidStrongPassword(string password)
+    {
+        if (string.IsNullOrWhiteSpace(password) || password.Length < 8) return false;
+        
+        bool hasUpper = password.Any(char.IsUpper);
+        bool hasLower = password.Any(char.IsLower);
+        bool hasDigit = password.Any(char.IsDigit);
+        bool hasSpecial = password.Any(c => !char.IsLetterOrDigit(c));
+        
+        return hasUpper && hasLower && hasDigit && hasSpecial;
     }
 }
 

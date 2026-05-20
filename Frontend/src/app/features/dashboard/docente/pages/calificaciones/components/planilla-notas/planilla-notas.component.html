@@ -6,7 +6,7 @@
   <!-- Paso 1: Configuración de la Evaluación (Sólo visible si no se ha generado la planilla) -->
   <div class="card-body setup-section" *ngIf="!planillaGenerada">
     <div *ngIf="competencias.length === 0" class="state-message empty">
-      <span>Debes agregar competencias generales del curso antes de poder calificar.</span>
+      <span>No se han registrado competencias para este curso. Solicite a la dirección que configure las competencias para poder registrar calificaciones.</span>
     </div>
 
     <div *ngIf="competencias.length > 0" class="setup-grid">

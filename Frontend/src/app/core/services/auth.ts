@@ -35,11 +35,13 @@ export class AuthService {
     // Removed
   }
 
-  private guardarSesion(response: LoginResponse): void {
-    localStorage.setItem('kumamoto_jwt', response.token);
-    localStorage.setItem(
+  private guardarSesion(response: any): void {
+    // El JWT ya viaja en la Cookie HttpOnly, solo guardamos los datos del usuario para pintar la UI.
+    // Usamos sessionStorage: Al cerrar la pestaña, se destruye automáticamente.
+    sessionStorage.setItem(
       'kumamoto_user',
       JSON.stringify({
+        id: response.id,
         nombre: `${response.nombres} ${response.apellidos}`,
         rol: response.rol,
         dni: response.dni
@@ -47,69 +49,37 @@ export class AuthService {
     );
   }
 
+  obtenerUsuarioIdDesdeToken(): number | null {
+    const raw = sessionStorage.getItem('kumamoto_user');
+    if (!raw) return null;
+    const user = JSON.parse(raw);
+    return user.id ? Number(user.id) : null;
+  }
 
   cerrarSesion(): void {
-    localStorage.removeItem('kumamoto_jwt');
-    localStorage.removeItem('kumamoto_user');
+    this.http.post(`${this.apiBase}/auth/logout`, {}, { withCredentials: true }).subscribe({
+      next: () => {
+        sessionStorage.removeItem('kumamoto_user');
+      },
+      error: () => {
+        sessionStorage.removeItem('kumamoto_user');
+      }
+    });
   }
 
   estaAutenticado(): boolean {
-    const token = localStorage.getItem('kumamoto_jwt');
-    if (!token) return false;
-
-    try {
-      const payloadPart = token.split('.')[1];
-      if (!payloadPart) return false;
-
-      const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
-      const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
-      const json = atob(padded);
-      const payload = JSON.parse(json) as { exp?: number };
-
-      if (payload && payload.exp) {
-        const isExpired = (payload.exp * 1000) < Date.now();
-        if (isExpired) {
-          this.cerrarSesion();
-          return false;
-        }
-      }
-      return true;
-    } catch {
-      this.cerrarSesion();
-      return false;
-    }
-  }
-
-  obtenerToken(): string | null {
-    return localStorage.getItem('kumamoto_jwt');
+    // La autenticación real la valida el backend mediante la Cookie HttpOnly en cada petición.
+    // Aquí solo verificamos que la sesión del navegador exista para permitir el renderizado inicial.
+    return !!sessionStorage.getItem('kumamoto_user');
   }
 
   obtenerUsuario(): { nombre: string; rol: string; dni: string } | null {
-    const raw = localStorage.getItem('kumamoto_user');
+    const raw = sessionStorage.getItem('kumamoto_user');
     return raw ? JSON.parse(raw) : null;
   }
 
   obtenerDni(): string | null {
     return this.obtenerUsuario()?.dni || null;
-  }
-
-  obtenerUsuarioIdDesdeToken(): number | null {
-    const token = this.obtenerToken();
-    if (!token) return null;
-
-    try {
-      const payloadPart = token.split('.')[1];
-      if (!payloadPart) return null;
-
-      const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
-      const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
-      const json = atob(padded);
-      const payload = JSON.parse(json) as { sub?: string };
-      const sub = payload.sub ? Number(payload.sub) : NaN;
-      return Number.isFinite(sub) ? sub : null;
-    } catch {
-      return null;
-    }
   }
 
   getProfile(): Observable<any> {

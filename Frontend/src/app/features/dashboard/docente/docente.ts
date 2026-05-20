@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { Router, RouterModule, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
 import { DocenteService } from '../../../core/services/docente';
@@ -20,6 +20,7 @@ export class Docente implements OnInit {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly docenteService = inject(DocenteService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   user = this.auth.obtenerUsuario();
 
@@ -31,9 +32,11 @@ export class Docente implements OnInit {
     this.docenteService.getMisTutorias().subscribe({
       next: (res) => {
         this.tutorias = res || [];
+        this.cdr.detectChanges();
       },
       error: () => {
         this.tutorias = [];
+        this.cdr.detectChanges();
       }
     });
   }

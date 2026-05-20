@@ -116,8 +116,21 @@ export class IngresarComponent {
   }
 
   restablecerPassword() {
-    if (!this.codigoRecuperacion || !this.nuevaPassword || this.nuevaPassword.trim().length < 4) {
-      this.errorRecuperacion = 'Ingrese el código de verificación y una nueva contraseña (mínimo 4 caracteres).';
+    if (!this.codigoRecuperacion || !this.nuevaPassword) {
+      this.errorRecuperacion = 'Ingrese el código de verificación y una nueva contraseña.';
+      return;
+    }
+
+    let passwordErrors = [];
+    const pwd = this.nuevaPassword.trim();
+    if (pwd.length < 8) passwordErrors.push('al menos 8 caracteres');
+    if (!/[A-Z]/.test(pwd)) passwordErrors.push('una letra mayúscula');
+    if (!/[a-z]/.test(pwd)) passwordErrors.push('una letra minúscula');
+    if (!/\d/.test(pwd)) passwordErrors.push('un número');
+    if (!/[^\da-zA-Z]/.test(pwd)) passwordErrors.push('un símbolo o carácter especial');
+
+    if (passwordErrors.length > 0) {
+      this.errorRecuperacion = 'Contraseña débil. Falta: ' + passwordErrors.join(', ') + '.';
       return;
     }
 

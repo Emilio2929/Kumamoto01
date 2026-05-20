@@ -1,0 +1,175 @@
+<div class="competencias-container">
+  <header class="page-header">
+    <div class="header-content">
+      <h1>Gestión de Competencias Curriculares</h1>
+      <p class="subtitle">Define las competencias oficiales por grado y curso. Los docentes evaluarán sobre estas competencias predefinidas.</p>
+    </div>
+  </header>
+
+  <!-- Panel de Selección -->
+  <div class="selector-card">
+    <div class="selectors-grid">
+      <div class="form-group">
+        <label for="grado-select">Grado Académico</label>
+        <div class="select-wrapper">
+          <select id="grado-select" [(ngModel)]="selectedGradoId" (change)="onFilterChange()" class="modern-select">
+            <option [ngValue]="null">Seleccione un grado...</option>
+            <option *ngFor="let g of grados" [value]="g.id">{{ g.nombre }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="curso-select">Curso / Asignatura</label>
+        <div class="select-wrapper">
+          <select id="curso-select" [(ngModel)]="selectedCursoId" (change)="onFilterChange()" class="modern-select">
+            <option [ngValue]="null">Seleccione un curso...</option>
+            <option *ngFor="let c of cursos" [value]="c.id">{{ c.nombre }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado de carga -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Cargando competencias...</p>
+  </div>
+
+  <!-- Mensaje de Error -->
+  <div class="error-banner animate-fade-in" *ngIf="errorMsg">
+    <svg viewBox="0 0 24 24" class="icon-error">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+    </svg>
+    <span>{{ errorMsg }}</span>
+  </div>
+
+  <!-- Vista Principal -->
+  <div class="main-content" *ngIf="!loading && selectedGradoId && selectedCursoId">
+    <!-- Tabla de Competencias -->
+    <div class="table-card animate-slide-up" *ngIf="competencias.length > 0">
+      <div class="card-header">
+        <h2>Lista de Competencias Registradas</h2>
+        <button class="btn btn-primary btn-add" (click)="openAddForm()">
+          <svg viewBox="0 0 24 24" class="btn-icon">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          Nueva Competencia
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th style="width: 80px;">N°</th>
+              <th style="width: 120px;">Código</th>
+              <th>Descripción de la Competencia</th>
+              <th style="width: 100px; text-align: center;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let comp of competencias; let idx = index">
+              <td><strong>{{ idx + 1 }}</strong></td>
+              <td><span class="badge-code">{{ comp.codigo }}</span></td>
+              <td>{{ comp.nombre }}</td>
+              <td class="actions-cell">
+                <button class="btn-action btn-edit" (click)="openEditForm(comp)" title="Editar Competencia">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                  </svg>
+                </button>
+                <button class="btn-action btn-delete" (click)="confirmDelete(comp)" title="Eliminar Competencia">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Estado vacío -->
+    <div class="empty-state animate-fade-in" *ngIf="competencias.length === 0">
+      <div class="empty-illustration">
+        <svg viewBox="0 0 24 24">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm0 8H7v-2h10v2z"/>
+        </svg>
+      </div>
+      <h3>No hay competencias registradas</h3>
+      <p>Aún no se han configurado competencias oficiales para este grado y curso.</p>
+      <button class="btn btn-primary" (click)="openAddForm()">
+        Agregar Primera Competencia
+      </button>
+    </div>
+  </div>
+
+  <!-- Estado Inicial (No Seleccionado) -->
+  <div class="initial-state animate-fade-in" *ngIf="!selectedGradoId || !selectedCursoId">
+    <div class="state-illustration">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" stroke-dasharray="4"/>
+        <path d="M12 8v4l3 3"/>
+      </svg>
+    </div>
+    <h3>Seleccione Grado y Curso</h3>
+    <p>Por favor seleccione el grado académico y el curso para visualizar o administrar sus competencias correspondientes.</p>
+  </div>
+</div>
+
+<!-- Modal para Crear/Editar Competencia -->
+<div class="modal-backdrop" *ngIf="showModal">
+  <div class="modal-container animate-scale-up">
+    <div class="modal-header">
+      <h3>{{ isEditing ? 'Editar Competencia' : 'Crear Competencia' }}</h3>
+      <button class="btn-close" (click)="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="comp-codigo">Código de la Competencia</label>
+        <input type="text" id="comp-codigo" [(ngModel)]="compCodigo" placeholder="Ej. C1, C2" class="modern-input" maxlength="10">
+      </div>
+      <div class="form-group mt-3">
+        <label for="comp-nombre">Nombre / Descripción de la Competencia</label>
+        <textarea id="comp-nombre" [(ngModel)]="compNombre" placeholder="Describa brevemente la competencia..." class="modern-textarea" rows="4"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" [disabled]="saving || !compCodigo.trim() || !compNombre.trim()" (click)="saveCompetencia()">
+        <span *ngIf="saving" class="spinner-inline"></span>
+        {{ saving ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal-backdrop" *ngIf="compToDelete">
+  <div class="modal-container modal-danger animate-scale-up">
+    <div class="modal-header">
+      <h3>Confirmar Eliminación</h3>
+      <button class="btn-close" (click)="cancelDelete()">&times;</button>
+    </div>
+    <div class="modal-body text-center">
+      <div class="warning-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+        </svg>
+      </div>
+      <p>¿Está seguro que desea eliminar la competencia <strong>{{ compToDelete.codigo }}</strong>?</p>
+      <p class="text-muted text-sm">{{ compToDelete.nombre }}</p>
+
+      <div class="error-banner mt-3 animate-fade-in" *ngIf="deleteError">
+        <span>{{ deleteError }}</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="cancelDelete()">Cancelar</button>
+      <button class="btn btn-danger" (click)="deleteCompetencia()">Eliminar</button>
+    </div>
+  </div>
+</div>

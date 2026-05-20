@@ -1,0 +1,239 @@
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+    <meta charset="utf-8">
+    <title>Cronograma Visual de Sprints - Proyecto Kumamoto</title>
+    <style>
+        body {
+            font-family: 'Calibri', 'Arial', sans-serif;
+            color: #333333;
+            line-height: 1.5;
+            padding: 20px;
+        }
+        h1 {
+            color: #1B365D;
+            font-size: 26pt;
+            border-bottom: 2px solid #1B365D;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #1B365D;
+            font-size: 18pt;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #CCCCCC;
+            padding-bottom: 5px;
+            background-color: #EBF1F5;
+            padding: 10px;
+        }
+        h3 {
+            color: #2C5282;
+            font-size: 14pt;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        p, li {
+            font-size: 11pt;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 30px;
+            font-size: 10.5pt;
+        }
+        th {
+            background-color: #1B365D;
+            color: white;
+            font-weight: bold;
+            text-align: left;
+            padding: 12px 10px;
+            border: 1px solid #1B365D;
+        }
+        td {
+            padding: 10px;
+            border: 1px solid #DDDDDD;
+            vertical-align: top;
+        }
+        tr:nth-child(even) {
+            background-color: #F9FBFD;
+        }
+        .meta-box {
+            background-color: #F0F4F8;
+            border-left: 5px solid #1B365D;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+        .meta-box p {
+            margin: 5px 0;
+            font-size: 11pt;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #1B365D;
+        }
+        .badge {
+            background-color: #2C5282;
+            color: white;
+            padding: 3px 8px;
+            font-weight: bold;
+            border-radius: 3px;
+            font-size: 10pt;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Cronograma Visual de Sprints (Línea de Tiempo Diaria)</h1>
+
+    <div class="meta-box">
+        <p><span class="highlight">Proyecto:</span> Sistema de Gestión Escolar "Proyecto Kumamoto"</p>
+        <p><span class="highlight">Duración Total:</span> 6 Semanas (42 Días Calendario / 30 Días Hábiles)</p>
+        <p><span class="highlight">Distribución:</span> 3 Sprints de 2 semanas cada uno (14 días naturales por Sprint).</p>
+    </div>
+
+    <h2>1. Sprint 1: Arquitectura Base, Seguridad, Autenticación y Gestión Institucional</h2>
+    <p><strong>Período:</strong> Días 1 al 14 (Semanas 1 y 2)<br>
+    <strong>Enfoque:</strong> Infraestructura Backend (.NET), Base de Datos (EF Core), Seguridad JWT, Maquetación del Login (CSS Grid) y vistas administrativas iniciales.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 15%;">Línea de Tiempo</th>
+                <th style="width: 45%;">Actividad Técnica Principal</th>
+                <th style="width: 40%;">Entregables / Archivos Involucrados</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge">Días 1-3</span></td>
+                <td>Inicialización del proyecto ASP.NET Core Web API y configuración de entornos y cadenas de conexión.</td>
+                <td>Kumamoto.API.csproj, appsettings.json, appsettings.Development.json.</td>
+            </tr>
+            <tr>
+                <td><span class="badge">Días 4-5</span></td>
+                <td>Modelado de entidades fundamentales con EF Core y ejecución de migraciones en SQL Server/Oracle.</td>
+                <td>Usuario.cs, Rol.cs, NivelEducativo.cs, PeriodoAcademico.cs, Grado.cs, Seccion.cs, Curso.cs.</td>
+            </tr>
+            <tr>
+                <td><span class="badge">Días 6-8</span></td>
+                <td>Implementación de autenticación JWT basada en roles y sanitización de inputs (trimming de contraseñas).</td>
+                <td>TokenService.cs, AuthEndpoints.cs.</td>
+            </tr>
+            <tr>
+                <td><span class="badge">Días 9-10</span></td>
+                <td>Configuración de cabeceras de seguridad HTTP (Rate Limiting, CSP) y servicio de correo para recuperación de claves.</td>
+                <td>Program.cs, EmailService.cs.</td>
+            </tr>
+            <tr>
+                <td><span class="badge">Días 11-12</span></td>
+                <td>Maquetación del Login en Angular usando CSS Grid estático y desarrollo del modal responsive de Comunicados.</td>
+                <td>login.component.ts, login.component.scss, app.routes.ts.</td>
+            </tr>
+            <tr>
+                <td><span class="badge">Días 13-14</span></td>
+                <td>Desarrollo de APIs y vistas de administración para la gestión de usuarios, personal y configuración del año académico.</td>
+                <td>UsuariosEndpoints.cs, ConfiguracionAnioEndpoints.cs, vistas Angular (usuarios, configuracion-anio).</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr style="border: 0; border-top: 1px solid #EEE; margin: 30px 0;">
+
+    <h2>2. Sprint 2: Gestión Académica, Matrícula, Portales Docente/Auxiliar y Control Operativo</h2>
+    <p><strong>Período:</strong> Días 15 al 28 (Semanas 3 y 4)<br>
+    <strong>Enfoque:</strong> Flujo de matrícula, asignación de carga académica, Portal Docente (calificación por competencias) y Portal Auxiliar (asistencia).</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 15%;">Línea de Tiempo</th>
+                <th style="width: 45%;">Actividad Técnica Principal</th>
+                <th style="width: 40%;">Entregables / Archivos Involucrados</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge">Días 15-17</span></td>
+                <td>Modelado de entidades relacionales de matrícula, aulas y carga académica de docentes/auxiliares.</td>
+                <td>Estudiante.cs, Aula.cs, CargaAcademica.cs, AsignacionAuxiliar.cs, HorarioCurso.cs.</td>
+            </tr>
+            <tr>
+                <td><span class="badge">Días 18-20</span></td>
+                <td>Construcción de endpoints REST para la matriculación de alumnos y asignación de cursos.</td>
+                <td>MatriculaEndpoints.cs, AulasEndpoints.cs, CargaAcademicaEndpoints.cs.</td>
+            </tr>
+            <tr>
+                <td><span class="badge">Días 21-22</span></td>
+                <td>Integración en el panel de la Directora de las interfaces de gestión de matrículas y asignación de tutores.</td>
+                <td>Vistas Angular (matricula, aulas, auxiliares).</td>
+            </tr>
+            <tr>
+                <td><span class="badge">Días 23-25</span></td>
+                <td>Desarrollo del motor de cálculo de calificaciones por competencias, bimestres y semanas académicas.</td>
+                <td>Calificacion.cs, CalificacionBimestral.cs, Competencia.cs, CalificacionesEndpoints.cs.</td>
+            </tr>
+            <tr>
+                <td><span class="badge">Días 26-27</span></td>
+                <td>Implementación del Portal Docente en Angular para el ingreso de notas y listado de cursos asignados.</td>
+                <td>dashboard-docente, lista-cursos, calificaciones.</td>
+            </tr>
+            <tr>
+                <td><span class="badge">Día 28</span></td>
+                <td>Desarrollo del Portal Auxiliar para el control de asistencia diaria en tiempo real y pruebas cruzadas.</td>
+                <td>Asistencia.cs, AuxiliarEndpoints.cs, registro-asistencia-auxiliar.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr style="border: 0; border-top: 1px solid #EEE; margin: 30px 0;">
+
+    <h2>3. Sprint 3: Alertas Tempranas, Desbloqueo Notas, Portal Padres y DevOps (CI/CD)</h2>
+    <p><strong>Período:</strong> Días 29 al 42 (Semanas 5 y 6)<br>
+    <strong>Enfoque:</strong> Inteligencia y monitoreo de riesgo, autorización de actas, Portal de Padres y automatización de despliegue en la nube.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 15%;">Línea de Tiempo</th>
+                <th style="width: 45%;">Actividad Técnica Principal</th>
+                <th style="width: 40%;">Entregables / Archivos Involucrados</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge">Días 29-31</span></td>
+                <td>Modelado de entidades para el registro de incidencias conductuales y seguimiento de alumnos en riesgo.</td>
+                <td>Incidencia.cs, AlumnoRiesgo.cs, AlertaRiesgo.cs, DesbloqueoCalificacion.cs.</td>
+            </tr>
+            <tr>
+                <td><span class="badge">Días 32-34</span></td>
+                <td>Desarrollo del servicio de alertas tempranas y optimización de consultas SQL con índices y LEFT JOINs.</td>
+                <td>EarlyWarningService.cs, optimize_tutoria_queries.sql, optimize_attendance_reports.sql, DashboardEndpoints.cs.</td>
+            </tr>
+            <tr>
+                <td><span class="badge">Días 35-36</span></td>
+                <td>Implementación del flujo seguro de Desbloqueo de Notas (candado de un solo uso) y su vista administrativa.</td>
+                <td>DesbloqueoNotasEndpoints.cs, vista Angular (desbloqueo-notas).</td>
+            </tr>
+            <tr>
+                <td><span class="badge">Días 37-39</span></td>
+                <td>Construcción de endpoints y portal web independiente para Padres de Familia (asistencia, notas, comunicados).</td>
+                <td>PadresEndpoints.cs, ComunicadoEndpoints.cs, vistas Angular (dashboard-padre, asistencia-padre, notas-padre).</td>
+            </tr>
+            <tr>
+                <td><span class="badge">Días 40-41</span></td>
+                <td>Containerización de la plataforma con Docker multi-etapa y configuración de manifiestos para la nube.</td>
+                <td>Dockerfile, docker-compose.yml, railway.json, render.yaml, vercel.json.</td>
+            </tr>
+            <tr>
+                <td><span class="badge">Día 42</span></td>
+                <td>Implementación del pipeline de integración y despliegue continuo (CI/CD) en Jenkins con análisis SAST y Cierre Final.</td>
+                <td>Jenkinsfile, despliegue automatizado en Oracle Cloud / Railway.</td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>

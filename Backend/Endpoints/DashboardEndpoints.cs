@@ -222,7 +222,7 @@ public static class DashboardEndpoints
                         .Where(c => c.EstudianteId == e.Id && c.Estado == 1 && c.Escala != null)
                         .Select(c => new { 
                             Letra = c.Escala!.Letra, 
-                            Curso = c.Competencia != null ? (c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : (c.Competencia.Carga != null && c.Competencia.Carga.Curso != null ? c.Competencia.Carga.Curso.Nombre : "Curso General")) : "Curso General", 
+                            Curso = c.Competencia != null && c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : "Curso General", 
                             Competencia = c.Competencia != null ? c.Competencia.Nombre : "Evaluación General" 
                         })
                         .ToList()
@@ -363,7 +363,6 @@ public static class DashboardEndpoints
             // 2. Obtener todas las calificaciones del estudiante
             var calificaciones = await db.Calificaciones
                 .Include(c => c.Competencia).ThenInclude(comp => comp!.Curso)
-                .Include(c => c.Competencia).ThenInclude(comp => comp!.Carga).ThenInclude(ca => ca!.Curso)
                 .Include(c => c.Semana).ThenInclude(s => s!.Periodo)
                 .Include(c => c.Escala)
                 .Where(c => c.EstudianteId == estudiante.Id && c.Estado == 1)
@@ -392,7 +391,7 @@ public static class DashboardEndpoints
 
                 // Iterar sobre los cursos del aula (o cursos con notas si no hay cargas)
                 var nombresCursos = cargas.Select(ca => ca.Curso?.Nombre ?? "Curso General").Distinct().ToList();
-                var cursosConNotas = calificaciones.Select(c => c.Competencia != null ? (c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : (c.Competencia.Carga != null && c.Competencia.Carga.Curso != null ? c.Competencia.Carga.Curso.Nombre : "Curso General")) : "Curso General").Distinct();
+                var cursosConNotas = calificaciones.Select(c => c.Competencia != null && c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : "Curso General").Distinct();
                 var todosLosCursos = nombresCursos.Union(cursosConNotas).Distinct().ToList();
 
                 foreach (var nombreCurso in todosLosCursos)
@@ -400,7 +399,7 @@ public static class DashboardEndpoints
                     // Calificaciones de este curso en este periodo
                     var califCurso = calificaciones
                         .Where(c => (c.Semana?.Periodo?.Nombre ?? "Periodo General") == periodo &&
-                                    (c.Competencia != null ? (c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : (c.Competencia.Carga != null && c.Competencia.Carga.Curso != null ? c.Competencia.Carga.Curso.Nombre : "Curso General")) : "Curso General") == nombreCurso &&
+                                    (c.Competencia != null && c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : "Curso General") == nombreCurso &&
                                     c.Escala != null)
                         .ToList();
 

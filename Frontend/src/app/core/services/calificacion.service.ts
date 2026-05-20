@@ -94,6 +94,22 @@ export class CalificacionService {
     return this.http.delete<void>(`${this.apiUrl}/competencias/${id}`);
   }
 
+  getCompetenciasAdmin(cursoId: number, gradoId: number): Observable<Competencia[]> {
+    return this.http.get<Competencia[]>(`${this.apiUrl}/competencias/admin/curso/${cursoId}/grado/${gradoId}`);
+  }
+
+  createCompetenciaAdmin(cursoId: number, gradoId: number, codigo: string, nombre: string): Observable<Competencia> {
+    return this.http.post<Competencia>(`${this.apiUrl}/competencias/admin`, { cursoId, gradoId, codigo, nombre });
+  }
+
+  deleteCompetenciaAdmin(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/competencias/admin/${id}`);
+  }
+
+  updateCompetenciaAdmin(id: number, codigo: string, nombre: string): Observable<Competencia> {
+    return this.http.put<Competencia>(`${this.apiUrl}/competencias/admin/${id}`, { codigo, nombre });
+  }
+
   getConfig(): Observable<CalificacionesConfig> {
     return this.http.get<CalificacionesConfig>(`${this.apiUrl}/config`);
   }

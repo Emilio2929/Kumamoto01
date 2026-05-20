@@ -199,23 +199,20 @@ public static class DocentePortalEndpoints
             // Obtener todas las competencias de los cursos de esta aula
             var competenciasAula = await db.Competencias
                 .Include(c => c.Curso)
-                .Include(c => c.Carga).ThenInclude(ca => ca!.Curso)
-                .Where(c => c.Estado == 1)
+                .Where(c => c.GradoId == aula.GradoId && c.Estado == 1)
                 .ToListAsync();
 
             var competenciasFiltradas = competenciasAula.Where(c => 
-                (c.Curso != null && cursosAula.Contains(c.Curso.Nombre)) ||
-                (c.Carga?.Curso != null && cursosAula.Contains(c.Carga.Curso.Nombre))
+                c.Curso != null && cursosAula.Contains(c.Curso.Nombre)
             ).Select(c => new {
                 Id = c.Id,
                 Nombre = c.Nombre,
-                Curso = c.Curso != null ? c.Curso.Nombre : c.Carga!.Curso!.Nombre
+                Curso = c.Curso!.Nombre
             }).ToList();
 
             // Notas bimestrales (CalificacionBimestral) de todos los cursos y bimestres para los estudiantes del aula
             var notasBimestrales = await db.CalificacionesBimestrales
                 .Include(c => c.Competencia!).ThenInclude(comp => comp.Curso)
-                .Include(c => c.Competencia!).ThenInclude(comp => comp.Carga!).ThenInclude(ca => ca.Curso)
                 .Include(c => c.Periodo)
                 .Include(c => c.Escala)
                 .Where(c => estudianteIds.Contains(c.EstudianteId) && c.Estado == 1)
@@ -224,8 +221,7 @@ public static class DocentePortalEndpoints
                     c.EstudianteId,
                     CompetenciaId = c.CompetenciaId,
                     Competencia = c.Competencia!.Nombre,
-                    Curso = c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : 
-                            (c.Competencia.Carga!.Curso != null ? c.Competencia.Carga.Curso.Nombre : "Curso General"),
+                    Curso = c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : "Curso General",
                     Bimestre = c.Periodo!.Nombre,
                     Letra = c.Escala!.Letra,
                     c.Escala.Significado
@@ -244,7 +240,6 @@ public static class DocentePortalEndpoints
             // Notas semanales (Calificacion) de todos los cursos y semanas para los estudiantes del aula
             var notasSemanales = await db.Calificaciones
                 .Include(c => c.Competencia!).ThenInclude(comp => comp.Curso)
-                .Include(c => c.Competencia!).ThenInclude(comp => comp.Carga!).ThenInclude(ca => ca.Curso)
                 .Include(c => c.Semana!).ThenInclude(s => s.Periodo)
                 .Include(c => c.Escala)
                 .Where(c => c.EstudianteId.HasValue && estudianteIds.Contains(c.EstudianteId.Value) && c.Estado == 1)
@@ -253,8 +248,7 @@ public static class DocentePortalEndpoints
                     EstudianteId = c.EstudianteId!.Value,
                     CompetenciaId = c.CompetenciaId,
                     Competencia = c.Competencia!.Nombre,
-                    Curso = c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : 
-                            (c.Competencia.Carga!.Curso != null ? c.Competencia.Carga.Curso.Nombre : "Curso General"),
+                    Curso = c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : "Curso General",
                     Bimestre = c.Semana!.Periodo != null ? c.Semana.Periodo.Nombre : "Bimestre I",
                     Semana = c.Semana.NumeroSemana,
                     Letra = c.Escala!.Letra,

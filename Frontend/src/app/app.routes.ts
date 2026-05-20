@@ -47,6 +47,10 @@ export const routes: Routes = [
 				loadComponent: () => import('./features/dashboard/directora/pages/cursos/cursos').then(m => m.CursosPage)
 			},
 			{
+				path: 'competencias',
+				loadComponent: () => import('./features/dashboard/directora/pages/competencias/competencias').then(m => m.CompetenciasPage)
+			},
+			{
 				path: 'carga-academica',
 				loadComponent: () => import('./features/dashboard/directora/pages/estructura/estructura').then(m => m.Estructura)
 			},

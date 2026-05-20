@@ -187,13 +187,12 @@ public static class PadresEndpoints
             // Notas recientes (usando modelo EF Core 5NF con soporte para Carga Académica)
             var calificaciones = await db.Calificaciones
                 .Include(c => c.Competencia).ThenInclude(comp => comp!.Curso)
-                .Include(c => c.Competencia).ThenInclude(comp => comp!.Carga).ThenInclude(ca => ca!.Curso)
                 .Include(c => c.Escala)
                 .Where(c => c.EstudianteId == estudiante.Id && c.Estado == 1)
                 .OrderByDescending(c => c.FechaRegistro)
                 .Take(4)
                 .Select(c => new { 
-                    curso = c.Competencia != null ? (c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : (c.Competencia.Carga != null && c.Competencia.Carga.Curso != null ? c.Competencia.Carga.Curso.Nombre : "Curso General")) : "Curso General", 
+                    curso = c.Competencia != null && c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : "Curso General", 
                     nota = c.Escala!.Letra 
                 })
                 .ToListAsync();
@@ -380,11 +379,10 @@ public static class PadresEndpoints
             var notasTodas = await db.Calificaciones
                 .Include(c => c.Semana)
                 .Where(c => c.EstudianteId != null && hijoIds.Contains(c.EstudianteId.Value) && c.Estado == 1)
-                .OrderByDescending(c => c.FechaRegistro)
                 .Select(c => new
                 {
                     EstudianteId = c.EstudianteId!.Value,
-                    curso        = c.Competencia != null ? (c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : (c.Competencia.Carga != null && c.Competencia.Carga.Curso != null ? c.Competencia.Carga.Curso.Nombre : "Curso General")) : "Curso General",
+                    curso        = c.Competencia != null && c.Competencia.Curso != null ? c.Competencia.Curso.Nombre : "Curso General",
                     competencia  = c.Competencia != null ? c.Competencia.Nombre : "Evaluación General",
                     codigo       = c.Competencia != null ? c.Competencia.Codigo : "-",
                     nota         = c.Escala!.Letra,
@@ -527,14 +525,13 @@ public static class PadresEndpoints
 
             var calificaciones = await db.Calificaciones
                 .Include(c => c.Competencia).ThenInclude(comp => comp!.Curso)
-                .Include(c => c.Competencia).ThenInclude(comp => comp!.Carga).ThenInclude(ca => ca!.Curso)
                 .Include(c => c.Semana).ThenInclude(s => s!.Periodo)
                 .Include(c => c.Escala)
                 .Where(c => c.EstudianteId == estudiante.Id && c.Estado == 1)
                 .ToListAsync();
 
             var nombresCursos = cargas.Select(ca => ca.Curso?.Nombre ?? "Curso General").Distinct().ToList();
-            var cursosConNotas = calificaciones.Select(c => c.Competencia?.Curso?.Nombre ?? (c.Competencia?.Carga?.Curso?.Nombre ?? "Curso General")).Distinct();
+            var cursosConNotas = calificaciones.Select(c => c.Competencia?.Curso?.Nombre ?? "Curso General").Distinct();
             var todosLosCursos = nombresCursos.Union(cursosConNotas).Distinct().OrderBy(c => c).ToList();
 
             var periodosDb = await db.PeriodosAcademicos
@@ -557,7 +554,7 @@ public static class PadresEndpoints
             var califsPlanificadas = calificaciones.Select(c => new
             {
                 Periodo = c.Semana?.Periodo?.Nombre ?? "Periodo General",
-                Curso = c.Competencia?.Curso?.Nombre ?? (c.Competencia?.Carga?.Curso?.Nombre ?? "Curso General"),
+                Curso = c.Competencia?.Curso?.Nombre ?? "Curso General",
                 CodigoComp = c.Competencia?.Codigo ?? "-",
                 NombreComp = c.Competencia?.Nombre ?? "Evaluación General",
                 IdComp = c.Competencia?.Id ?? 0,

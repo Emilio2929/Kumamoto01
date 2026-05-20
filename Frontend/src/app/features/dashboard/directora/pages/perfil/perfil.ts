@@ -97,6 +97,18 @@ export class Perfil implements OnInit {
       this.showModal('Atención', "La nueva contraseña y la confirmación no coinciden.", 'error');
       return;
     }
+
+    let passwordErrors = [];
+    if (this.passwords.newPass.length < 8) passwordErrors.push('al menos 8 caracteres');
+    if (!/[A-Z]/.test(this.passwords.newPass)) passwordErrors.push('una letra mayúscula');
+    if (!/[a-z]/.test(this.passwords.newPass)) passwordErrors.push('una letra minúscula');
+    if (!/\d/.test(this.passwords.newPass)) passwordErrors.push('un número');
+    if (!/[^\da-zA-Z]/.test(this.passwords.newPass)) passwordErrors.push('un símbolo o carácter especial');
+
+    if (passwordErrors.length > 0) {
+      this.showModal('Atención', "La nueva contraseña es muy débil. Falta: " + passwordErrors.join(', ') + ".", 'error');
+      return;
+    }
     
     this.showModal('Cambiar Contraseña', '¿Está seguro que desea cambiar su contraseña? Su sesión actual se cerrará.', 'confirm', () => {
       this.authService.changePassword({

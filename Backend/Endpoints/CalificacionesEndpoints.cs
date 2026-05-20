@@ -14,43 +14,9 @@ public static class CalificacionesEndpoints
         var group = app.MapGroup("/api/calificaciones").WithTags("Calificaciones").RequireAuthorization();
 
         // ── POST /api/calificaciones/competencias
-        group.MapPost("/competencias", async (CrearCompetenciaRequest request, ClaimsPrincipal user, KumamotoDbContext db) =>
+        group.MapPost("/competencias", (CrearCompetenciaRequest request, ClaimsPrincipal user, KumamotoDbContext db) =>
         {
-            var userId = GetUserId(user);
-            if (userId is null) return Results.Unauthorized();
-
-            // Validar que la carga pertenezca al docente
-            var carga = await db.CargasAcademicas.FirstOrDefaultAsync(c => c.Id == request.CargaId && c.Estado == 1);
-            if (carga == null) return Results.NotFound("Carga académica no encontrada.");
-            if (carga.DocenteId != userId) return Results.Forbid();
-
-            // Validar estrictamente en la BD que no exista ya el mismo código de competencia activo para esta carga
-            var existeCodigo = await db.Competencias
-                .AnyAsync(c => c.CargaId == request.CargaId && c.Codigo.ToLower() == request.Codigo.ToLower() && c.Estado == 1);
-
-            if (existeCodigo)
-            {
-                return Results.BadRequest(new { mensaje = $"Ya existe una competencia activa registrada con el código '{request.Codigo.ToUpper()}' para este curso." });
-            }
-
-            // Siguiente numero_orden (si existiera lógica) o simplemente agregar
-            var maxOrden = await db.Competencias
-                .Where(c => c.CargaId == request.CargaId && c.Estado == 1)
-                .MaxAsync(c => (int?)c.NumeroOrden) ?? 0;
-
-            var comp = new Competencia
-            {
-                CargaId = request.CargaId,
-                Codigo = request.Codigo.ToUpper(),
-                Nombre = request.Nombre,
-                NumeroOrden = maxOrden + 1,
-                Estado = 1
-            };
-
-            db.Competencias.Add(comp);
-            await db.SaveChangesAsync();
-
-            return Results.Ok(new CompetenciaDto(comp.Id, comp.Codigo, comp.Nombre));
+            return Results.BadRequest(new { mensaje = "Las competencias ahora son únicas por grado y curso, y son cargadas exclusivamente por la Directora." });
         }).WithName("CrearCompetencia");
 
         // ── GET /api/calificaciones/competencias/carga/{cargaId}
@@ -59,12 +25,14 @@ public static class CalificacionesEndpoints
             var userId = GetUserId(user);
             if (userId is null) return Results.Unauthorized();
 
-            var carga = await db.CargasAcademicas.FirstOrDefaultAsync(c => c.Id == cargaId && c.Estado == 1);
+            var carga = await db.CargasAcademicas
+                .Include(c => c.Aula)
+                .FirstOrDefaultAsync(c => c.Id == cargaId && c.Estado == 1);
             if (carga == null) return Results.NotFound();
             if (carga.DocenteId != userId) return Results.Forbid();
 
             var comps = await db.Competencias
-                .Where(c => c.CargaId == cargaId && c.Estado == 1)
+                .Where(c => c.CursoId == carga.CursoId && c.GradoId == carga.Aula!.GradoId && c.Estado == 1)
                 .OrderBy(c => c.NumeroOrden)
                 .Select(c => new CompetenciaDto(c.Id, c.Codigo, c.Nombre))
                 .ToListAsync();
@@ -96,21 +64,104 @@ public static class CalificacionesEndpoints
         }).WithName("GetMisCursos");
 
         // ── DELETE /api/calificaciones/competencias/{id}
-        group.MapDelete("/competencias/{id}", async (int id, ClaimsPrincipal user, KumamotoDbContext db) =>
+        group.MapDelete("/competencias/{id}", (int id, ClaimsPrincipal user, KumamotoDbContext db) =>
         {
-            var userId = GetUserId(user);
-            if (userId is null) return Results.Unauthorized();
+            return Results.BadRequest(new { mensaje = "Las competencias ahora son únicas por grado y curso, y son administradas exclusivamente por la Directora." });
+        }).WithName("DeleteCompetencia");
 
-            var comp = await db.Competencias.Include(c => c.Carga).FirstOrDefaultAsync(c => c.Id == id && c.Estado == 1);
+        // ── GET /api/calificaciones/competencias/admin/curso/{cursoId}/grado/{gradoId}
+        group.MapGet("/competencias/admin/curso/{cursoId:int}/grado/{gradoId:int}", async (int cursoId, int gradoId, KumamotoDbContext db) =>
+        {
+            var comps = await db.Competencias
+                .Where(c => c.CursoId == cursoId && c.GradoId == gradoId && c.Estado == 1)
+                .OrderBy(c => c.NumeroOrden)
+                .Select(c => new CompetenciaDto(c.Id, c.Codigo, c.Nombre))
+                .ToListAsync();
+
+            return Results.Ok(comps);
+        }).WithName("GetCompetenciasPorCursoYGrado");
+
+        // ── POST /api/calificaciones/competencias/admin
+        group.MapPost("/competencias/admin", async (CrearCompetenciaAdminRequest request, KumamotoDbContext db) =>
+        {
+            if (request.CursoId <= 0 || request.GradoId <= 0)
+                return Results.BadRequest(new { mensaje = "Curso y Grado son requeridos." });
+
+            if (string.IsNullOrWhiteSpace(request.Codigo) || string.IsNullOrWhiteSpace(request.Nombre))
+                return Results.BadRequest(new { mensaje = "Código y Nombre son requeridos." });
+
+            var existeCodigo = await db.Competencias
+                .AnyAsync(c => c.CursoId == request.CursoId && c.GradoId == request.GradoId && c.Codigo.ToLower() == request.Codigo.ToLower() && c.Estado == 1);
+
+            if (existeCodigo)
+            {
+                return Results.BadRequest(new { mensaje = $"Ya existe una competencia activa con el código '{request.Codigo.ToUpper()}' para este curso y grado." });
+            }
+
+            var maxOrden = await db.Competencias
+                .Where(c => c.CursoId == request.CursoId && c.GradoId == request.GradoId && c.Estado == 1)
+                .MaxAsync(c => (int?)c.NumeroOrden) ?? 0;
+
+            var comp = new Competencia
+            {
+                CursoId = request.CursoId,
+                GradoId = request.GradoId,
+                Codigo = request.Codigo.ToUpper(),
+                Nombre = request.Nombre.Trim(),
+                NumeroOrden = maxOrden + 1,
+                Estado = 1
+            };
+
+            db.Competencias.Add(comp);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new CompetenciaDto(comp.Id, comp.Codigo, comp.Nombre));
+        }).WithName("CrearCompetenciaAdmin");
+
+        // ── DELETE /api/calificaciones/competencias/admin/{id}
+        group.MapDelete("/competencias/admin/{id:int}", async (int id, KumamotoDbContext db) =>
+        {
+            var comp = await db.Competencias.FirstOrDefaultAsync(c => c.Id == id && c.Estado == 1);
             if (comp == null) return Results.NotFound();
-            if (comp.Carga?.DocenteId != userId) return Results.Forbid();
 
-            // Opcional: verificar si tiene calificaciones, pero por ahora borrado lógico
+            // Verificamos si tiene calificaciones registradas
+            var tieneCalificaciones = await db.Calificaciones.AnyAsync(c => c.CompetenciaId == id && c.Estado == 1);
+            if (tieneCalificaciones)
+            {
+                return Results.BadRequest(new { mensaje = "No se puede eliminar la competencia porque ya tiene calificaciones registradas." });
+            }
+
             comp.Estado = 0;
             await db.SaveChangesAsync();
 
             return Results.Ok();
-        }).WithName("DeleteCompetencia");
+        }).WithName("DeleteCompetenciaAdmin");
+
+        // ── PUT /api/calificaciones/competencias/admin/{id}
+        group.MapPut("/competencias/admin/{id:int}", async (int id, EditarCompetenciaAdminRequest request, KumamotoDbContext db) =>
+        {
+            var comp = await db.Competencias.FirstOrDefaultAsync(c => c.Id == id && c.Estado == 1);
+            if (comp == null) return Results.NotFound();
+
+            if (string.IsNullOrWhiteSpace(request.Codigo) || string.IsNullOrWhiteSpace(request.Nombre))
+                return Results.BadRequest(new { mensaje = "Código y Nombre son requeridos." });
+
+            // Verificar si el código ya existe en otra competencia distinta del mismo curso y grado
+            var existeCodigo = await db.Competencias
+                .AnyAsync(c => c.Id != id && c.CursoId == comp.CursoId && c.GradoId == comp.GradoId && c.Codigo.ToLower() == request.Codigo.ToLower() && c.Estado == 1);
+
+            if (existeCodigo)
+            {
+                return Results.BadRequest(new { mensaje = $"Ya existe otra competencia activa con el código '{request.Codigo.ToUpper()}' para este curso y grado." });
+            }
+
+            comp.Codigo = request.Codigo.ToUpper();
+            comp.Nombre = request.Nombre.Trim();
+
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new CompetenciaDto(comp.Id, comp.Codigo, comp.Nombre));
+        }).WithName("EditarCompetenciaAdmin");
 
         // ── GET /api/calificaciones/planilla
         group.MapGet("/planilla", async (int cargaId, int semanaId, string competenciasIds, ClaimsPrincipal user, KumamotoDbContext db) =>
@@ -126,7 +177,7 @@ public static class CalificacionesEndpoints
             var selectedIds = competenciasIds.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToList();
 
             var comps = await db.Competencias
-                .Where(c => c.CargaId == cargaId && c.Estado == 1 && selectedIds.Contains(c.Id))
+                .Where(c => c.CursoId == carga.CursoId && c.GradoId == carga.Aula!.GradoId && c.Estado == 1 && selectedIds.Contains(c.Id))
                 .OrderBy(c => c.NumeroOrden)
                 .ToListAsync();
 
@@ -215,6 +266,12 @@ public static class CalificacionesEndpoints
 
             // Obtener todas las calificaciones previas de los estudiantes en esta semana
             var estudiantesIdsRequest = request.Notas.Select(n => n.EstudianteId).Distinct().ToList();
+            Console.WriteLine($">>>> [DEBUG] Recibidos {request.Notas.Count} notas para {estudiantesIdsRequest.Count} estudiantes.");
+            foreach (var n in request.Notas)
+            {
+                Console.WriteLine($">>>> [DEBUG] Nota: EstudianteId={n.EstudianteId}, CompetenciaId={n.CompetenciaId}, Nota={n.Nota}");
+            }
+
             var calificacionesPrevias = await db.Calificaciones
                 .Where(c => c.SemanaId == request.SemanaId && c.EstudianteId != null && estudiantesIdsRequest.Contains(c.EstudianteId.Value) && c.Estado == 1)
                 .ToListAsync();
@@ -229,7 +286,11 @@ public static class CalificacionesEndpoints
             foreach (var item in request.Notas)
             {
                 var letra = item.Nota?.ToUpper() ?? "";
-                if (!escalaDict.TryGetValue(letra, out var escalaId)) continue;
+                if (!escalaDict.TryGetValue(letra, out var escalaId))
+                {
+                    Console.WriteLine($">>>> [DEBUG] Escala no encontrada para letra: {letra}");
+                    continue;
+                }
 
                 var existente = calificacionesPrevias.FirstOrDefault(c => c.EstudianteId == item.EstudianteId && c.CompetenciaId == item.CompetenciaId);
                 
@@ -253,16 +314,18 @@ public static class CalificacionesEndpoints
                 else
                 {
                     // Es una nota nueva (competencia no registrada anteriormente para este estudiante en esta semana)
-                    // Verificamos si el estudiante ya tiene OTRAS notas en esta semana que tengan más de 24 horas
                     var tieneNotasAntiguas = calificacionesPrevias.Any(c => c.EstudianteId == item.EstudianteId && (ahora - c.FechaRegistro).TotalHours > 24);
-                    
-                    // Si ya pasó la fecha de bloqueo (tiene notas antiguas) o si hay un desbloqueo activo para él (lo que implica que fue reabierto por la directora tras el bloqueo),
-                    // EL DOCENTE SOLO DEBE PODER AGREGAR NOTAS A LAS COMPETENCIAS REGISTRADAS ANTERIORMENTE. Por lo tanto, no se permite agregar esta nueva competencia.
-                    var tieneDesbloqueo = desbloqueosActivos.Any(d => d.EstudianteId == item.EstudianteId && d.Estado == 1);
+                    var desbloqueo = desbloqueosActivos.FirstOrDefault(d => d.EstudianteId == item.EstudianteId && d.Estado == 1);
 
-                    if (tieneNotasAntiguas || tieneDesbloqueo)
+                    if (tieneNotasAntiguas && desbloqueo == null)
                     {
-                        continue; // No se permite agregar nuevas competencias si ya pasó el bloqueo o está en modo desbloqueo
+                        continue; // Ya pasó el bloqueo y no hay desbloqueo activo. No se puede agregar.
+                    }
+
+                    // Consumir el desbloqueo si se usó para agregar esta nueva competencia
+                    if (desbloqueo != null && tieneNotasAntiguas)
+                    {
+                        desbloqueo.Estado = 0;
                     }
 
                     db.Calificaciones.Add(new Calificacion
@@ -344,7 +407,7 @@ public static class CalificacionesEndpoints
             if (carga == null || carga.DocenteId != userId) return Results.Forbid();
 
             var comps = await db.Competencias
-                .Where(c => c.CargaId == cargaId && c.Estado == 1)
+                .Where(c => c.CursoId == carga.CursoId && c.GradoId == carga.Aula!.GradoId && c.Estado == 1)
                 .OrderBy(c => c.NumeroOrden)
                 .ToListAsync();
 

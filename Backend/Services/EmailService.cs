@@ -1,19 +1,21 @@
-using System.Net;
-using System.Net.Mail;
-using Microsoft.Extensions.Configuration;
+using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Resend;
 
 namespace Kumamoto.API.Services;
 
 public class EmailService
 {
-    private readonly IConfiguration _configuration;
+    private readonly IResend _resend;
     private readonly ILogger<EmailService> _logger;
+    private readonly IConfiguration _config;
 
-    public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
+    public EmailService(IResend resend, ILogger<EmailService> logger, IConfiguration config)
     {
-        _configuration = configuration;
+        _resend = resend;
         _logger = logger;
+        _config = config;
     }
 
     public async Task EnviarCodigoRecuperacionAsync(string correoDestino, string codigo)
@@ -26,49 +28,76 @@ public class EmailService
 
         try
         {
-            var host = _configuration["Smtp:Host"];
-            var portStr = _configuration["Smtp:Port"];
-            var user = _configuration["Smtp:Username"];
-            var pass = _configuration["Smtp:Password"];
-
-            if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
+            var emailFrom = _config["EMAIL_FROM"] ?? "Soporte <soporte@ie3092kumamoto1.org>";
+            var message = new EmailMessage
             {
-                _logger.LogWarning("Configuración SMTP no provista o en modo desarrollo. El código {Codigo} se muestra arriba para pruebas locales.", codigo);
-                return;
-            }
-
-            int port = int.TryParse(portStr, out var p) ? p : 587;
-
-            using var client = new SmtpClient(host, port)
-            {
-                Credentials = new NetworkCredential(user, pass),
-                EnableSsl = _configuration.GetValue<bool>("Smtp:EnableSsl", true)
+                From = emailFrom,
+                To = { correoDestino },
+                Subject = "Recuperación de Contraseña - I.E. 3092 Kumamoto",
+                HtmlBody = $@"
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset='UTF-8'>
+                </head>
+                <body style='margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, ""Segoe UI"", Roboto, Helvetica, Arial, sans-serif;'>
+                    <table border='0' cellpadding='0' cellspacing='0' width='100%' style='padding: 40px 0;'>
+                        <tr>
+                            <td align='center'>
+                                <table border='0' cellpadding='0' cellspacing='0' width='100%' style='max-width: 600px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); overflow: hidden;'>
+                                    
+                                    <!-- Header / Logo -->
+                                    <tr>
+                                        <td align='center' style='padding: 40px 0 20px 0; background-color: #ffffff;'>
+                                            <h1 style='color: #1e3a8a; margin: 0; font-size: 28px; font-weight: bold; letter-spacing: -0.5px;'>
+                                                I.E. 3092 Kumamoto
+                                            </h1>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Cuerpo del mensaje -->
+                                    <tr>
+                                        <td style='padding: 20px 40px; color: #4b5563; line-height: 1.6; font-size: 16px; text-align: center;'>
+                                            <p>Hola,</p>
+                                            <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta asociada a <strong>{correoDestino}</strong>.</p>
+                                            <p>Ingresa el siguiente código de 6 dígitos en la pantalla de recuperación:</p>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Código -->
+                                    <tr>
+                                        <td align='center' style='padding: 10px 0 30px 0;'>
+                                            <div style='background-color: #f8fafc; border: 2px dashed #1e3a8a; padding: 15px 30px; display: inline-block; border-radius: 8px;'>
+                                                <span style='font-size: 32px; font-weight: bold; color: #1e3a8a; letter-spacing: 8px;'>{codigo}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Advertencia de seguridad -->
+                                    <tr>
+                                        <td style='padding: 0 40px 30px 40px; color: #6b7280; line-height: 1.5; font-size: 14px; text-align: center;'>
+                                            <p>Este código es seguro y expirará en 15 minutos. Si tú no realizaste esta solicitud, puedes ignorar este correo de forma segura. Tu contraseña actual no cambiará.</p>
+                                            <p style='margin-bottom: 0;'>Saludos cordiales,<br>El equipo de soporte de la I.E. 3092 Kumamoto</p>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Footer -->
+                                    <tr>
+                                        <td align='center' style='padding: 20px 40px; background-color: #f9fafb; color: #9ca3af; font-size: 13px; border-top: 1px solid #e5e7eb;'>
+                                            &copy; {DateTime.UtcNow.Year} I.E. 3092 Kumamoto. Todos los derechos reservados.
+                                        </td>
+                                    </tr>
+                                    
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+                </html>"
             };
 
-            var mailMessage = new MailMessage
-            {
-                From = new MailAddress(user, "Colegio Kumamoto - Soporte"),
-                Subject = "Código de Recuperación de Contraseña",
-                Body = $@"
-<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;'>
-    <h2 style='color: #1e3a8a; text-align: center;'>Colegio Kumamoto</h2>
-    <p style='color: #334155; font-size: 16px;'>Hola,</p>
-    <p style='color: #334155; font-size: 16px;'>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta asociada a <b>{correoDestino}</b>.</p>
-    <div style='background-color: #f8fafc; border-left: 4px solid #1e3a8a; padding: 15px; margin: 20px 0; text-align: center;'>
-        <span style='font-size: 28px; font-weight: bold; color: #1e3a8a; letter-spacing: 5px;'>{codigo}</span>
-    </div>
-    <p style='color: #64748b; font-size: 14px;'>Este código expirará en 15 minutos.</p>
-    <p style='color: #64748b; font-size: 14px;'>Si no solicitaste este cambio, puedes ignorar este correo de forma segura.</p>
-    <hr style='border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;' />
-    <p style='color: #94a3b8; font-size: 12px; text-align: center;'>© 2026 Colegio Kumamoto. Todos los derechos reservados.</p>
-</div>",
-                IsBodyHtml = true
-            };
-
-            mailMessage.To.Add(correoDestino);
-
-            await client.SendMailAsync(mailMessage);
-            _logger.LogInformation("Correo de recuperación enviado exitosamente a {Correo}", correoDestino);
+            var response = await _resend.EmailSendAsync(message);
+            _logger.LogInformation("Correo de recuperación enviado exitosamente vía Resend a {Correo}.", correoDestino);
         }
         catch (Exception ex)
         {

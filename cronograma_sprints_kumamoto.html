@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan de Desarrollo, Sprints y Backlog Detallado - Proyecto Kumamoto</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'default',
+            securityLevel: 'loose',
+            themeVariables: {
+                background: '#ffffff',
+                canvasBkg: '#ffffff',
+                sectionBkg: '#ffffff',
+                sectionBkg2: '#ffffff',
+                altSectionBkg: '#ffffff'
+            }
+        });
+    </script>
+    <style>
+        :root {
+            --primary-color: #1B365D;
+            --secondary-color: #2C5282;
+            --accent-color: #3182CE;
+            --text-color: #2D3748;
+            --bg-color: #F7FAFC;
+            --card-bg: #FFFFFF;
+            --border-color: #E2E8F0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            padding: 50px 60px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border-radius: 12px;
+            border-top: 8px solid var(--primary-color);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-top: 0;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            margin-top: 50px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            font-size: 1.4rem;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent-color);
+            padding-left: 12px;
+        }
+
+        p, li {
+            font-size: 1.05rem;
+            margin-bottom: 12px;
+        }
+
+        ul {
+            margin-top: 5px;
+            margin-bottom: 15px;
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .meta-box {
+            background-color: #EDF2F7;
+            border-left: 6px solid var(--primary-color);
+            padding: 25px;
+            margin-bottom: 35px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .meta-box p {
+            margin: 8px 0;
+            font-size: 1.1rem;
+        }
+
+        .highlight {
+            font-weight: 600;
+            color: var(--primary-color);
+            min-width: 180px;
+            display: inline-block;
+        }
+
+        .alert-box {
+            background-color: #EBF8FF;
+            border-left: 6px solid var(--accent-color);
+            padding: 20px 25px;
+            margin: 30px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .alert-box h4 {
+            color: var(--secondary-color);
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0 40px 0;
+            font-size: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            text-align: left;
+            padding: 16px 20px;
+            border: 1px solid var(--primary-color);
+        }
+
+        td {
+            padding: 16px 20px;
+            border: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #F8FAFC;
+        }
+
+        tr:hover td {
+            background-color: #F1F5F9;
+        }
+
+        .mermaid-wrapper {
+            background: #ffffff;
+            padding: 35px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin: 35px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+            .mermaid-wrapper { border: none; box-shadow: none; padding: 15px 0; margin: 20px 0; page-break-inside: avoid; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            h2 { page-break-before: always; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>Plan de Desarrollo, Sprints y Backlog Detallado - Proyecto Kumamoto</h1>
+
+    <div class="meta-box">
+        <p><span class="highlight">Proyecto:</span> Sistema de Gestión Escolar "Proyecto Kumamoto"</p>
+        <p><span class="highlight">Duración Total:</span> 6 Semanas (42 Días Calendario / 30 Días Hábiles)</p>
+        <p><span class="highlight">Distribución:</span> 3 Sprints de 2 semanas cada uno (14 días naturales por Sprint)</p>
+        <p><span class="highlight">Metodología:</span> Scrum / Agile</p>
+        <p><span class="highlight">Stack Tecnológico Implementado:</span> Backend (.NET 8/9 C#, Entity Framework Core), Frontend (Angular, SCSS, CSS Grid), Base de Datos (SQL Server / Oracle), DevOps (Docker, Docker Compose, Render).</p>
+    </div>
+
+    <div class="alert-box">
+        <h4>Importante</h4>
+        <p>Todas las tareas, módulos y artefactos descritos a continuación reflejan de forma exacta la estructura del código fuente implementado en el repositorio (controladores/endpoints mínimos en C#, servicios de dominio, componentes de Angular, Docker y manifiestos de nube en Render).</p>
+    </div>
+
+    <h2>📊 Visión General del Proyecto (Gantt Maestro)</h2>
+    <p>El siguiente diagrama de Gantt ilustra la secuencia macro de los 3 Sprints a lo largo de las 6 semanas de desarrollo del sistema institucional:</p>
+
+    <div class="mermaid-wrapper">
+        <div class="mermaid">
+        %%{init: {'theme': 'default', 'themeVariables': {'background': '#ffffff', 'canvasBkg': '#ffffff', 'sectionBkg': '#ffffff', 'sectionBkg2': '#ffffff', 'altSectionBkg': '#ffffff'}, 'themeCSS': 'rect.background { fill: #ffffff !important; }', 'gantt': {'todayMarker': false, 'barHeight': 28, 'fontSize': 10, 'leftPadding': 160}}}%%
+        gantt
+            title Cronograma General de Sprints (Semanas 1 a 6)
+            dateFormat YYYY-MM-DD
+            axisFormat %d/%m
+            todayMarker off
+            
+            section Sprint 1
+            Arquitectura    :sp1_1, 2026-05-01, 5d
+            Seguridad       :sp1_2, after sp1_1, 5d
+            Login Admin     :sp1_3, after sp1_2, 4d
+            
+            section Sprint 2
+            Matrícula       :sp2_1, 2026-05-15, 6d
+            Docentes        :sp2_2, after sp2_1, 5d
+            Auxiliar        :sp2_3, after sp2_2, 3d
+            
+            section Sprint 3
+            Alertas         :sp3_1, 2026-05-29, 5d
+            Padres UI       :sp3_2, after sp3_1, 5d
+            Pruebas         :sp3_3, after sp3_2, 2d
+            Render          :sp3_4, after sp3_3, 2d
+        </div>
+    </div>
+
+    <h2>🏃‍♂️ Sprint 1: Arquitectura Base, Seguridad, Autenticación y Gestión Institucional</h2>
+    <p><strong>Período:</strong> Días 1 al 14 (Semanas 1 y 2)<br>
+    <strong>Objetivo del Sprint:</strong> Establecer la base arquitectónica del sistema en el Backend (.NET) y Frontend (Angular), configurar la base de datos con Entity Framework Core, implementar el sistema de seguridad JWT y construir el portal de inicio de sesión junto con la gestión administrativa central (Usuarios, Año Académico, Grados, Secciones y Cursos).</p>
+
+    <div class="mermaid-wrapper">
+        <div class="mermaid">
+        %%{init: {'theme': 'default', 'themeVariables': {'background': '#ffffff', 'canvasBkg': '#ffffff', 'sectionBkg': '#ffffff', 'sectionBkg2': '#ffffff', 'altSectionBkg': '#ffffff'}, 'themeCSS': 'rect.background { fill: #ffffff !important; }', 'gantt': {'todayMarker': false, 'barHeight': 28, 'fontSize': 11, 'leftPadding': 160}}}%%
+        gantt
+            title Cronograma Detallado - Sprint 1
+            dateFormat YYYY-MM-DD
+            axisFormat %d/%m
+            todayMarker off
+            
+            section Backend & DB
+            Setup ASP.NET          :d1, 2026-05-01, 3d
+            Modelado EF            :d4, after d1, 2d
+            Auth APIs              :d6, after d4, 3d
+            Seguridad              :d9, after d6, 2d
+            
+            section Frontend & Admin
+            Login UI               :d11, 2026-05-11, 2d
+            Admin UI               :d13, after d11, 2d
+        </div>
+    </div>
+
+    <h3>Línea de Tiempo Diaria - Sprint 1</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 15%; text-align: center;">Días</th>
+                <th style="width: 55%;">Actividad Técnica Principal</th>
+                <th style="width: 30%;">Entregables / Archivos Involucrados</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="text-align: center;"><strong>Días 1-3</strong></td>
+                <td>Inicialización del proyecto ASP.NET Core Web API y configuración de entornos.</td>
+                <td><code>Kumamoto.API.csproj</code>, <code>appsettings.json</code>, <code>appsettings.Development.json</code>.</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Días 4-5</strong></td>
+                <td>Modelado de entidades fundamentales con EF Core y ejecución de migraciones en SQL Server/Oracle.</td>
+                <td><code>Usuario.cs</code>, <code>Rol.cs</code>, <code>NivelEducativo.cs</code>, <code>PeriodoAcademico.cs</code>, <code>Grado.cs</code>, <code>Seccion.cs</code>, <code>Curso.cs</code>.</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Días 6-8</strong></td>
+                <td>Implementación de autenticación JWT basada en roles y sanitización de inputs (trimming de contraseñas).</td>
+                <td><code>TokenService.cs</code>, <code>AuthEndpoints.cs</code>.</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Días 9-10</strong></td>
+                <td>Configuración de cabeceras de seguridad HTTP (Rate Limiting, CSP) y servicio de correo para recuperación de claves.</td>
+                <td><code>Program.cs</code>, <code>EmailService.cs</code>.</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Días 11-12</strong></td>
+                <td>Maquetación del Login en Angular usando CSS Grid estático y desarrollo del modal responsive de Comunicados.</td>
+                <td><code>login.component.ts</code>, <code>login.component.scss</code>, <code>app.routes.ts</code>.</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Días 13-14</strong></td>
+                <td>Desarrollo de APIs y vistas de administración para la gestión de usuarios, personal y configuración del año académico.</td>
+                <td><code>UsuariosEndpoints.cs</code>, <code>ConfiguracionAnioEndpoints.cs</code>, vistas Angular (<code>usuarios</code>, <code>configuracion-anio</code>).</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Sprint Backlog Detallado - Sprint 1</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 10%;">ID</th>
+                <th style="width: 25%;">Historia de Usuario / Módulo</th>
+                <th style="width: 40%;">Tareas Técnicas (Implementación Real)</th>
+                <th style="width: 25%;">Criterios de Aceptación</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>SB1-01</strong></td>
+                <td><strong>Configuración de Infraestructura y ORM</strong></td>
+                <td>
+                    <ul>
+                        <li>Configuración del proyecto ASP.NET Core Web API (Kumamoto.API.csproj).</li>
+                        <li>Definición de cadenas de conexión y entornos en appsettings.json y appsettings.Development.json.</li>
+                        <li>Modelado de entidades base en EF Core: Usuario.cs, Rol.cs, NivelEducativo.cs, PeriodoAcademico.cs, Grado.cs, Seccion.cs, Curso.cs.</li>
+                        <li>Creación y ejecución de migraciones iniciales en la base de datos.</li>
+                    </ul>
+                </td>
+                <td>La API compila correctamente, se conecta a la base de datos y genera las tablas relacionales sin errores.</td>
+            </tr>
+            <tr>
+                <td><strong>SB1-02</strong></td>
+                <td><strong>Seguridad y Autenticación JWT</strong></td>
+                <td>
+                    <ul>
+                        <li>Desarrollo de TokenService.cs para la emisión y validación de tokens JWT con claims de roles (Directora, Docente, Auxiliar, Padre).</li>
+                        <li>Desarrollo de AuthEndpoints.cs para manejar login, validación de credenciales y refresco de tokens.</li>
+                        <li>Implementación de defensas HTTP (Rate Limiting, CSP, X-Frame-Options) en Program.cs.</li>
+                        <li>Implementación de sanitización de entradas (trimming) para evitar fallos en contraseñas.</li>
+                        <li>Desarrollo de lógica de recuperación de contraseña conectada a EmailService.cs.</li>
+                    </ul>
+                </td>
+                <td>Los endpoints devuelven tokens JWT válidos según el rol. Las contraseñas con espacios en blanco accidentales se procesan correctamente.</td>
+            </tr>
+            <tr>
+                <td><strong>SB1-03</strong></td>
+                <td><strong>Frontend: Portal de Login y Comunicados</strong></td>
+                <td>
+                    <ul>
+                        <li>Configuración de rutas principales en Angular (app.routes.ts) y estilos globales (app.scss).</li>
+                        <li>Desarrollo del componente login.component.ts y su maquetación con CSS Grid en login.component.scss (diseño estático moderno y limpio sin carrusel).</li>
+                        <li>Creación del modal de detalle de "Comunicados" en el login, asegurando escalado correcto de imágenes y scroll vertical completo sin recortes.</li>
+                    </ul>
+                </td>
+                <td>El login es 100% responsive en móviles, tablets y escritorio. El modal de comunicados muestra contenido extenso e imágenes adaptadas perfectamente.</td>
+            </tr>
+            <tr>
+                <td><strong>SB1-04</strong></td>
+                <td><strong>Gestión de Usuarios y Personal (Admin)</strong></td>
+                <td>
+                    <ul>
+                        <li>Desarrollo de endpoints CRUD en C#: UsuariosEndpoints.cs y AdministrativosEndpoints.cs.</li>
+                        <li>Implementación de vistas en Angular para la Directora: módulos usuarios y personal dentro de features/dashboard/directora/pages.</li>
+                        <li>Integración de servicios de frontend para listado, creación, edición y bloqueo de usuarios.</li>
+                    </ul>
+                </td>
+                <td>La Directora puede administrar el personal institucional, asignar roles y gestionar accesos desde su panel.</td>
+            </tr>
+            <tr>
+                <td><strong>SB1-05</strong></td>
+                <td><strong>Configuración de Año Académico y Estructura</strong></td>
+                <td>
+                    <ul>
+                        <li>Desarrollo de endpoints de gestión curricular: ConfiguracionAnioEndpoints.cs, GradosSeccionesEndpoints.cs, CursosEndpoints.cs.</li>
+                        <li>Creación de las vistas de Angular para la Directora: configuracion-anio, grados-secciones, cursos, y estructura.</li>
+                    </ul>
+                </td>
+                <td>Permite abrir/cerrar años académicos y estructurar los grados, secciones y cursos disponibles en la institución.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>🏃‍♂️ Sprint 2: Gestión Académica, Matrícula, Portales Docente/Auxiliar y Control Operativo</h2>
+    <p><strong>Período:</strong> Días 15 al 28 (Semanas 3 y 4)<br>
+    <strong>Objetivo del Sprint:</strong> Desplegar el núcleo operativo institucional, abarcando el flujo completo de matrícula de estudiantes, asignación de carga académica a docentes y auxiliares, y la puesta en marcha de los portales para el registro de calificaciones (por competencias) y control de asistencia diaria.</p>
+
+    <div class="mermaid-wrapper">
+        <div class="mermaid">
+        %%{init: {'theme': 'default', 'themeVariables': {'background': '#ffffff', 'canvasBkg': '#ffffff', 'sectionBkg': '#ffffff', 'sectionBkg2': '#ffffff', 'altSectionBkg': '#ffffff'}, 'themeCSS': 'rect.background { fill: #ffffff !important; }', 'gantt': {'todayMarker': false, 'barHeight': 28, 'fontSize': 11, 'leftPadding': 160}}}%%
+        gantt
+            title Cronograma Detallado - Sprint 2
+            dateFormat YYYY-MM-DD
+            axisFormat %d/%m
+            todayMarker off
+            
+            section Matrícula & Cargas
+            Modelado Cargas        :d15, 2026-05-15, 3d
+            APIs Matrícula         :d18, after d15, 3d
+            Vistas Admin           :d21, after d18, 2d
+            
+            section Portales Operativos
+            APIs Notas             :d23, 2026-05-23, 3d
+            Portal Docente         :d26, after d23, 2d
+            Auxiliar               :d28, after d26, 1d
+        </div>
+    </div>
+
+    <h3>Línea de Tiempo Diaria - Sprint 2</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 15%; text-align: center;">Días</th>
+                <th style="width: 55%;">Actividad Técnica Principal</th>
+                <th style="width: 30%;">Entregables / Archivos Involucrados</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="text-align: center;"><strong>Días 15-17</strong></td>
+                <td>Modelado de entidades relacionales de matrícula, aulas y carga académica de docentes/auxiliares.</td>
+                <td><code>Estudiante.cs</code>, <code>Aula.cs</code>, <code>CargaAcademica.cs</code>, <code>AsignacionAuxiliar.cs</code>, <code>HorarioCurso.cs</code>.</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Días 18-20</strong></td>
+                <td>Construcción de endpoints REST para la matriculación de alumnos y asignación de cursos.</td>
+                <td><code>MatriculaEndpoints.cs</code>, <code>AulasEndpoints.cs</code>, <code>CargaAcademicaEndpoints.cs</code>.</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Días 21-22</strong></td>
+                <td>Integración en el panel de la Directora de las interfaces de gestión de matrículas y asignación de tutores.</td>
+                <td>Vistas Angular (<code>matricula</code>, <code>aulas</code>, <code>auxiliares</code>).</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Días 23-25</strong></td>
+                <td>Desarrollo del motor de cálculo de calificaciones por competencias, bimestres y semanas académicas.</td>
+                <td><code>Calificacion.cs</code>, <code>CalificacionBimestral.cs</code>, <code>Competencia.cs</code>, <code>CalificacionesEndpoints.cs</code>.</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Días 26-27</strong></td>
+                <td>Implementación del Portal Docente en Angular para el ingreso de notas y listado de cursos asignados.</td>
+                <td><code>dashboard-docente</code>, <code>lista-cursos</code>, <code>calificaciones</code>.</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Día 28</strong></td>
+                <td>Desarrollo del Portal Auxiliar para el control de asistencia diaria en tiempo real y pruebas cruzadas.</td>
+                <td><code>Asistencia.cs</code>, <code>AuxiliarEndpoints.cs</code>, <code>registro-asistencia-auxiliar</code>.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Sprint Backlog Detallado - Sprint 2</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 10%;">ID</th>
+                <th style="width: 25%;">Historia de Usuario / Módulo</th>
+                <th style="width: 40%;">Tareas Técnicas (Implementación Real)</th>
+                <th style="width: 25%;">Criterios de Aceptación</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>SB2-01</strong></td>
+                <td><strong>Matrícula y Carga Académica</strong></td>
+                <td>
+                    <ul>
+                        <li>Modelado de entidades de relación: Estudiante.cs, Aula.cs, CargaAcademica.cs, AsignacionAuxiliar.cs, HorarioCurso.cs.</li>
+                        <li>Desarrollo de endpoints de gestión: MatriculaEndpoints.cs, AulasEndpoints.cs, CargaAcademicaEndpoints.cs.</li>
+                        <li>Desarrollo de las vistas en el Portal Directora: matricula, aulas, y auxiliares.</li>
+                        <li>Implementación de asignación de tutores y docentes por curso y aula en el frontend.</li>
+                    </ul>
+                </td>
+                <td>Los estudiantes quedan matriculados en sus respectivas aulas y los docentes/auxiliares tienen su carga horaria correctamente asignada.</td>
+            </tr>
+            <tr>
+                <td><strong>SB2-02</strong></td>
+                <td><strong>Portal Docente: Calificaciones y Competencias</strong></td>
+                <td>
+                    <ul>
+                        <li>Modelado de entidades de evaluación: Calificacion.cs, CalificacionBimestral.cs, Competencia.cs, EscalaCalificacion.cs, SemanaAcademica.cs.</li>
+                        <li>Desarrollo de APIs de evaluación: CalificacionesEndpoints.cs, DocentesEndpoints.cs, DocentePortalEndpoints.cs.</li>
+                        <li>Creación de vistas en Angular (features/dashboard/docente): dashboard-docente, lista-cursos, y el módulo avanzado de calificaciones.</li>
+                        <li>Implementación de registro de notas por semanas académicas y bimestres con guardado dinámico.</li>
+                    </ul>
+                </td>
+                <td>El docente visualiza únicamente sus cursos asignados y puede calificar a los alumnos por competencias de forma fluida y estructurada.</td>
+            </tr>
+            <tr>
+                <td><strong>SB2-03</strong></td>
+                <td><strong>Portal Auxiliar y Control de Asistencia</strong></td>
+                <td>
+                    <ul>
+                        <li>Modelado de la entidad de registro Asistencia.cs.</li>
+                        <li>Desarrollo de endpoints operativos: AuxiliarEndpoints.cs, AuxiliarPortalEndpoints.cs, AsignacionAuxiliarEndpoints.cs.</li>
+                        <li>Implementación del Portal Auxiliar en Angular (features/auxiliar/pages): dashboard-auxiliar, lista-aulas-auxiliar, registro-asistencia-auxiliar, y reportes-auxiliar.</li>
+                        <li>Integración del módulo de registro de asistencia en la vista del docente (asistencia).</li>
+                    </ul>
+                </td>
+                <td>Los auxiliares y docentes pueden tomar asistencia diaria de manera rápida, reflejando el estado (Presente, Ausente, Tardanza) en la base de datos en tiempo real.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>🏃‍♂️ Sprint 3: Alertas Tempranas, Desbloqueo Notas, Portal Padres, Pruebas QA y DevOps</h2>
+    <p><strong>Período:</strong> Días 29 al 42 (Semanas 5 y 6)<br>
+    <strong>Objetivo del Sprint:</strong> Implementar los módulos avanzados de inteligencia y monitoreo (Sistema de Alerta Temprana de Riesgo y Gestión de Incidencias), el flujo de control administrativo para el desbloqueo de notas, el portal de consulta para padres de familia, realizar la validación exhaustiva de calidad (QA y UAT), y preparar el empaquetado final en Docker para el despliegue en Render.</p>
+
+    <div class="mermaid-wrapper">
+        <div class="mermaid">
+        %%{init: {'theme': 'default', 'themeVariables': {'background': '#ffffff', 'canvasBkg': '#ffffff', 'sectionBkg': '#ffffff', 'sectionBkg2': '#ffffff', 'altSectionBkg': '#ffffff'}, 'themeCSS': 'rect.background { fill: #ffffff !important; }', 'gantt': {'todayMarker': false, 'barHeight': 28, 'fontSize': 11, 'leftPadding': 160}}}%%
+        gantt
+            title Cronograma Detallado - Sprint 3
+            dateFormat YYYY-MM-DD
+            axisFormat %d/%m
+            todayMarker off
+            
+            section Riesgo & Actas
+            Modelado Riesgo        :d29, 2026-05-29, 2d
+            Alertas SQL            :d31, after d29, 3d
+            Desbloqueo             :d34, after d31, 2d
+            
+            section Padres & Pruebas
+            Portal Padres          :d36, 2026-06-05, 3d
+            Pruebas QA             :d39, after d36, 2d
+            
+            section DevOps & Cloud
+            Docker                 :d41, 2026-06-10, 1d
+            Render                 :d42, after d41, 1d
+        </div>
+    </div>
+
+    <h3>Línea de Tiempo Diaria - Sprint 3</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 15%; text-align: center;">Días</th>
+                <th style="width: 55%;">Actividad Técnica Principal</th>
+                <th style="width: 30%;">Entregables / Archivos Involucrados</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="text-align: center;"><strong>Días 29-30</strong></td>
+                <td>Modelado de entidades para el registro de incidencias conductuales y seguimiento de alumnos en riesgo.</td>
+                <td><code>Incidencia.cs</code>, <code>AlumnoRiesgo.cs</code>, <code>AlertaRiesgo.cs</code>, <code>DesbloqueoCalificacion.cs</code>.</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Días 31-33</strong></td>
+                <td>Desarrollo del servicio de alertas tempranas y optimización de consultas SQL con índices y LEFT JOINs.</td>
+                <td><code>EarlyWarningService.cs</code>, <code>optimize_tutoria_queries.sql</code>, <code>optimize_attendance_reports.sql</code>, <code>DashboardEndpoints.cs</code>.</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Días 34-35</strong></td>
+                <td>Implementación del flujo seguro de Desbloqueo de Notas (candado de un solo uso) y su vista administrativa.</td>
+                <td><code>DesbloqueoNotasEndpoints.cs</code>, vista Angular (<code>desbloqueo-notas</code>).</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Días 36-38</strong></td>
+                <td>Construcción de endpoints y portal web independiente para Padres de Familia (asistencia, notas, comunicados).</td>
+                <td><code>PadresEndpoints.cs</code>, <code>ComunicadoEndpoints.cs</code>, vistas Angular (<code>dashboard-padre</code>, <code>asistencia-padre</code>, <code>notas-padre</code>).</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Días 39-40</strong></td>
+                <td>Ejecución de Pruebas de Integración (QA), validación de APIs con Swagger/Postman y Pruebas de Aceptación (UAT) con la Directora.</td>
+                <td>Casos de Prueba UAT, reportes de cobertura, validación de flujos en entorno de Staging.</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Día 41</strong></td>
+                <td>Containerización de la plataforma con Docker multi-etapa para Backend (.NET) y Frontend (Angular).</td>
+                <td><code>Dockerfile</code>, <code>docker-compose.yml</code>.</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;"><strong>Día 42</strong></td>
+                <td>Enlace de servicios con Docker Compose y configuración del manifiesto de nube para despliegue en Render.</td>
+                <td><code>render.yaml</code>, pase a producción en Render y Cierre del Proyecto.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Sprint Backlog Detallado - Sprint 3</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 10%;">ID</th>
+                <th style="width: 25%;">Historia de Usuario / Módulo</th>
+                <th style="width: 40%;">Tareas Técnicas (Implementación Real)</th>
+                <th style="width: 25%;">Criterios de Aceptación</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>SB3-01</strong></td>
+                <td><strong>Tutoría, Incidencias y Alerta Temprana de Riesgo</strong></td>
+                <td>
+                    <ul>
+                        <li>Modelado de entidades de seguimiento: Incidencia.cs, AlumnoRiesgo.cs, AlertaRiesgo.cs, Notificacion.cs.</li>
+                        <li>Desarrollo de lógica de servicios de dominio: EarlyWarningService.cs, AlertaTempranaService.cs, y RiesgoService.cs.</li>
+                        <li>Optimización de consultas SQL en el backend (uso de LEFT JOIN y creación de índices en migraciones como optimize_tutoria_queries.sql y optimize_attendance_reports.sql).</li>
+                        <li>Desarrollo de IncidenciasEndpoints.cs, NotificacionesEndpoints.cs, y DashboardEndpoints.cs (para el monitor de riesgo de la Directora).</li>
+                        <li>Implementación de las vistas incidencias y tutoria en los portales de Directora, Docente y Auxiliar.</li>
+                    </ul>
+                </td>
+                <td>El sistema detecta y alerta automáticamente sobre alumnos con acumulación de inasistencias, bajo rendimiento o incidencias conductuales graves.</td>
+            </tr>
+            <tr>
+                <td><strong>SB3-02</strong></td>
+                <td><strong>Flujo de Autorización de Desbloqueo de Notas</strong></td>
+                <td>
+                    <ul>
+                        <li>Modelado de la entidad DesbloqueoCalificacion.cs.</li>
+                        <li>Desarrollo de DesbloqueoNotasEndpoints.cs garantizando la regla de negocio de "un solo uso" (el permiso se revoca automáticamente tras guardar la modificación de la nota).</li>
+                        <li>Implementación de la vista desbloqueo-notas en el dashboard de la Directora (configurada como vista por defecto al iniciar sesión) con filtros de Bimestre y Semanas.</li>
+                        <li>Resolución de advertencias de nulabilidad (CS8602) en consultas LINQ.</li>
+                    </ul>
+                </td>
+                <td>La Directora puede otorgar permisos temporales de modificación de notas. Una vez que el docente realiza el cambio, el candado se cierra automáticamente.</td>
+            </tr>
+            <tr>
+                <td><strong>SB3-03</strong></td>
+                <td><strong>Portal de Padres y Comunicación Institucional</strong></td>
+                <td>
+                    <ul>
+                        <li>Desarrollo de endpoints de consulta externa: PadresEndpoints.cs y ComunicadoEndpoints.cs.</li>
+                        <li>Construcción del Portal de Padres en Angular (features/padres/pages): dashboard-padre, asistencia-diaria, horario, incidencias, y notas-padre.</li>
+                        <li>Creación de la vista de gestión de comunicados (comunicados) en el portal administrativo de la Directora.</li>
+                    </ul>
+                </td>
+                <td>Los padres acceden a un portal seguro para ver en tiempo real las notas, asistencia, horarios y comunicados oficiales de hijos.</td>
+            </tr>
+            <tr>
+                <td><strong>SB3-04</strong></td>
+                <td><strong>Pruebas de Integración y Calidad (QA / UAT)</strong></td>
+                <td>
+                    <ul>
+                        <li>Ejecución de pruebas de integración en flujos críticos (Cálculo de promedios, Desbloqueo de notas y Alertas tempranas).</li>
+                        <li>Verificación de seguridad en endpoints mediante simulación de peticiones concurrentes (Rate Limiting y validación de claims JWT).</li>
+                        <li>Pruebas de Aceptación de Usuario (UAT) del diseño responsive y usabilidad en los portales de Directora, Docente, Auxiliar y Padres.</li>
+                    </ul>
+                </td>
+                <td>Todos los módulos operan sin errores de servidor (500), los cálculos de notas son exactos y la Directora da su conformidad formal a los flujos.</td>
+            </tr>
+            <tr>
+                <td><strong>SB3-05</strong></td>
+                <td><strong>Containerización Docker y Despliegue en Render</strong></td>
+                <td>
+                    <ul>
+                        <li>Creación de archivo de manifiesto para la plataforma en la nube Render (render.yaml).</li>
+                        <li>Implementación de Dockerfiles multi-etapa optimizados para el Backend (.NET) y Frontend (Angular).</li>
+                        <li>Configuración de orquestación local y de servicios mediante docker-compose.yml para enlazar la base de datos, backend y frontend en contenedores aislados.</li>
+                    </ul>
+                </td>
+                <td>La aplicación completa (Backend, Frontend y Base de Datos) se levanta y ejecuta de forma estable en contenedores Docker mediante un solo comando (docker-compose up) y se despliega en Render.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>🥧 Distribución del Esfuerzo e Hitos del Proyecto</h2>
+    <div class="mermaid-wrapper">
+        <div class="mermaid">
+        %%{init: {'theme': 'default', 'themeVariables': {'background': '#ffffff', 'canvasBkg': '#ffffff'}, 'themeCSS': 'rect.background { fill: #ffffff !important; }'}}%%
+        pie title Distribución del Esfuerzo por Componentes
+            "Backend APIs NET Core" : 30
+            "Frontend UI Angular" : 30
+            "Pruebas Calidad QA UAT" : 15
+            "Base de Datos EF Core" : 13
+            "DevOps Docker Render" : 12
+        </div>
+    </div>
+    
+    <ul>
+        <li><strong>Hito Sprint 1:</strong> Plataforma base funcional y segura, base de datos inicializada, sistema de login operativo con maquetación moderna (CSS Grid), y administración completa de usuarios, personal y estructura académica.</li>
+        <li><strong>Hito Sprint 2:</strong> Sistema operativo en marcha permitiendo la matrícula de alumnos, asignación de horarios/cargas, y portales independientes para que docentes y auxiliares gestionen asistencia y calificaciones por competencias.</li>
+        <li><strong>Hito Sprint 3:</strong> Sistema inteligente e integrado con monitoreo de riesgo (Alertas Tempranas), control estricto de actas (Desbloqueo de Notas), portal de padres, <strong>validación exhaustiva de calidad (QA/UAT)</strong>, y empaquetado profesional mediante <strong>Docker y render.yaml</strong> listo para el despliegue en Render.</li>
+    </ul>
+
+</div>
+
+</body>
+</html>

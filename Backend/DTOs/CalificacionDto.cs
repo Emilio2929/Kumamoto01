@@ -2,6 +2,10 @@ namespace Kumamoto.API.DTOs;
 
 public record CrearCompetenciaRequest(int CargaId, string Codigo, string Nombre);
 
+public record CrearCompetenciaAdminRequest(int CursoId, int GradoId, string Codigo, string Nombre);
+
+public record EditarCompetenciaAdminRequest(string Codigo, string Nombre);
+
 public record CompetenciaDto(int Id, string Codigo, string Nombre);
 
 public record PlanillaResponse(

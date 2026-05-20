@@ -3,14 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CalificacionService, Competencia } from '../../../../../core/services/calificacion.service';
 import { ActivatedRoute } from '@angular/router';
-import { GestionCompetenciasComponent } from './components/gestion-competencias/gestion-competencias.component';
 import { PlanillaNotasComponent } from './components/planilla-notas/planilla-notas.component';
 import { ReportesCursoComponent } from './components/reportes-curso/reportes-curso.component';
 
 @Component({
   selector: 'app-calificaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, GestionCompetenciasComponent, PlanillaNotasComponent, ReportesCursoComponent],
+  imports: [CommonModule, FormsModule, PlanillaNotasComponent, ReportesCursoComponent],
   templateUrl: './calificaciones.component.html',
   styleUrls: ['./calificaciones.component.scss']
 })
@@ -26,7 +25,7 @@ export class CalificacionesComponent implements OnInit {
 
   cargas: any[] = [];
   cursoSeleccionadoTexto: string = '';
-  currentMode: 'list' | 'competencias' | 'notas' | 'reportes' = 'list';
+  currentMode: 'list' | 'notas' | 'reportes' = 'list';
 
   ngOnInit(): void {
     this.cargarMisCursos();
@@ -58,10 +57,6 @@ export class CalificacionesComponent implements OnInit {
     });
   }
 
-  abrirCompetencias(carga: any): void {
-    this.seleccionarCarga(carga, 'competencias');
-  }
-
   abrirNotas(carga: any): void {
     this.seleccionarCarga(carga, 'notas');
   }
@@ -70,7 +65,7 @@ export class CalificacionesComponent implements OnInit {
     this.seleccionarCarga(carga, 'reportes');
   }
 
-  private seleccionarCarga(carga: any, mode: 'competencias' | 'notas' | 'reportes'): void {
+  private seleccionarCarga(carga: any, mode: 'notas' | 'reportes'): void {
     this.cargaId = carga.cargaId;
     this.cargaSeleccionada = carga;
     this.cursoSeleccionadoTexto = `${carga.curso} - ${carga.grado} ${carga.seccion}`;
@@ -98,9 +93,5 @@ export class CalificacionesComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
-  }
-
-  onCompetenciaCambiada(): void {
-    this.cargarCompetencias();
   }
 }

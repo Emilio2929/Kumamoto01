@@ -64,8 +64,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options =>
     options.AddPolicy("StrictCorsPolicy", p =>
     {
-        var allowedOrigins = corsOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(o => o.Trim()).ToArray();
-        p.WithOrigins(allowedOrigins)
+        var allowedList = corsOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(o => o.Trim()).ToArray();
+        p.SetIsOriginAllowed(origin => 
+            allowedList.Contains(origin, StringComparer.OrdinalIgnoreCase) ||
+            origin.StartsWith("http://localhost") ||
+            origin.EndsWith(".vercel.app") ||
+            origin.EndsWith(".trycloudflare.com"))
          .AllowAnyHeader()
          .AllowAnyMethod()
          .AllowCredentials(); // Obligatorio para Cookies HttpOnly

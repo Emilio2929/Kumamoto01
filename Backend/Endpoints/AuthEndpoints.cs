@@ -43,10 +43,9 @@ public static class AuthEndpoints
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true, // Bloquea XSS
-                Secure = isProduction, // HTTPS obligatorio en Prod
-                SameSite = SameSiteMode.Strict, // Bloquea CSRF
-                // Al NO definir 'Expires' ni 'MaxAge', se convierte en una Cookie de Sesión: 
-                // Se borrará automáticamente cuando el usuario cierre la pestaña/navegador.
+                Secure = true, // OBLIGATORIO ser true cuando SameSite es None
+                SameSite = SameSiteMode.None, // Permite compartir la cookie entre dominios distintos (Vercel -> Render)
+                // Al NO definir 'Expires' ni 'MaxAge', se convierte en una Cookie de Sesión
             };
 
             context.Response.Cookies.Append("kumamoto_jwt", token, cookieOptions);
@@ -74,7 +73,7 @@ public static class AuthEndpoints
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict
+                SameSite = SameSiteMode.None
             });
             return Results.Ok(new { mensaje = "Sesión cerrada correctamente." });
         })

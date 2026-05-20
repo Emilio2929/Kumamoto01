@@ -26,8 +26,8 @@ public static class AdministrativosEndpoints
             return Results.Ok(adminis);
         }).WithName("GetAdministrativos");
 
-        // POST /api/administrativos → crear con credenciales auto-generadas
-        group.MapPost("/", async (CreateAdministrativoDto dto, KumamotoDbContext db) =>
+        // ── POST /api/administrativos  → crear con credenciales auto-generadas
+        group.MapPost("/", async (CreateAdministrativoDto dto, KumamotoDbContext db, Kumamoto.API.Services.EmailService emailService) =>
         {
             if (string.IsNullOrWhiteSpace(dto.Dni) || dto.Dni.Length != 8)
                 return Results.BadRequest(new { mensaje = "El DNI debe tener 8 dígitos." });
@@ -69,17 +69,23 @@ public static class AdministrativosEndpoints
             db.Usuarios.Add(admin);
             await db.SaveChangesAsync();
 
+            var correoDestino = !string.IsNullOrWhiteSpace(admin.CorreoPersonal) ? admin.CorreoPersonal : admin.Correo;
+            await emailService.EnviarCredencialesAccesoAsync(correoDestino!, $"{admin.Nombres} {admin.Apellidos}", clave, "Administrativo");
+
+            var msg = string.IsNullOrWhiteSpace(admin.CorreoPersonal)
+                ? $"Administrativo registrado. Credenciales enviadas a correo institucional: {correo}."
+                : $"Administrativo registrado exitosamente. Las credenciales de acceso se enviaron a su correo personal: {admin.CorreoPersonal}";
+
             return Results.Created($"/api/administrativos/{admin.Id}", new
             {
                 admin.Id,
                 correo,
-                claveGenerada = clave,
-                mensaje = $"Credenciales enviadas a {correo}. Clave temporal: {clave}"
+                mensaje = msg
             });
 
         }).WithName("CreateAdministrativo");
 
-        // PUT /api/administrativos/{id} → editar datos
+        // ── PUT /api/administrativos/{id}  → editar datos
         group.MapPut("/{id:int}", async (int id, UpdateAdministrativoDto dto, KumamotoDbContext db) =>
         {
             if (string.IsNullOrWhiteSpace(dto.Nombres))
@@ -102,7 +108,7 @@ public static class AdministrativosEndpoints
             return Results.NoContent();
         }).WithName("UpdateAdministrativo");
 
-        // PATCH /api/administrativos/{id}/clave → cambiar contraseña
+        // ── PATCH /api/administrativos/{id}/clave  → cambiar contraseña
         group.MapPatch("/{id:int}/clave", async (int id, CambiarClaveDto dto, KumamotoDbContext db) =>
         {
             if (string.IsNullOrWhiteSpace(dto.NuevaClave) || dto.NuevaClave.Length < 4)
@@ -116,7 +122,7 @@ public static class AdministrativosEndpoints
             return Results.NoContent();
         }).WithName("CambiarClaveAdministrativo");
 
-        // PATCH /api/administrativos/{id}/estado → toggle activo/inactivo
+        // ── PATCH /api/administrativos/{id}/estado  → toggle activo/inactivo
         group.MapPatch("/{id:int}/estado", async (int id, KumamotoDbContext db) =>
         {
             var a = await db.Usuarios.FindAsync(id);
@@ -126,7 +132,7 @@ public static class AdministrativosEndpoints
             return Results.Ok(new { a.Estado });
         }).WithName("ToggleAdministrativoEstado");
 
-        // DELETE /api/administrativos/{id} → eliminación lógica
+        // ── DELETE /api/administrativos/{id}  → eliminación lógica
         group.MapDelete("/{id:int}", async (int id, KumamotoDbContext db) =>
         {
             var a = await db.Usuarios.FindAsync(id);
@@ -143,7 +149,7 @@ public static class AdministrativosEndpoints
         var letraNombre  = NormalizarTexto(nombres.Split(' ')[0])[0].ToString();
         var primerApellido = NormalizarTexto(apellidos.Split(' ')[0]);
         var baseLocal    = $"{letraNombre}{primerApellido}";
-        var dominio      = "@kumamoto.edu.pe";
+        var dominio      = "@kumamoto.pe";
 
         var candidato = $"{baseLocal}{dominio}";
         if (!await db.Usuarios.AnyAsync(u => u.Correo == candidato))

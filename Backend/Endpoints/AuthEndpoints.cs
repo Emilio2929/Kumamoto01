@@ -26,14 +26,14 @@ public static class AuthEndpoints
                 .FirstOrDefaultAsync(u => u.Correo == request.Correo && u.Estado == 1);
 
             if (usuario is null)
-                return Results.Unauthorized();
+                return Results.BadRequest(new { mensaje = "Credenciales incorrectas. Intenta de nuevo." });
 
             // Verificación híbrida de contraseña (Transición Segura)
             var hashedInput = HashPassword(request.Password);
             bool esValido = (usuario.ClaveHash == request.Password) || (usuario.ClaveHash == hashedInput);
 
             if (!esValido)
-                return Results.Unauthorized();
+                return Results.BadRequest(new { mensaje = "Credenciales incorrectas. Intenta de nuevo." });
 
             // Generar JWT
             var token = tokenService.GenerarToken(usuario);

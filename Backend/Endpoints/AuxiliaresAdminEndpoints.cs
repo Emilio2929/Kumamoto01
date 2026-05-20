@@ -26,8 +26,8 @@ public static class AuxiliaresAdminEndpoints
             return Results.Ok(auxiliares);
         }).WithName("GetAuxiliaresAdmin");
 
-        // POST /api/auxiliares-admin → crear con credenciales auto-generadas
-        group.MapPost("/", async (CreateAuxiliarDto dto, KumamotoDbContext db) =>
+        // ── POST /api/auxiliares-admin  → crear con credenciales auto-generadas
+        group.MapPost("/", async (CreateAuxiliarDto dto, KumamotoDbContext db, Kumamoto.API.Services.EmailService emailService) =>
         {
             if (string.IsNullOrWhiteSpace(dto.Dni) || dto.Dni.Length != 8)
                 return Results.BadRequest(new { mensaje = "El DNI debe tener 8 dígitos." });
@@ -69,12 +69,18 @@ public static class AuxiliaresAdminEndpoints
             db.Usuarios.Add(auxiliar);
             await db.SaveChangesAsync();
 
+            var correoDestino = !string.IsNullOrWhiteSpace(auxiliar.CorreoPersonal) ? auxiliar.CorreoPersonal : auxiliar.Correo;
+            await emailService.EnviarCredencialesAccesoAsync(correoDestino!, $"{auxiliar.Nombres} {auxiliar.Apellidos}", clave, "Auxiliar");
+
+            var msg = string.IsNullOrWhiteSpace(auxiliar.CorreoPersonal)
+                ? $"Auxiliar registrado. Credenciales enviadas a correo institucional: {correo}."
+                : $"Auxiliar registrado exitosamente. Las credenciales de acceso se enviaron a su correo personal: {auxiliar.CorreoPersonal}";
+
             return Results.Created($"/api/auxiliares-admin/{auxiliar.Id}", new
             {
                 auxiliar.Id,
                 correo,
-                claveGenerada = clave,
-                mensaje = $"Credenciales enviadas a {correo}. Clave temporal: {clave}"
+                mensaje = msg
             });
 
         }).WithName("CreateAuxiliarAdmin");
@@ -143,7 +149,7 @@ public static class AuxiliaresAdminEndpoints
         var letraNombre  = NormalizarTexto(nombres.Split(' ')[0])[0].ToString();
         var primerApellido = NormalizarTexto(apellidos.Split(' ')[0]);
         var baseLocal    = $"{letraNombre}{primerApellido}";
-        var dominio      = "@kumamoto.edu.pe";
+        var dominio      = "@kumamoto.pe";
 
         var candidato = $"{baseLocal}{dominio}";
         if (!await db.Usuarios.AnyAsync(u => u.Correo == candidato))

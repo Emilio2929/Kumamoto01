@@ -45,9 +45,9 @@ public static class PadresEndpoints
         }).WithName("BuscarPadrePorDni");
 
         // ── POST /api/padres  → crear padre con credenciales auto-generadas
-        group.MapPost("/", async (CreatePadreDto dto, KumamotoDbContext db) =>
+        group.MapPost("/", async (CreatePadreDto dto, KumamotoDbContext db, Kumamoto.API.Services.EmailService emailService) =>
         {
-            var correoInstitucional = $"p{dto.Dni}@kumamoto.edu.pe";
+            var correoInstitucional = $"p{dto.Dni}@kumamoto.pe";
             var correoPersonal = string.IsNullOrWhiteSpace(dto.Correo) ? null : dto.Correo.Trim().ToLower();
 
             var existeDni = await db.Usuarios.AnyAsync(u => u.Dni == dto.Dni);
@@ -79,18 +79,21 @@ public static class PadresEndpoints
                 RolId = ROL_PADRE,
                 Estado = 1
             };
+            
             db.Usuarios.Add(padre);
             await db.SaveChangesAsync();
 
+            var correoDestino = !string.IsNullOrWhiteSpace(padre.CorreoPersonal) ? padre.CorreoPersonal : padre.Correo;
+            await emailService.EnviarCredencialesAccesoAsync(correoDestino!, $"{padre.Nombres} {padre.Apellidos}", clave, "Padre de Familia");
+
             var msg = string.IsNullOrWhiteSpace(correoPersonal)
-                ? $"Padre registrado con correo institucional: {correoInstitucional}. Clave: {clave}"
-                : $"Padre registrado. Credenciales enviadas a {correoPersonal}. Clave: {clave}";
+                ? $"Padre registrado. Credenciales enviadas a correo institucional: {correoInstitucional}."
+                : $"Padre registrado exitosamente. Las credenciales de acceso se enviaron a su correo personal: {correoPersonal}";
 
             return Results.Created($"/api/padres/{padre.Id}", new
             {
                 padre.Id,
                 correo = padre.Correo,
-                claveGenerada = clave,
                 mensaje = msg
             });
         }).WithName("CreatePadre");

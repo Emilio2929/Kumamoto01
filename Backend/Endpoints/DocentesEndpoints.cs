@@ -38,7 +38,7 @@ public static class DocentesEndpoints
         }).WithName("GetDocentesCombo");
 
         // ── POST /api/docentes  → crear con credenciales auto-generadas
-        group.MapPost("/", async (CreateDocenteDto dto, KumamotoDbContext db) =>
+        group.MapPost("/", async (CreateDocenteDto dto, KumamotoDbContext db, Kumamoto.API.Services.EmailService emailService) =>
         {
             if (string.IsNullOrWhiteSpace(dto.Dni) || dto.Dni.Length != 8)
                 return Results.BadRequest(new { mensaje = "El DNI debe tener 8 dígitos." });
@@ -62,7 +62,7 @@ public static class DocentesEndpoints
             if (existeEstudiante)
                 return Results.Conflict(new { mensaje = "El DNI ya está registrado como estudiante." });
 
-            // Genera correo: [1ra letra nombre][primer apellido]@kumamoto.edu.pe
+            // Genera correo: [1ra letra nombre][primer apellido]@kumamoto.pe
             var correo = await GenerarCorreoUnicoAsync(dto.Nombres.Trim(), dto.Apellidos.Trim(), db);
             var clave  = $"Kuma{dto.Dni}";
 
@@ -81,15 +81,20 @@ public static class DocentesEndpoints
             db.Usuarios.Add(docente);
             await db.SaveChangesAsync();
 
+            var correoDestino = !string.IsNullOrWhiteSpace(docente.CorreoPersonal) ? docente.CorreoPersonal : docente.Correo;
+            await emailService.EnviarCredencialesAccesoAsync(correoDestino!, $"{docente.Nombres} {docente.Apellidos}", clave, "Docente");
+
+            var msg = string.IsNullOrWhiteSpace(docente.CorreoPersonal)
+                ? $"Docente registrado. Credenciales enviadas a correo institucional: {correo}."
+                : $"Docente registrado exitosamente. Las credenciales de acceso se enviaron a su correo personal: {docente.CorreoPersonal}";
+
             return Results.Created($"/api/docentes/{docente.Id}", new
             {
                 docente.Id,
                 correo,
-                claveGenerada = clave,
-                mensaje = $"Credenciales: correo={correo} | clave={clave}"
+                mensaje = msg
             });
         }).WithName("CreateDocente");
-
 
         // ── PUT /api/docentes/{id}  → editar datos
         group.MapPut("/{id:int}", async (int id, UpdateDocenteDto dto, KumamotoDbContext db) =>
@@ -156,7 +161,7 @@ public static class DocentesEndpoints
         var letraNombre  = NormalizarTexto(nombres.Split(' ')[0])[0].ToString();
         var primerApellido = NormalizarTexto(apellidos.Split(' ')[0]);
         var baseLocal    = $"{letraNombre}{primerApellido}";
-        var dominio      = "@kumamoto.edu.pe";
+        var dominio      = "@kumamoto.pe";
 
         var candidato = $"{baseLocal}{dominio}";
         if (!await db.Usuarios.AnyAsync(u => u.Correo == candidato))

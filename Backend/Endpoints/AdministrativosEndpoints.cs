@@ -69,12 +69,13 @@ public static class AdministrativosEndpoints
             db.Usuarios.Add(admin);
             await db.SaveChangesAsync();
 
-            var correoDestino = !string.IsNullOrWhiteSpace(admin.CorreoPersonal) ? admin.CorreoPersonal : admin.Correo;
-            await emailService.EnviarCredencialesAccesoAsync(correoDestino!, $"{admin.Nombres} {admin.Apellidos}", clave, "Administrativo");
+            // Solo se envía si tiene correo personal registrado
+            if (!string.IsNullOrWhiteSpace(admin.CorreoPersonal))
+                await emailService.EnviarCredencialesAccesoAsync(admin.CorreoPersonal, admin.Correo!, $"{admin.Nombres} {admin.Apellidos}", clave, "Administrativo");
 
-            var msg = string.IsNullOrWhiteSpace(admin.CorreoPersonal)
-                ? $"Administrativo registrado. Credenciales enviadas a correo institucional: {correo}."
-                : $"Administrativo registrado exitosamente. Las credenciales de acceso se enviaron a su correo personal: {admin.CorreoPersonal}";
+            var msg = !string.IsNullOrWhiteSpace(admin.CorreoPersonal)
+                ? $"Administrativo registrado exitosamente. Las credenciales de acceso han sido enviadas al correo personal: {admin.CorreoPersonal}."
+                : $"Administrativo registrado exitosamente. Correo institucional asignado: {correo}.";
 
             return Results.Created($"/api/administrativos/{admin.Id}", new
             {

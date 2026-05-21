@@ -81,12 +81,13 @@ public static class DocentesEndpoints
             db.Usuarios.Add(docente);
             await db.SaveChangesAsync();
 
-            var correoDestino = !string.IsNullOrWhiteSpace(docente.CorreoPersonal) ? docente.CorreoPersonal : docente.Correo;
-            await emailService.EnviarCredencialesAccesoAsync(correoDestino!, $"{docente.Nombres} {docente.Apellidos}", clave, "Docente");
+            // Solo se envía si tiene correo personal registrado
+            if (!string.IsNullOrWhiteSpace(docente.CorreoPersonal))
+                await emailService.EnviarCredencialesAccesoAsync(docente.CorreoPersonal, docente.Correo!, $"{docente.Nombres} {docente.Apellidos}", clave, "Docente");
 
-            var msg = string.IsNullOrWhiteSpace(docente.CorreoPersonal)
-                ? $"Docente registrado. Credenciales enviadas a correo institucional: {correo}."
-                : $"Docente registrado exitosamente. Las credenciales de acceso se enviaron a su correo personal: {docente.CorreoPersonal}";
+            var msg = !string.IsNullOrWhiteSpace(docente.CorreoPersonal)
+                ? $"Docente registrado exitosamente. Las credenciales de acceso han sido enviadas al correo personal: {docente.CorreoPersonal}."
+                : $"Docente registrado exitosamente. Correo institucional asignado: {correo}.";
 
             return Results.Created($"/api/docentes/{docente.Id}", new
             {

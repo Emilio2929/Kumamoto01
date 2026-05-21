@@ -105,7 +105,9 @@ public class EmailService
         }
     }
 
-    public async Task EnviarCredencialesAccesoAsync(string correoDestino, string nombres, string contrasenaAsignada, string rol)
+    // correoDestino = a quién se envía (personal o institucional)
+    // correoLogin   = credencial que debe usar para ingresar al sistema (siempre el institucional)
+    public async Task EnviarCredencialesAccesoAsync(string correoDestino, string correoLogin, string nombres, string contrasenaAsignada, string rol)
     {
         _logger.LogInformation("====================================================================");
         _logger.LogInformation("ENVÍO DE CREDENCIALES DE ACCESO AL REGISTRAR {Rol}", rol.ToUpper());
@@ -154,7 +156,7 @@ public class EmailService
                                     <tr>
                                         <td align='center' style='padding: 10px 40px 30px 40px;'>
                                             <div style='background-color: #f8fafc; border: 2px dashed #1e3a8a; padding: 20px; display: block; border-radius: 8px; text-align: left;'>
-                                                <p style='margin: 0 0 10px 0; font-size: 16px; color: #4b5563;'><strong>Usuario/Correo:</strong> {correoDestino}</p>
+                                                <p style='margin: 0 0 10px 0; font-size: 16px; color: #4b5563;'><strong>Usuario/Correo:</strong> {correoLogin}</p>
                                                 <p style='margin: 0; font-size: 16px; color: #4b5563;'><strong>Contraseña temporal:</strong> <span style='font-family: monospace; font-size: 18px; color: #1e3a8a; font-weight: bold;'>{contrasenaAsignada}</span></p>
                                             </div>
                                         </td>

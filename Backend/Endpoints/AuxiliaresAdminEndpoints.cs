@@ -69,12 +69,13 @@ public static class AuxiliaresAdminEndpoints
             db.Usuarios.Add(auxiliar);
             await db.SaveChangesAsync();
 
-            var correoDestino = !string.IsNullOrWhiteSpace(auxiliar.CorreoPersonal) ? auxiliar.CorreoPersonal : auxiliar.Correo;
-            await emailService.EnviarCredencialesAccesoAsync(correoDestino!, $"{auxiliar.Nombres} {auxiliar.Apellidos}", clave, "Auxiliar");
+            // Solo se envía si tiene correo personal registrado
+            if (!string.IsNullOrWhiteSpace(auxiliar.CorreoPersonal))
+                await emailService.EnviarCredencialesAccesoAsync(auxiliar.CorreoPersonal, auxiliar.Correo!, $"{auxiliar.Nombres} {auxiliar.Apellidos}", clave, "Auxiliar");
 
-            var msg = string.IsNullOrWhiteSpace(auxiliar.CorreoPersonal)
-                ? $"Auxiliar registrado. Credenciales enviadas a correo institucional: {correo}."
-                : $"Auxiliar registrado exitosamente. Las credenciales de acceso se enviaron a su correo personal: {auxiliar.CorreoPersonal}";
+            var msg = !string.IsNullOrWhiteSpace(auxiliar.CorreoPersonal)
+                ? $"Auxiliar registrado exitosamente. Las credenciales de acceso han sido enviadas al correo personal: {auxiliar.CorreoPersonal}."
+                : $"Auxiliar registrado exitosamente. Correo institucional asignado: {correo}.";
 
             return Results.Created($"/api/auxiliares-admin/{auxiliar.Id}", new
             {

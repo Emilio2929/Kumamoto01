@@ -83,12 +83,13 @@ public static class PadresEndpoints
             db.Usuarios.Add(padre);
             await db.SaveChangesAsync();
 
-            var correoDestino = !string.IsNullOrWhiteSpace(padre.CorreoPersonal) ? padre.CorreoPersonal : padre.Correo;
-            await emailService.EnviarCredencialesAccesoAsync(correoDestino!, $"{padre.Nombres} {padre.Apellidos}", clave, "Padre de Familia");
+            // Solo se envía si tiene correo personal registrado
+            if (!string.IsNullOrWhiteSpace(padre.CorreoPersonal))
+                await emailService.EnviarCredencialesAccesoAsync(padre.CorreoPersonal, padre.Correo!, $"{padre.Nombres} {padre.Apellidos}", clave, "Padre de Familia");
 
-            var msg = string.IsNullOrWhiteSpace(correoPersonal)
-                ? $"Padre registrado. Credenciales enviadas a correo institucional: {correoInstitucional}."
-                : $"Padre registrado exitosamente. Las credenciales de acceso se enviaron a su correo personal: {correoPersonal}";
+            var msg = !string.IsNullOrWhiteSpace(correoPersonal)
+                ? $"Padre registrado exitosamente. Las credenciales de acceso han sido enviadas al correo personal: {correoPersonal}."
+                : $"Padre registrado exitosamente. Correo institucional asignado: {correoInstitucional}.";
 
             return Results.Created($"/api/padres/{padre.Id}", new
             {

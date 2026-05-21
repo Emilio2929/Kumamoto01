@@ -6,18 +6,23 @@ import { Router } from '@angular/router';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
-  
-  const cloned = req.clone({
-    withCredentials: true // Obligatorio para enviar/recibir cookies HttpOnly en peticiones cruzadas o seguras
-  });
+
+  // Obtener el token guardado en sessionStorage tras el login
+  const token = sessionStorage.getItem('kumamoto_token');
+
+  const cloned = token
+    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+    : req;
 
   return next(cloned).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
         sessionStorage.removeItem('kumamoto_user');
+        sessionStorage.removeItem('kumamoto_token');
         router.navigate(['/']);
       }
       return throwError(() => error);
     })
   );
 };
+

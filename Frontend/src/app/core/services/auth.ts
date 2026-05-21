@@ -36,8 +36,11 @@ export class AuthService {
   }
 
   private guardarSesion(response: any): void {
-    // El JWT ya viaja en la Cookie HttpOnly, solo guardamos los datos del usuario para pintar la UI.
-    // Usamos sessionStorage: Al cerrar la pestaña, se destruye automáticamente.
+    // Guardamos el JWT real en sessionStorage para enviarlo como Bearer token en cada petición.
+    // Al cerrar la pestaña, se destruye automáticamente.
+    if (response.token && response.token !== 'SecureCookieProvided') {
+      sessionStorage.setItem('kumamoto_token', response.token);
+    }
     sessionStorage.setItem(
       'kumamoto_user',
       JSON.stringify({
@@ -57,12 +60,14 @@ export class AuthService {
   }
 
   cerrarSesion(): void {
-    this.http.post(`${this.apiBase}/auth/logout`, {}, { withCredentials: true }).subscribe({
+    this.http.post(`${this.apiBase}/auth/logout`, {}).subscribe({
       next: () => {
         sessionStorage.removeItem('kumamoto_user');
+        sessionStorage.removeItem('kumamoto_token');
       },
       error: () => {
         sessionStorage.removeItem('kumamoto_user');
+        sessionStorage.removeItem('kumamoto_token');
       }
     });
   }

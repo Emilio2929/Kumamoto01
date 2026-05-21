@@ -10,7 +10,12 @@ public class TokenService(IConfiguration config)
 {
     public string GenerarToken(Usuario usuario)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));
+        // Lee JWT_SECRET desde variable de entorno (producción) o Jwt:Key desde appsettings (desarrollo)
+        var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET")
+            ?? config["Jwt:Key"]
+            ?? throw new InvalidOperationException("JWT_SECRET no configurado.");
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new List<Claim>

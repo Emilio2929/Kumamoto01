@@ -50,9 +50,9 @@ public static class AuthEndpoints
 
             context.Response.Cookies.Append("kumamoto_jwt", token, cookieOptions);
 
-            // Retornamos la respuesta SIN el token
+            // Retornamos la respuesta CON el token para que el cliente lo use como Bearer
             return Results.Ok(new {
-                token = "SecureCookieProvided", // Placeholder
+                token = token, // Token real para Bearer authentication
                 id = usuario.Id,
                 nombres = usuario.Nombres,
                 apellidos = usuario.Apellidos,
@@ -61,7 +61,7 @@ public static class AuthEndpoints
             });
         })
         .WithName("Login")
-        .WithSummary("Autenticación Segura (Cookie HttpOnly)")
+        .WithSummary("Autenticación (Bearer Token)")
         .WithOpenApi()
         .RequireRateLimiting("LoginPolicy"); // Fuerza bruta bloqueada
 
